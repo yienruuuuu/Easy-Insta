@@ -1,50 +1,91 @@
 package org.example;
 
-import net.lightbody.bmp.BrowserMobProxy;
-import net.lightbody.bmp.BrowserMobProxyServer;
-import net.lightbody.bmp.client.ClientUtil;
-import org.openqa.selenium.Proxy;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import com.github.instagram4j.instagram4j.IGClient;
+import com.github.instagram4j.instagram4j.actions.feed.FeedIterable;
+import com.github.instagram4j.instagram4j.actions.users.UserAction;
+import com.github.instagram4j.instagram4j.exceptions.IGResponseException;
+import com.github.instagram4j.instagram4j.models.user.Profile;
+import com.github.instagram4j.instagram4j.requests.friendships.FriendshipsFeedsRequest;
+import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import java.util.List;
+import java.util.concurrent.CompletionException;
 
 @SpringBootApplication
 public class WebScraperTest implements CommandLineRunner {
 
     @Value("${webdriver.chrome.path}")
     private String chromeDriverPath;
+    @Value("${insta.username}")
+    private String username;
+    @Value("${insta.password}")
+    private String password;
 
     @Override
     public void run(String... args) throws Exception {
-        //若瀏覽器安裝位置為預設則webDriver會自動搜尋path設定的位置，也可以使用System.setProperty 來指定路徑
-        System.setProperty("webdriver.chrome.driver", chromeDriverPath);
-        //設定ChromeOptions，允許跨域
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--remote-allow-origins=*");
-        // 創建並啟動BrowserMob Proxy
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
-        // 0 表示選擇一個隨機可用的端口
-        proxy.start(0);
-        // 獲取代理服務器的Selenium代理對象
-        Proxy seleniumProxy = ClientUtil.createSeleniumProxy(proxy);
-        // 配置Selenium以使用代理
-        options.setProxy(seleniumProxy);
-        //Selenium對不同瀏覽器提供了不同的webDriver
-        WebDriver driver = new ChromeDriver(options);
-
-        // 設置響應攔截器
-        proxy.addResponseFilter((response, contents, messageInfo) -> {
-            // 到Google首頁
-            driver.get("https://www.google.com.tw/");
-            // 取得pageTitle
-            String title = driver.getTitle();
-            System.out.print(title);
+        //登入
+        IGClient client = IGClient.builder().username(username).password(password).login();
+        //搜尋
+        UserAction user2 = client.actions().users().findByUsername("marianlinlin").join();
+        //打印用戶資訊
+        System.out.println("user.getUser() =" + user2.getUser());
+        //打印用戶的追蹤者
+        user2.followersFeed().stream().limit(1).forEach(response -> {
+            // 獲取用戶列表
+            List<Profile> users = response.getUsers();
+            // 獲取並打印用戶數量
+            int numberOfUsers = users.size();
+            System.out.println("Number of users in this response: " + numberOfUsers);
+            // 如果你想打印每個用戶的信息
+            users.forEach(user -> {
+                System.out.println("user = " + user);
+            });
         });
 
+        FeedIterable<FriendshipsFeedsRequest, FeedUsersResponse> followersFeed = user2.followersFeed();
+
+        int totalFollowers = 0;
+        boolean keepFetching = true;
+        int retryDelay = 5000;
+
+        while (keepFetching) {
+            try {
+                for (FeedUsersResponse response : followersFeed) {
+                    totalFollowers += response.getUsers().size();
+                    System.out.println("Processed a page. Total followers so far: " + totalFollowers);
+
+                    // 暫停一定時間以避免速率限制
+                    Thread.sleep(15000);
+                }
+                // 如果一切順利，退出循環
+                keepFetching = false;
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof IGResponseException) {
+                    IGResponseException igException = (IGResponseException) e.getCause();
+                    String message = igException.getMessage();
+                    if (message != null && message.contains("Please wait a few minutes before you try again.")) {
+                        // 这里是根据消息内容判断是否需要重新登录，你可以根据实际情况调整
+                        System.out.println("Received rate limit error. Trying to re-login...");
+                        client = IGClient.builder().username(username).password(password).login();
+                        user2 = client.actions().users().findByUsername("marianlinlin").join();
+                    }
+                }
+                System.err.println("Request failed: " + e.getMessage());
+                System.out.println("Retrying in " + retryDelay / 1000 + " seconds...");
+
+            } catch (InterruptedException e) {
+                // 恢復中斷狀態
+                Thread.currentThread().interrupt();
+                // 結束循環
+                keepFetching = false;
+            }
+        }
+
+        System.out.println("Total followers: " + totalFollowers);
     }
 
     public static void main(String[] args) {
