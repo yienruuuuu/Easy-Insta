@@ -6,7 +6,6 @@ import org.example.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +20,7 @@ public class LoginServiceImpl implements LoginService {
     }
 
     @Override
-    public Optional<LoginAccount> findById(BigInteger id) {
+    public Optional<LoginAccount> findById(Integer id) {
         return Optional.of(loginAccountDao.findById(id).get());
     }
 
