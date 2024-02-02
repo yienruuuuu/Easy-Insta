@@ -32,7 +32,7 @@ public class LoginController extends BaseController {
         return loginService.findAll();
     }
 
-    @Operation(summary = "登入", description = "登入IG4J插件")
+    @Operation(summary = "登入", description = "手動登入IG4J插件")
     @GetMapping(value = "login/ig4J/{accountEnum}")
     public void loginIg4J(@PathVariable AccountEnum accountEnum) {
         instagramService.login(accountEnum);
