@@ -1,6 +1,5 @@
 package org.example.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -25,6 +24,5 @@ public class LoginAccount {
     private String account;
 
     @Column(name = "password")
-    @JsonIgnore
     private String password;
 }
