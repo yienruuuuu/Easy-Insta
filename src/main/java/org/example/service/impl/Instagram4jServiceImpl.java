@@ -2,7 +2,6 @@ package org.example.service.impl;
 
 
 import com.github.instagram4j.instagram4j.IGClient;
-import com.github.instagram4j.instagram4j.models.user.User;
 import com.xcoder.easyinsta.Instagram;
 import com.xcoder.easyinsta.Utils;
 import com.xcoder.easyinsta.models.UserInfo;
@@ -28,8 +27,6 @@ public class Instagram4jServiceImpl implements InstagramService {
     IgUserServiceImpl igUserService;
 
     @Getter
-    private IGClient client;
-    @Getter
     private Instagram instagram;
 
     @PostConstruct
@@ -52,43 +49,43 @@ public class Instagram4jServiceImpl implements InstagramService {
 
     @Override
     public IgUser searchUser(String username, boolean needToWriteToDb) {
+        IgUser userEntity = null;
         try {
-            String aaa = Utils.getPkFromUsername("marianlinlin");
-            AsyncTask<UserInfo> task = instagram.profile().getUserInfo("marianlinlin");
-            task.setOnSuccessCallback(result -> {
-
-                System.out.println("User info: " + printUserInfo(result));
-            });
-            System.out.println("Task started aaa = " + aaa);
+            long igUserPk = Long.parseLong(Utils.getPkFromUsername(username));
+            AsyncTask<UserInfo> task = instagram.profile().getUserInfo(username).setOnSuccessCallback(userInfo -> log.info("userInfo : {}", printUserInfo(userInfo)));
+            UserInfo userInfo = task.getResult(5);
+            Optional<IgUser> igUserFromDb = igUserService.findUserByIgPk(igUserPk);
+            userEntity = getIgUserService(igUserFromDb, userInfo, igUserPk, username);
+            if (needToWriteToDb) {
+                igUserService.save(userEntity);
+            }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("searchUser error : {}", e.getMessage());
         }
-        return null;
+        return userEntity;
     }
 
     //private
 
     //資料實體處理
     @NotNull
-    private static IgUser getIgUserService(Optional<IgUser> userOptional, User igUser) {
+    private static IgUser getIgUserService(Optional<IgUser> userOptional, UserInfo userInfo, Long igUserPk, String username) {
         IgUser userEntity = userOptional.orElse(new IgUser());
 
         // 设置或更新用户信息
-        userEntity.setIgPk(igUser.getPk());
-        userEntity.setUserName(igUser.getUsername());
-        userEntity.setFullName(igUser.getFull_name());
-        userEntity.setPrivate(igUser.is_private());
-        userEntity.setBusiness(igUser.is_business());
-        userEntity.setMediaCount(igUser.getMedia_count());
-        userEntity.setFollowerCount(igUser.getFollower_count());
-        userEntity.setFollowingCount(igUser.getFollowing_count());
-        userEntity.setIgAccountType(igUser.getAccount_type());
+        userEntity.setIgPk(igUserPk);
+        userEntity.setUserName(username);
+        userEntity.setFullName(userInfo.fullName);
+        userEntity.setMediaCount(userInfo.posts);
+        userEntity.setFollowerCount(userInfo.followers);
+        userEntity.setFollowingCount(userInfo.following);
+        log.info("userEntity : {}", userEntity);
         return userEntity;
     }
 
     private String printUserInfo(UserInfo userInfo) {
         if (userInfo == null) {
-            System.out.println("UserInfo is null");
+            log.info("UserInfo is null");
             return "UserInfo is null";
         }
 

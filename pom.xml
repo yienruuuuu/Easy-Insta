@@ -17,7 +17,17 @@
     </properties>
 
     <repositories>
-        <!-- 添加 JitPack 庫 -->
+        <!-- Maven Central 庫 -->
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <!-- Google Maven 庫 -->
+        <repository>
+            <id>google</id>
+            <url>https://maven.google.com</url>
+        </repository>
+        <!-- JitPack 庫 -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
@@ -75,13 +85,13 @@
             <artifactId>springdoc-openapi-ui</artifactId>
             <version>1.7.0</version>
         </dependency>
-        <!-- mysql -->
+        <!-- mysql驅動 -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.3.0</version>
         </dependency>
-        <!-- git第三方instagram爬蟲 -->
+        <!-- git第三方instagram爬蟲 包裝instagram4J版本 by ErrorxCode-->
         <dependency>
             <groupId>com.github.ErrorxCode</groupId>
             <artifactId>EasyInsta</artifactId>
@@ -92,19 +102,40 @@
             <artifactId>AsyncTask</artifactId>
             <version>1.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
+        <dependency>
+            <groupId>com.github.ErrorxCode</groupId>
+            <artifactId>JSON-java-port</artifactId>
+            <version>20220320</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic 日誌記錄用logback庫-->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>1.2.3</version>
         </dependency>
-
+        <!-- https://mvnrepository.com/artifact/org.json/json  json格式化庫-->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.google.firebase/firebase-messaging -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-messaging</artifactId>
+            <version>22.0.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.google.firebase/firebase-core -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-core</artifactId>
+            <version>21.1.1</version>
+        </dependency>
 
 
     </dependencies>

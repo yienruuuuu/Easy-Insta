@@ -26,18 +26,12 @@ public class IgUser {
     private String userName;
     @Column(name = "full_name")
     private String fullName;
-    @Column(name = "is_private", columnDefinition = "TINYINT(1)")
-    private boolean isPrivate;
-    @Column(name = "is_business", columnDefinition = "TINYINT(1)")
-    private boolean isBusiness;
     @Column(name = "media_count")
     private int mediaCount;
     @Column(name = "follower_count")
     private int followerCount;
     @Column(name = "following_count")
     private int followingCount;
-    @Column(name = "ig_account_type")
-    private int igAccountType;
 
     @Override
     public boolean equals(Object o) {
