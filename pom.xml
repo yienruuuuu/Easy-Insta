@@ -13,7 +13,16 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-boot.version>2.7.3</spring-boot.version>
+        <lombok.version>1.18.24</lombok.version>
     </properties>
+
+    <repositories>
+        <!-- 添加 JitPack 庫 -->
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -72,6 +81,31 @@
             <artifactId>mysql-connector-j</artifactId>
             <version>8.3.0</version>
         </dependency>
+        <!-- git第三方instagram爬蟲 -->
+        <dependency>
+            <groupId>com.github.ErrorxCode</groupId>
+            <artifactId>EasyInsta</artifactId>
+            <version>2.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ErrorxCode</groupId>
+            <artifactId>AsyncTask</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+
+
 
     </dependencies>
 </project>

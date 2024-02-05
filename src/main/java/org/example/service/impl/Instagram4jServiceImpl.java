@@ -2,10 +2,13 @@ package org.example.service.impl;
 
 
 import com.github.instagram4j.instagram4j.IGClient;
-import com.github.instagram4j.instagram4j.actions.users.UserAction;
-import com.github.instagram4j.instagram4j.exceptions.IGLoginException;
 import com.github.instagram4j.instagram4j.models.user.User;
+import com.xcoder.easyinsta.Instagram;
+import com.xcoder.easyinsta.Utils;
+import com.xcoder.easyinsta.models.UserInfo;
+import com.xcoder.tasks.AsyncTask;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.example.bean.enumtype.AccountEnum;
 import org.example.entity.IgUser;
 import org.example.service.InstagramService;
@@ -16,15 +19,18 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.Optional;
 
+@Slf4j
 @Service("instagramService")
 public class Instagram4jServiceImpl implements InstagramService {
     @Autowired
     LoginServiceImpl loginService;
     @Autowired
-    IgUserImpl userService;
+    IgUserServiceImpl igUserService;
 
     @Getter
     private IGClient client;
+    @Getter
+    private Instagram instagram;
 
     @PostConstruct
     public void init() {
@@ -36,12 +42,9 @@ public class Instagram4jServiceImpl implements InstagramService {
     public void login(AccountEnum account) {
         loginService.findById(account.getLoginAccountId()).ifPresent(login -> {
             try {
-                client = IGClient.builder()
-                        .username(login.getAccount())
-                        .password(login.getPassword())
-                        .login();
-                System.out.println("登入成功 : " + client.getSelfProfile().getUsername());
-            } catch (IGLoginException e) {
+                instagram = Instagram.login(login.getAccount(), login.getPassword());
+                log.info("登入成功 : {}", instagram.username);
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
@@ -49,32 +52,25 @@ public class Instagram4jServiceImpl implements InstagramService {
 
     @Override
     public IgUser searchUser(String username, boolean needToWriteToDb) {
-        //搜尋
-        UserAction searchResult = client.actions().users().findByUsername(username).join();
-//        获取 User 对象User
-        User igUser = searchResult.getUser();
-        System.out.println("查詢用戶 : " + igUser.getUsername());
-        System.out.println("查詢用戶PK : " + igUser.getPk());
-        // 查找数据库中是否已存在该用户
-        Optional<IgUser> userOptional = userService.findUserByIgPk(igUser.getPk());
+        try {
+            String aaa = Utils.getPkFromUsername("marianlinlin");
+            AsyncTask<UserInfo> task = instagram.profile().getUserInfo("marianlinlin");
+            task.setOnSuccessCallback(result -> {
 
-        // 创建新的 User 实体或从数据库获取已存在的
-        IgUser userEntity = getIgUser(userOptional, igUser);
-
-        // 检查是否需要写入数据库
-        if (needToWriteToDb) {
-            // 保存或更新用户信息
-            userService.save(userEntity);
-            System.out.println("用户信息已保存或更新 : " + userEntity.getUserName());
-        } else {
-            System.out.println("不需要写入数据库 : " + userEntity.getUserName());
+                System.out.println("User info: " + printUserInfo(result));
+            });
+            System.out.println("Task started aaa = " + aaa);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return userEntity;
-
+        return null;
     }
 
+    //private
+
+    //資料實體處理
     @NotNull
-    private static IgUser getIgUser(Optional<IgUser> userOptional, User igUser) {
+    private static IgUser getIgUserService(Optional<IgUser> userOptional, User igUser) {
         IgUser userEntity = userOptional.orElse(new IgUser());
 
         // 设置或更新用户信息
@@ -89,4 +85,23 @@ public class Instagram4jServiceImpl implements InstagramService {
         userEntity.setIgAccountType(igUser.getAccount_type());
         return userEntity;
     }
+
+    private String printUserInfo(UserInfo userInfo) {
+        if (userInfo == null) {
+            System.out.println("UserInfo is null");
+            return "UserInfo is null";
+        }
+
+        String info = "UserInfo{\n" +
+                "username='" + userInfo.username + "',\n" +
+                "fullName='" + userInfo.fullName + "',\n" +
+                "biography='" + userInfo.biography + "',\n" +
+                "profilePicUrl='" + userInfo.profilePicUrl + "',\n" +
+                "followers=" + userInfo.followers + ",\n" +
+                "following=" + userInfo.following + ",\n" +
+                "posts=" + userInfo.posts + "\n" +
+                '}';
+        return info;
+    }
+
 }

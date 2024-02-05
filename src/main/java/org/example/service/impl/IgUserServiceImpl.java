@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service("igUserImpl")
-public class IgUserImpl implements IgUserService {
+public class IgUserServiceImpl implements IgUserService {
     @Autowired
     IgUserDao userDao;
 
