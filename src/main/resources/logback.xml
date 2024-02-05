@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <property name="LOG_PATH" value="./logs"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>%date %level [%thread] %logger [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <appender name="file_warn" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/warn/logback.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/warn/logback.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>20MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <encoder>
+            <pattern>%date %level [%thread] %logger [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <appender name="file_info" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/info/logback.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/info/logback.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>20MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>%date %level [%thread] %logger [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <appender name="file_debug" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/debug/logback.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/debug/logback.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>20MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <encoder>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSSZ} [%thread] %-5level %class{10}.%method:%line - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <!-- project log -->
+    <logger name="org.example" level="debug" additivity="false">
+        <appender-ref ref="console"/>
+        <appender-ref ref="file_debug"/>
+        <appender-ref ref="file_info"/>
+        <appender-ref ref="file_warn"/>
+    </logger>
+    <!-- other log not in project -->
+    <root level="DEBUG">
+        <appender-ref ref="console"/>
+        <appender-ref ref="file_warn"/>
+    </root>
+    <!--    屏蔽 instagram4j 的 DEBUG 等級日誌-->
+    <logger name="com.github.instagram4j.instagram4j" level="WARN"/>
+</configuration>
