@@ -19,4 +19,18 @@ public interface InstagramService {
      * @return 用戶信息
      */
     IgUser searchUser(String username, boolean needToWriteToDb);
+
+    /**
+     * 查詢用戶追隨者
+     *
+     * @param username 用戶名
+     */
+    void searchUserFollowers(String username);
+
+    /**
+     * 查詢用戶發文
+     *
+     * @param username 用戶名
+     */
+    void searchUserPosts(String username);
 }

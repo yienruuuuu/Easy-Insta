@@ -24,9 +24,21 @@ public class IgUserController extends BaseController {
     InstagramService instagramService;
 
     @Operation(summary = "以用戶名查詢用戶", description = "查詢用戶資料")
-    @GetMapping(value = "searchUser/{username}/{needToWriteToDb}")
+    @GetMapping(value = "/{username}/{needToWriteToDb}")
     public IgUser getUserInfoByUserName(@PathVariable String username, @PathVariable boolean needToWriteToDb) {
         return instagramService.searchUser(username, needToWriteToDb);
+    }
+
+    @Operation(summary = "以用戶名紀錄所有追隨者", description = "查詢用戶追隨者")
+    @GetMapping(value = "/followers/{username}")
+    public void getFollowersByUserName(@PathVariable String username) {
+        instagramService.searchUserFollowers(username);
+    }
+
+    @Operation(summary = "以用戶名查詢所有發文", description = "查詢用戶發文(簡化版)")
+    @GetMapping(value = "/post/{username}")
+    public void getPostsByUserName(@PathVariable String username) {
+        instagramService.searchUserPosts(username);
     }
 
 }
