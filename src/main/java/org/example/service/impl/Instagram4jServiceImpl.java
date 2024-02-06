@@ -1,9 +1,9 @@
 package org.example.service.impl;
 
 
-import com.github.instagram4j.instagram4j.IGClient;
 import com.xcoder.easyinsta.Instagram;
 import com.xcoder.easyinsta.Utils;
+import com.xcoder.easyinsta.models.Post;
 import com.xcoder.easyinsta.models.UserInfo;
 import com.xcoder.tasks.AsyncTask;
 import lombok.Getter;
@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -65,6 +66,32 @@ public class Instagram4jServiceImpl implements InstagramService {
         return userEntity;
     }
 
+    @Override
+    public void searchUserFollowers(String username) {
+        try {
+            AsyncTask<List<String>> followersTask = instagram.profile().getFollowers(username);
+            followersTask.setOnSuccessCallback(followers -> {
+                log.info("Followers of {}: {}", username, followers);
+            });
+            List<String> followers = followersTask.getResult(20);
+        } catch (Exception e) {
+            log.error("Error fetching followers of {}: {}", username, e.getMessage());
+        }
+    }
+
+    @Override
+    public void searchUserPosts(String username) {
+        try {
+            AsyncTask<Post[]> postsTask = instagram.profile().getPosts(username);
+            postsTask.setOnSuccessCallback(posts -> {
+                log.info("Posts of {}: {}", username, posts);
+            });
+            Post[] posts = postsTask.getResult(20);
+        } catch (Exception e) {
+            log.error("Error fetching posts of {}: {}", username, e.getMessage());
+        }
+    }
+
     //private
 
     //資料實體處理
@@ -100,5 +127,4 @@ public class Instagram4jServiceImpl implements InstagramService {
                 '}';
         return info;
     }
-
 }

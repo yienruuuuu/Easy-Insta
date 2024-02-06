@@ -3,3 +3,4 @@
  */
 
 rootProject.name = 'WebCrawlerForIns'
+include 'thirdpartylibs:EasyInsta'
