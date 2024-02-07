@@ -43,7 +43,6 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
     implementation project('thirdpartylibs:EasyInsta')
-
 }
 
 
@@ -51,6 +50,7 @@ group = 'org.example'
 version = '1.0-SNAPSHOT'
 description = 'WebCrawlerForIns'
 java.sourceCompatibility = JavaVersion.VERSION_17
+java.targetCompatibility = JavaVersion.VERSION_17
 
 publishing {
     publications {

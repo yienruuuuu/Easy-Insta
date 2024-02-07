@@ -93,7 +93,6 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     //private
-
     //資料實體處理
     @NotNull
     private static IgUser getIgUserService(Optional<IgUser> userOptional, UserInfo userInfo, Long igUserPk, String username) {
