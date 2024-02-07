@@ -12,13 +12,12 @@ public interface InstagramService {
     void login(String account, String password);
 
     /**
-     * 查詢用戶
+     * 以用戶名查詢用戶
      *
      * @param username        用戶名
-     * @param needToWriteToDb 是否需要寫入數據庫
      * @return 用戶信息
      */
-    IgUser searchUser(String username, boolean needToWriteToDb);
+    IgUser searchUser(String username);
 
     /**
      * 查詢用戶追隨者

@@ -36,6 +36,7 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
     //other
     implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+    implementation 'com.google.guava:guava:31.1-jre'
     //jar
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     // build.gradle
