@@ -2,6 +2,11 @@ package org.example.service;
 
 import org.example.entity.IgUser;
 
+/**
+ * Instagram操作相關Service
+ *
+ * @Author: Eric.Lee
+ */
 public interface InstagramService {
     /**
      * 登入
