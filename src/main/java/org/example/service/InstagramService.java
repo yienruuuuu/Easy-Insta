@@ -1,6 +1,5 @@
 package org.example.service;
 
-import org.example.bean.enumtype.AccountEnum;
 import org.example.entity.IgUser;
 
 public interface InstagramService {
@@ -8,8 +7,9 @@ public interface InstagramService {
      * 登入
      *
      * @param account 登入操作用帳號
+     * @param password 登入操作用密碼
      */
-    void login(AccountEnum account);
+    void login(String account, String password);
 
     /**
      * 查詢用戶

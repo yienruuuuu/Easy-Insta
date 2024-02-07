@@ -1,14 +1,17 @@
 package org.example.service.impl;
 
 
+import com.github.instagram4j.instagram4j.IGClient;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.enumtype.AccountEnum;
 import org.example.entity.IgUser;
+import org.example.entity.LoginAccount;
 import org.example.service.InstagramService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Optional;
 
 @Slf4j
 @Service("instagramService")
@@ -18,15 +21,31 @@ public class Instagram4jServiceImpl implements InstagramService {
     @Autowired
     IgUserServiceImpl igUserService;
 
+    private IGClient client;
+
     @PostConstruct
     public void init() {
         // 初始化 IGClient 預設使用ERICLEE09578登入
-        login(AccountEnum.ERICLEE09578);
+        Optional<LoginAccount> password = loginService.findById(AccountEnum.ERICLEE09578.getLoginAccountId());
+        if (!password.isPresent()) {
+            log.error("ERICLEE09578 帳號不存在");
+            return;
+        }
+        login(AccountEnum.ERICLEE09578.name(), password.get().getPassword());
+
     }
 
     @Override
-    public void login(AccountEnum account) {
-
+    public void login(String account, String password) {
+        try {
+            client = IGClient.builder()
+                    .username(account)
+                    .password(password)
+                    .login();
+            log.info("登入成功, 帳號:{}", account);
+        } catch (Exception e) {
+            log.error("登入異常", e);
+        }
     }
 
     @Override
