@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.bean.enumtype.AccountEnum;
 import org.example.entity.IgUser;
 import org.example.entity.LoginAccount;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.InstagramService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 @Slf4j
 @Service("instagramService")
@@ -50,12 +53,18 @@ public class Instagram4jServiceImpl implements InstagramService {
 
     @Override
     public IgUser searchUser(String username) {
-        UserAction searchResult = client.actions().users().findByUsername(username).join();
+        UserAction searchResult = null;
+        try {
+            searchResult = client.actions().users().findByUsername(username).join();
+        } catch (CompletionException e) {
+            log.error("IG查詢用戶異常", e);
+            throw new ApiException(SysCode.IG_USER_NOT_FOUND, "查詢用戶異常");
+        }
         User igUser = searchResult.getUser();
         log.info("IG查詢結果,用戶名稱: {} ,查詢用戶PK: {}", igUser.getUsername(), igUser.getPk());
-        // 查找数据库中是否已存在该用户
+        // 查詢資料庫中是否已存在該用戶
         Optional<IgUser> userOptional = igUserService.findUserByIgPk(igUser.getPk());
-        // 创建新的 User 实体或从数据库获取已存在的
+        // 建立新的User實體，或是從資料庫中獲取已存在的實體
         return getIgUser(userOptional, igUser);
     }
 

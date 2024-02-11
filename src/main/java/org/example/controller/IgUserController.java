@@ -30,12 +30,13 @@ public class IgUserController extends BaseController {
     @GetMapping(value = "/{username}/{needToWriteToDb}")
     public IgUser getUserInfoByUserName(@PathVariable String username, @PathVariable boolean needToWriteToDb) {
         IgUser igUser = instagramService.searchUser(username);
-        // 检查是否需要写入数据库,保存或更新用户信息
-        if (!needToWriteToDb) {
+        // 檢查是否需要寫入資料庫,保存或更新使用者訊息
+        if (needToWriteToDb) {
+            igUserService.save(igUser);
+            log.info("用户信息已保存或更新 : " + igUser.getUserName());
+        } else {
             log.info("不需要写入数据库 用戶名稱: {}", igUser.getUserName());
         }
-        igUserService.save(igUser);
-        log.info("用户信息已保存或更新 : " + igUser.getUserName());
         return igUser;
     }
 

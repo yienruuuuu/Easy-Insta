@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 @Tag(name = "Login controller", description = "IG登入相關API")
 @RestController
-@RequestMapping("user")
+@RequestMapping("admin")
 public class LoginController extends BaseController {
 
     @Autowired
