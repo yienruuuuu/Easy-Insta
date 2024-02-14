@@ -40,7 +40,7 @@ public class IgUserController extends BaseController {
         return igUser;
     }
 
-    @Operation(summary = "以用戶名紀錄所有追隨者", description = "查詢用戶追隨者")
+    @Operation(summary = "提交排程>以用戶名紀錄所有追隨者", description = "提交排程>查詢某用戶所有追隨者")
     @GetMapping(value = "/followers/{username}")
     public void getFollowersByUserName(@PathVariable String username) {
         instagramService.searchUserFollowers(username);

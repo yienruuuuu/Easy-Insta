@@ -84,5 +84,5 @@
         <appender-ref ref="file_warn"/>
     </root>
     <!--    屏蔽 instagram4j 的 DEBUG 等級日誌-->
-    <logger name="com.github.instagram4j.instagram4j" level="WARN"/>
+    <logger name="com.zaxxer.hikari.pool" level="WARN"/>
 </configuration>

@@ -11,7 +11,7 @@
  Target Server Version : 80027 (8.0.27)
  File Encoding         : 65001
 
- Date: 06/02/2024 00:27:32
+ Date: 14/02/2024 23:35:57
 */
 
 SET NAMES utf8mb4;
@@ -35,7 +35,7 @@ CREATE TABLE `ig_user`  (
 -- ----------------------------
 -- Records of ig_user
 -- ----------------------------
-INSERT INTO `ig_user` VALUES (1, 1103143815, 'marianlinlin', 'Marian馬莉恩', 1594, 1806, 1236);
+INSERT INTO `ig_user` VALUES (1, 1103143815, 'marianlinlin', 'Marian馬莉恩', 1595, 1807, 1238);
 INSERT INTO `ig_user` VALUES (2, 24829723610, 'mitaka__0702', '米塔', 12, 34, 8);
 
 -- ----------------------------
@@ -53,5 +53,27 @@ CREATE TABLE `login_account`  (
 -- Records of login_account
 -- ----------------------------
 INSERT INTO `login_account` VALUES (0, 'ericlee09578', 's8903132');
+
+-- ----------------------------
+-- Table structure for task_queue
+-- ----------------------------
+DROP TABLE IF EXISTS `task_queue`;
+CREATE TABLE `task_queue`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '唯一标识一个任务的ID',
+  `user_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '提交任务的用户ID，用于任务权限控制',
+  `task_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '任务类型，根据不同的任务类型，处理逻辑可能不同',
+  `status` enum('PENDING','IN_PROGRESS','COMPLETED','FAILED') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'PENDING' COMMENT '任务的当前状态（等待中、进行中、完成、失败）',
+  `submit_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '任务提交时间',
+  `start_time` timestamp NULL DEFAULT NULL COMMENT '任务开始执行时间',
+  `end_time` timestamp NULL DEFAULT NULL COMMENT '任务结束时间',
+  `result` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '任务结果，根据需要存储结果的链接或者其他标识',
+  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '如果任务失败，存储错误信息',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `task_id`(`id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of task_queue
+-- ----------------------------
 
 SET FOREIGN_KEY_CHECKS = 1;
