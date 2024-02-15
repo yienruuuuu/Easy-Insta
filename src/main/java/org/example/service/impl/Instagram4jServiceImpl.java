@@ -29,7 +29,7 @@ public class Instagram4jServiceImpl implements InstagramService {
 
     private IGClient client;
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         Optional<LoginAccount> optionalAccount = loginService.findById(AccountEnum.ERICLEE09578.getLoginAccountId());
         optionalAccount.ifPresentOrElse(
