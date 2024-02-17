@@ -3,11 +3,11 @@ package org.example.entity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import org.example.bean.enumtype.TaskStatusEnum;
+import org.example.bean.enumtype.TaskTypeEnum;
 
 import javax.persistence.*;
 import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.util.Objects;
+import java.time.Instant;
 
 /**
  * @author Eric.Lee
@@ -18,7 +18,8 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Builder@Schema(description = "任務序列")
+@Builder
+@Schema(description = "任務序列")
 @Getter
 @Setter
 public class TaskQueue {
@@ -29,15 +30,17 @@ public class TaskQueue {
     @Column(name = "user_id")
     private String userId;
     @Column(name = "task_type")
-    private String taskType;
+    @Enumerated(EnumType.STRING)
+    private TaskTypeEnum taskType;
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private TaskStatusEnum status;
     @Column(name = "submit_time")
-    private Timestamp submitTime;
+    private Instant submitTime;
     @Column(name = "start_time")
-    private Timestamp startTime;
+    private Instant startTime;
     @Column(name = "end_time")
-    private Timestamp endTime;
+    private Instant endTime;
     @Column(name = "result")
     private String result;
     @Column(name = "error_message")

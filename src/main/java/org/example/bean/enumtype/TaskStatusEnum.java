@@ -2,6 +2,10 @@ package org.example.bean.enumtype;
 
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Getter
 public enum TaskStatusEnum {
     /**
@@ -30,5 +34,16 @@ public enum TaskStatusEnum {
             case IN_PROGRESS -> targetStatus == COMPLETED || targetStatus == FAILED;
             default -> false;
         };
+    }
+
+    /**
+     * 获取未完成等級的任务状态
+     *
+     * @return 未完成狀態的列表
+     */
+    public static List<TaskStatusEnum> getUnfinishedStatus() {
+        return Arrays.stream(TaskStatusEnum.values())
+                .filter(status -> status == PENDING || status == IN_PROGRESS)
+                .collect(Collectors.toList());
     }
 }
