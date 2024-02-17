@@ -35,6 +35,9 @@ public class TaskQueue {
     @Enumerated(EnumType.STRING)
     private TaskTypeEnum taskType;
 
+    @Column(name = "need_login_ig")
+    private boolean needLoginIg;
+
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private TaskStatusEnum status;

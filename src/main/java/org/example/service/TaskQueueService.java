@@ -15,4 +15,8 @@ public interface TaskQueueService extends BaseService<TaskQueue> {
 
     Optional<TaskQueue> createAndSaveTaskQueue(String username, TaskTypeEnum taskType, TaskStatusEnum status);
 
+    boolean existsInProgressTasks(TaskStatusEnum status);
+
+    Optional<TaskQueue> findFirstTaskQueueByStatus(TaskStatusEnum status);
+
 }

@@ -8,7 +8,7 @@ import org.example.service.TaskQueueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +37,16 @@ public class TaskQueueServiceImpl implements TaskQueueService {
                 .submitTime(LocalDateTime.now())
                 .build();
         return save(newTask);
+    }
+
+    @Override
+    public boolean existsInProgressTasks(TaskStatusEnum status) {
+        return taskQueueDao.existsInProgressTasks(status);
+    }
+
+    @Override
+    public Optional<TaskQueue> findFirstTaskQueueByStatus(TaskStatusEnum status) {
+        return taskQueueDao.findFirstByStatusOrderBySubmitTimeDesc(status);
     }
 
     @Override

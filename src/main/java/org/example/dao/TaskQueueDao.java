@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Eric.Lee
@@ -24,4 +25,20 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
      */
     @Query("SELECT t FROM TaskQueue t WHERE t.taskType = :taskType AND t.userId = :userId AND t.status IN :statuses ORDER BY t.submitTime DESC")
     List<TaskQueue> findTaskQueuesByCustomQuery(@Param("taskType") TaskTypeEnum taskType, @Param("userId") String userId, @Param("statuses") List<TaskStatusEnum> statuses);
+
+    /**
+     * 檢查目前是否有某狀態的任務存在
+     *
+     * @return boolean
+     */
+    @Query("SELECT COUNT(t) > 0 FROM TaskQueue t WHERE t.status = :status")
+    boolean existsInProgressTasks(@Param("status") TaskStatusEnum status);
+
+    /**
+     * 依據任務狀態及提交時間排序，查詢最早提交的一筆任務序列
+     *
+     * @param status 任務狀態
+     * @return 任務序列
+     */
+    Optional<TaskQueue> findFirstByStatusOrderBySubmitTimeDesc(TaskStatusEnum status);
 }
