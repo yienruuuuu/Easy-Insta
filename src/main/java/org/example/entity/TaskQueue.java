@@ -7,7 +7,7 @@ import org.example.bean.enumtype.TaskTypeEnum;
 
 import javax.persistence.*;
 import java.math.BigInteger;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 /**
  * @author Eric.Lee
@@ -40,13 +40,13 @@ public class TaskQueue {
     private TaskStatusEnum status;
 
     @Column(name = "submit_time")
-    private Instant submitTime;
+    private LocalDateTime submitTime;
 
     @Column(name = "start_time")
-    private Instant startTime;
+    private LocalDateTime startTime;
 
     @Column(name = "end_time")
-    private Instant endTime;
+    private LocalDateTime endTime;
 
     @Column(name = "result")
     private String result;

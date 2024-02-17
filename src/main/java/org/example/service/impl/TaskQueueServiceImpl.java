@@ -34,7 +34,7 @@ public class TaskQueueServiceImpl implements TaskQueueService {
                 .userId(username)
                 .taskType(taskType)
                 .status(status)
-                .submitTime(Instant.now())
+                .submitTime(LocalDateTime.now())
                 .build();
         return save(newTask);
     }
