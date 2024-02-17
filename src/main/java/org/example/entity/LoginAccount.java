@@ -29,14 +29,20 @@ public class LoginAccount {
 
     @Column(name = "password")
     private String password;
+
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private LoginAccountStatusEnum status;
+
     @Column(name = "status_remark")
     private String statusRemark;
+
     @Column(name = "email")
     private String email;
+
     @Column(name = "email_password")
     private String emailPassword;
+
     @Column(name = "backup_email")
     private String backupEmail;
 }

@@ -20,16 +20,22 @@ public class IgUser {
     @Id
     @Column(name = "id")
     private int id;
+
     @Column(name = "ig_pk")
     private long igPk;
+
     @Column(name = "user_name")
     private String userName;
+
     @Column(name = "full_name")
     private String fullName;
+
     @Column(name = "media_count")
     private int mediaCount;
+
     @Column(name = "follower_count")
     private int followerCount;
+
     @Column(name = "following_count")
     private int followingCount;
 

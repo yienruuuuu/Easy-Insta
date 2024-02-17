@@ -27,22 +27,30 @@ public class TaskQueue {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", columnDefinition = "serial")
     private BigInteger id;
+
     @Column(name = "user_id")
     private String userId;
+
     @Column(name = "task_type")
     @Enumerated(EnumType.STRING)
     private TaskTypeEnum taskType;
+
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private TaskStatusEnum status;
+
     @Column(name = "submit_time")
     private Instant submitTime;
+
     @Column(name = "start_time")
     private Instant startTime;
+
     @Column(name = "end_time")
     private Instant endTime;
+
     @Column(name = "result")
     private String result;
+
     @Column(name = "error_message")
     private String errorMessage;
 
