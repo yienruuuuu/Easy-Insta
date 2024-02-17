@@ -1,7 +1,6 @@
 package org.example;
 
 import com.github.instagram4j.instagram4j.IGClient;
-import com.github.instagram4j.instagram4j.actions.feed.FeedIterable;
 import com.github.instagram4j.instagram4j.actions.users.UserAction;
 import com.github.instagram4j.instagram4j.models.user.Profile;
 import com.github.instagram4j.instagram4j.requests.friendships.FriendshipsFeedsRequest;
@@ -12,14 +11,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 @SpringBootApplication
 public class WebScraperTest implements CommandLineRunner {
 
-    private String username = "ericlee09578";
-    private String password = "s8903132";
+    private String username = "bellebarker487";
+    private String password = "haluho4157Hy";
 
     @Override
     public void run(String... args) throws Exception {
@@ -28,9 +27,7 @@ public class WebScraperTest implements CommandLineRunner {
         //获取追踪者
         List<Profile> followers = getFollowersByUserNameAndMaxId(client, "marianlinlin", null);
         //打印追踪者
-        followers.forEach(profile -> {
-            System.out.println("follower = " + profile.getUsername());
-        });
+        followers.forEach(profile -> System.out.println("follower = " + profile));
     }
 
     public static void main(String[] args) {
@@ -48,31 +45,43 @@ public class WebScraperTest implements CommandLineRunner {
     public static List<Profile> getFollowersByUserNameAndMaxId(IGClient client, String username, String maxId) {
         List<Profile> followers = Lists.newArrayList();
         AtomicReference<String> maxIdRef = new AtomicReference<>(maxId);
+        // 計數器，用於追蹤請求到的資料數量
+        int count = 0;
 
         try {
             UserAction userAction = client.actions().users().findByUsername(username).join();
             Long userId = userAction.getUser().getPk();
 
-            Supplier<FriendshipsFeedsRequest> requestSupplier = () ->
-                    new FriendshipsFeedsRequest(userId, FriendshipsFeedsRequest.FriendshipsFeeds.FOLLOWERS, maxIdRef.get());
-
             while (true) {
-                FeedIterable<FriendshipsFeedsRequest, FeedUsersResponse> iterable = new FeedIterable<>(client, requestSupplier);
-                boolean hasMore = false;
+                // 每次循环使用最新的maxId创建请求
+                FriendshipsFeedsRequest request = new FriendshipsFeedsRequest(userId, FriendshipsFeedsRequest.FriendshipsFeeds.FOLLOWERS, maxIdRef.get());
+                FeedUsersResponse response = client.sendRequest(request).join();
 
-                for (FeedUsersResponse response : iterable) {
-                    followers.addAll(response.getUsers());
-                    maxIdRef.set(response.getNext_max_id());
-                    System.out.println("nextMaxId = " + maxIdRef.get());
-                    Thread.sleep(10000);
+                List<Profile> users = response.getUsers();
+                followers.addAll(users);
+                count += users.size();
+                System.out.println("当前累计用户数: " + count);
 
-                    if (response.getNext_max_id() != null && !response.getNext_max_id().isEmpty()) {
-                        hasMore = true;
-                        break; // 跳出 for-each 循環，進行下一次 while 循環
-                    }
+                // 更新maxId以供下一次请求使用
+                String nextMaxId = response.getNext_max_id();
+                if (nextMaxId == null || nextMaxId.isEmpty()) {
+                    // 没有更多数据，结束循环
+                    break;
                 }
-                if (!hasMore) {
-                    break; // 如果沒有更多頁面，結束 while 循環
+                maxIdRef.set(nextMaxId);
+
+                // 每当累积到200个用户数据时，暂停一段时间
+                if (count >= 150) {
+                    System.out.println("达到150个用户数据，跳出循環");
+                    break;
+                }
+                //請求間暫停五秒
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    System.out.println("暂停被中断");
+                    break;
                 }
             }
         } catch (Exception e) {
