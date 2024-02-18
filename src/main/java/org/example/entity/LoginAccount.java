@@ -2,9 +2,13 @@ package org.example.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import org.example.bean.enumtype.LoginAccountStatusEnum;
 
 import javax.persistence.*;
 
+/**
+ * @author Eric.Lee
+ */
 @Entity
 @Schema(description = "Restaurant's group")
 @Getter
@@ -25,4 +29,20 @@ public class LoginAccount {
 
     @Column(name = "password")
     private String password;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private LoginAccountStatusEnum status;
+
+    @Column(name = "status_remark")
+    private String statusRemark;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "email_password")
+    private String emailPassword;
+
+    @Column(name = "backup_email")
+    private String backupEmail;
 }
