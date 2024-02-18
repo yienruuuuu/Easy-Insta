@@ -57,4 +57,10 @@ public class TaskQueue {
     @Column(name = "error_message")
     private String errorMessage;
 
+    @Column(name = "next_id_for_search")
+    private String nextIdForSearch;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 }

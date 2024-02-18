@@ -4,10 +4,14 @@ import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.dao.TaskQueueDao;
 import org.example.entity.TaskQueue;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.TaskQueueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -40,13 +44,30 @@ public class TaskQueueServiceImpl implements TaskQueueService {
     }
 
     @Override
-    public boolean existsInProgressTasks(TaskStatusEnum status) {
-        return taskQueueDao.existsInProgressTasks(status);
+    public boolean checkTasksByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg) {
+        return taskQueueDao.existsInProgressTasks(status, needLoginIg);
     }
 
     @Override
-    public Optional<TaskQueue> findFirstTaskQueueByStatus(TaskStatusEnum status) {
-        return taskQueueDao.findFirstByStatusOrderBySubmitTimeDesc(status);
+    public Optional<TaskQueue> findFirstTaskQueueByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg) {
+        return taskQueueDao.findFirstByStatusAndNeedLoginIgOrderBySubmitTimeDesc(status, needLoginIg);
+    }
+
+    @Override
+    public List<TaskQueue> findTasksByStatus(TaskStatusEnum status) {
+        return taskQueueDao.findTaskQueuesByStatus(status);
+    }
+
+    @Transactional
+    @Override
+    public TaskQueue updateTaskStatus(BigInteger taskId, TaskStatusEnum newStatus) {
+        Optional<TaskQueue> taskQueueOptional = taskQueueDao.findById(taskId);
+        if (taskQueueOptional.isPresent()) {
+            TaskQueue taskQueue = taskQueueOptional.get();
+            taskQueue.setStatus(newStatus);
+            return taskQueueDao.save(taskQueue);
+        }
+        throw new ApiException(SysCode.TASK_STATUS_UPDATE_FAILED);
     }
 
     @Override

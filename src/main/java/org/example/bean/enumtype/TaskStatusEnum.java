@@ -13,6 +13,7 @@ public enum TaskStatusEnum {
      */
     PENDING("等待中"),
     IN_PROGRESS("进行中"),
+    PAUSED("暂停中"),
     COMPLETED("已完成"),
     FAILED("失败");
 

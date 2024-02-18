@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,12 +28,12 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
     List<TaskQueue> findTaskQueuesByCustomQuery(@Param("taskType") TaskTypeEnum taskType, @Param("userId") String userId, @Param("statuses") List<TaskStatusEnum> statuses);
 
     /**
-     * 檢查目前是否有某狀態的任務存在
+     * 檢查目前是否有某狀態及某登入需求的任務存在
      *
      * @return boolean
      */
-    @Query("SELECT COUNT(t) > 0 FROM TaskQueue t WHERE t.status = :status")
-    boolean existsInProgressTasks(@Param("status") TaskStatusEnum status);
+    @Query("SELECT COUNT(t) > 0 FROM TaskQueue t WHERE t.status = :status AND t.needLoginIg = :needLoginIg")
+    boolean existsInProgressTasks(@Param("status") TaskStatusEnum status, @Param("needLoginIg") boolean needLoginIg);
 
     /**
      * 依據任務狀態及提交時間排序，查詢最早提交的一筆任務序列
@@ -40,5 +41,21 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
      * @param status 任務狀態
      * @return 任務序列
      */
-    Optional<TaskQueue> findFirstByStatusOrderBySubmitTimeDesc(TaskStatusEnum status);
+    Optional<TaskQueue> findFirstByStatusAndNeedLoginIgOrderBySubmitTimeDesc(TaskStatusEnum status, boolean needLoginIg);
+
+    /**
+     * 依據任務狀態查詢任務序列
+     *
+     * @param status 任務狀態
+     * @return 任務序列集合
+     */
+    List<TaskQueue> findTaskQueuesByStatus(TaskStatusEnum status);
+
+    /**
+     * 依據任務ID查詢任務序列
+     *
+     * @param taskId    任務ID
+     * @return boolean
+     */
+    Optional<TaskQueue> findById(BigInteger taskId);
 }

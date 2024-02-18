@@ -28,7 +28,7 @@ public class Followers {
     private String igUserName;
 
     @Column(name = "follower_pk")
-    private int followerPk;
+    private Long followerPk;
 
     @Column(name = "follower_user_name")
     private String followerUserName;

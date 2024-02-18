@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.dao.LoginAccountDao;
 import org.example.entity.LoginAccount;
 import org.example.service.LoginService;
@@ -27,5 +28,10 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public List<LoginAccount> findAll() {
         return loginAccountDao.findAll();
+    }
+
+    @Override
+    public Optional<LoginAccount> findLoginAccountByStatus(LoginAccountStatusEnum status) {
+        return loginAccountDao.findLoginAccountByStatus(status);
     }
 }

@@ -4,6 +4,8 @@ import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.entity.TaskQueue;
 
+import java.math.BigInteger;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -15,8 +17,18 @@ public interface TaskQueueService extends BaseService<TaskQueue> {
 
     Optional<TaskQueue> createAndSaveTaskQueue(String username, TaskTypeEnum taskType, TaskStatusEnum status);
 
-    boolean existsInProgressTasks(TaskStatusEnum status);
+    boolean checkTasksByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg);
 
-    Optional<TaskQueue> findFirstTaskQueueByStatus(TaskStatusEnum status);
+    Optional<TaskQueue> findFirstTaskQueueByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg);
 
+    List<TaskQueue> findTasksByStatus(TaskStatusEnum status);
+
+    /**
+     * 更新任務狀態(採用樂觀鎖)
+     *
+     * @param taskId    任務ID
+     * @param newStatus 新狀態
+     * @return boolean
+     */
+    TaskQueue updateTaskStatus(BigInteger taskId, TaskStatusEnum newStatus);
 }

@@ -13,6 +13,7 @@ public enum LoginAccountStatusEnum {
      */
     NORMAL("正常"),
     EXHAUSTED_TODAY("今日登入次數已用畢"),
+    DEVIANT("異常"),
     BLOCKED("無法正常登入");
 
     private final String description;
