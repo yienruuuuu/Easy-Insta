@@ -7,6 +7,7 @@ import org.example.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,5 +34,10 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public Optional<LoginAccount> findLoginAccountByStatus(LoginAccountStatusEnum status) {
         return loginAccountDao.findLoginAccountByStatus(status);
+    }
+
+    @Override
+    public int updateExhaustedAccounts(LocalDateTime thresholdTime, LoginAccountStatusEnum newStatus, LoginAccountStatusEnum oldStatus) {
+        return loginAccountDao.updateStatusForExhaustedAccountsBefore(thresholdTime, newStatus, oldStatus);
     }
 }

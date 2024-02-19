@@ -35,23 +35,21 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
     public void executeGetFollowerTask(TaskQueue task) {
         log.info("開始執行任務: {}", task);
         String maxId = task.getNextIdForSearch() == null ? null : task.getNextIdForSearch();
-        loginAndCheckResult(getLoginAccount(), task);
+        LoginAccount loginAccount = getLoginAccount();
+        loginAndCheckResult(loginAccount, task);
 
         boolean result = instagramService.searchTargetUserFollowersAndSave(task, maxId);
         if (!result) {
-            log.error("取得追蹤者失敗，任務終止: {}", task);
+            log.error("取得追蹤者失敗，任務終止: {} ,並已暫停掃描task_queue排程", task);
             stopTasks();
-            return;
-        }
-
-        if (task.getNextIdForSearch() == null) {
+        } else if (task.getNextIdForSearch() == null) {
             task.setStatus(TaskStatusEnum.COMPLETED);
             task.setEndTime(LocalDateTime.now());
         } else {
             task.setStatus(TaskStatusEnum.PAUSED);
         }
         taskQueueService.save(task);
-        log.info("任務完成:{}", task);
+        log.info("任務已儲存:{}", task);
     }
 
     //private
@@ -76,9 +74,11 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
         boolean loginResult = instagramService.login(loginAccount.getAccount(), loginAccount.getPassword());
         if (!loginResult) {
             loginAccount.setStatus(LoginAccountStatusEnum.DEVIANT);
-            loginAccount.setStatusRemark(String.valueOf(LocalDateTime.now()));
             log.info("登入失敗，任務終止: {}, 帳號:{}", task, loginAccount);
-            loginService.save(loginAccount);
+        } else {
+            loginAccount.setStatus(LoginAccountStatusEnum.EXHAUSTED);
         }
+        loginAccount.setModifyTime((LocalDateTime.now()));
+        loginService.save(loginAccount);
     }
 }

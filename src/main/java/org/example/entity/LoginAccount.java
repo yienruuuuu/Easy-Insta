@@ -5,6 +5,7 @@ import lombok.*;
 import org.example.bean.enumtype.LoginAccountStatusEnum;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 /**
  * @author Eric.Lee
@@ -45,4 +46,7 @@ public class LoginAccount {
 
     @Column(name = "backup_email")
     private String backupEmail;
+
+    @Column(name = "modify_time")
+    private LocalDateTime modifyTime;
 }

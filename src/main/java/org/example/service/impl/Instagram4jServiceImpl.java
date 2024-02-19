@@ -174,7 +174,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                 maxIdRef.set(nextMaxId);
 
                 if (count >= 200) {
-                    log.info("達到200个追蹤者資料，跳出循環");
+                    log.info("達到200个追蹤者資料，跳出循環 count:{}", count);
                     break;
                 }
                 //請求間暫停五秒

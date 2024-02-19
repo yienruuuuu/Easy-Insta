@@ -1,5 +1,6 @@
 package org.example.dao.Impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.dao.CustomFollowersRepository;
 import org.example.entity.Followers;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.util.List;
  * @author Eric.Lee
  * Date:2024/2/18
  */
+@Slf4j
 @Repository
 public class CustomFollowersRepositoryImpl implements CustomFollowersRepository {
     @Autowired
@@ -23,7 +25,7 @@ public class CustomFollowersRepositoryImpl implements CustomFollowersRepository 
     @Override
     public void batchInsertOrUpdate(List<Followers> followersList) {
         String sql = "INSERT IGNORE INTO followers (ig_user_name, follower_pk, follower_user_name, follower_full_name) VALUES (?, ?, ?, ?)";
-        jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+        int[] updateCounts = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 Followers follower = followersList.get(i);
@@ -38,5 +40,13 @@ public class CustomFollowersRepositoryImpl implements CustomFollowersRepository 
                 return followersList.size();
             }
         });
+        // 計算實際寫入的記錄數
+        int actualInsertCount = 0;
+        for (int count : updateCounts) {
+            if (count > 0) {
+                actualInsertCount++;
+            }
+        }
+        log.info("實際寫入的記錄數: {}", actualInsertCount);
     }
 }

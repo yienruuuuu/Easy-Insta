@@ -12,7 +12,7 @@ public enum LoginAccountStatusEnum {
      * 可供登入之帳號狀態
      */
     NORMAL("正常"),
-    EXHAUSTED_TODAY("今日登入次數已用畢"),
+    EXHAUSTED("暫時無法使用"),
     DEVIANT("異常"),
     BLOCKED("無法正常登入");
 
