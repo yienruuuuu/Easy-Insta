@@ -16,20 +16,22 @@ import java.time.LocalDateTime;
  */
 @Slf4j
 @Service
-public class checkLoginAccount {
+public class CheckLoginAccount {
     @Autowired
     private LoginService loginService;
 
     @Value("${exhausted.account.resurrection.coldtime:2}")
     private int accountColdtime;
 
-    // 每小時執行一次
-    @Scheduled(fixedDelayString = "${taskQueue.checkDelay:10000}")
+    // 每小時和半小時執行一次，例如 01:00, 01:30, 02:00, 02:30...
+    @Scheduled(cron = "0 0/30 * * * ?")
     public void updateExhaustedAccounts() {
         log.info("開始檢查並更新登入帳號狀態");
-        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(accountColdtime);
         // 呼叫service層方法來更新狀態
-        int updatedCount = loginService.updateExhaustedAccounts(oneHourAgo, LoginAccountStatusEnum.NORMAL, LoginAccountStatusEnum.EXHAUSTED);
+        int updatedCount = loginService.updateExhaustedAccounts(
+                LocalDateTime.now().minusHours(accountColdtime),
+                LoginAccountStatusEnum.NORMAL,
+                LoginAccountStatusEnum.EXHAUSTED);
         log.info("已更新 {} 個登入帳號狀態為 NORMAL", updatedCount);
     }
 }
