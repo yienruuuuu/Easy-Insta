@@ -3,6 +3,8 @@ package org.example.task;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.entity.TaskQueue;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.InstagramService;
 import org.example.service.LoginService;
 import org.example.service.TaskQueueService;
@@ -36,7 +38,15 @@ public class CheckTaskQueue extends BaseQueue {
         if (!checkTaskEnabled()) return;
         if (isInProgressTaskExists()) return;
 
-        processTasksByStatus(Arrays.asList(TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING));
+        try {
+            TaskQueue task = getTask(Arrays.asList(TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING));
+            updateAndExecuteTask(task);
+        } catch (ApiException e) {
+            log.info("檢查任務序列發生預期事件 {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("檢查任務序列發生特殊錯誤", e);
+            stopBaseQueue();
+        }
         log.info("檢查任務序列結束");
     }
 
@@ -60,17 +70,15 @@ public class CheckTaskQueue extends BaseQueue {
      *
      * @param statusList 任務狀態列表
      */
-    private void processTasksByStatus(List<TaskStatusEnum> statusList) {
+    private TaskQueue getTask(List<TaskStatusEnum> statusList) {
         for (TaskStatusEnum status : statusList) {
-            Optional<TaskQueue> task = taskQueueService.findFirstTaskQueueByStatusAndNeedLogin(status, true);
-            if (task.isEmpty()) {
-                log.info("沒有需要登入且處於{}狀態的任務", status);
-                continue;
+            Optional<TaskQueue> taskOpt = taskQueueService.findFirstTaskQueueByStatusAndNeedLogin(status, true);
+            if (taskOpt.isPresent()) {
+                log.info("發現需要登入且處於{}狀態的任務: {}", status, taskOpt);
+                return taskOpt.get();
             }
-            log.info("發現需要登入且處於{}狀態的任務: {}", status, task.get());
-            updateAndExecuteTask(task.get());
-            break;
         }
+        throw new ApiException(SysCode.NO_TASKS_TO_PERFORM, "沒有需要執行的任務");
     }
 
     /**
@@ -79,7 +87,9 @@ public class CheckTaskQueue extends BaseQueue {
      * @param taskQueue 任務
      */
     private void updateAndExecuteTask(TaskQueue taskQueue) {
+        // 更新任務狀態為IN_PROGRESS
         TaskQueue latestTaskQueue = taskQueueService.updateTaskStatus(taskQueue.getId(), TaskStatusEnum.IN_PROGRESS);
+        // 執行任務
         taskExecutionService.executeGetFollowerTask(latestTaskQueue);
     }
 

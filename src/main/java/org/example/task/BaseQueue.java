@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class BaseQueue {
     private volatile boolean enableTask = true;
 
-    public void stopTasks() {
+    public void stopBaseQueue() {
         this.enableTask = false;
     }
 

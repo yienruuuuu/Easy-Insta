@@ -2,7 +2,9 @@ package org.example.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.example.bean.enumtype.LoginAccountStatusEnum;
+import org.example.bean.enumtype.TaskStatusEnum;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -18,7 +20,7 @@ import java.time.LocalDateTime;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Builder
+@Slf4j
 public class LoginAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,4 +51,25 @@ public class LoginAccount {
 
     @Column(name = "modify_time")
     private LocalDateTime modifyTime;
+
+    /**
+     * 標記帳號異常
+     *
+     * @param errorMessage 失敗原因描述
+     */
+    public void loginAccountDeviant(String errorMessage) {
+        this.status = LoginAccountStatusEnum.DEVIANT;
+        this.statusRemark = errorMessage;
+        this.modifyTime = LocalDateTime.now();
+    }
+
+    /**
+     * 標記帳號異常
+     *
+     */
+    public void loginAccountExhausted() {
+        this.status = LoginAccountStatusEnum.EXHAUSTED;
+        this.modifyTime = LocalDateTime.now();
+        log.info("帳號已標記為EXHAUSTED, 帳號:{}", this.account);
+    }
 }

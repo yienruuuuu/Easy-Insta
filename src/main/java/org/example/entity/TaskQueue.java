@@ -51,6 +51,9 @@ public class TaskQueue {
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
+    @Column(name = "modify_time")
+    private LocalDateTime modifyTime;
+
     @Column(name = "result")
     private String result;
 
@@ -63,4 +66,32 @@ public class TaskQueue {
     @Version
     @Column(name = "version")
     private Long version;
+
+    /**
+     * 標記任務為已完成。
+     */
+    public void completeTask() {
+        this.status = TaskStatusEnum.COMPLETED;
+        this.endTime = LocalDateTime.now(); // 設定任務結束時間為目前時間
+    }
+
+    /**
+     * 標記任務為暫停。
+     * 暫停狀態可以用來表示任務需要在將來某個時間點被重新啟動繼續執行。
+     */
+    public void pauseTask() {
+        this.status = TaskStatusEnum.PAUSED;
+        this.modifyTime = LocalDateTime.now(); // 設定任務修改時間為目前時間
+    }
+
+    /**
+     * 標記任務為失敗。
+     *
+     * @param errorMessage 失敗原因描述
+     */
+    public void failTask(String errorMessage) {
+        this.status = TaskStatusEnum.FAILED;
+        this.endTime = LocalDateTime.now(); // 設定任務結束時間為目前時間
+        this.errorMessage = errorMessage; // 設定錯誤訊息
+    }
 }

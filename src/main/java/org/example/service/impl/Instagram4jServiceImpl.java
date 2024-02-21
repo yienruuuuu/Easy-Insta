@@ -16,6 +16,7 @@ import org.example.entity.IgUser;
 import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
+import org.example.exception.TaskExecutionException;
 import org.example.service.FollowersService;
 import org.example.service.InstagramService;
 import org.jetbrains.annotations.NotNull;
@@ -42,18 +43,16 @@ public class Instagram4jServiceImpl implements InstagramService {
     private IGClient client;
 
     @Override
-    public boolean login(String account, String password) {
+    public void login(String account, String password) {
         try {
             client = IGClient.builder()
                     .username(account)
                     .password(password)
                     .login();
             log.info("登入成功, 帳號:{}", account);
-            return true;
         } catch (Exception e) {
-            log.error("登入異常", e);
+            throw new TaskExecutionException("登入失敗");
         }
-        return false;
     }
 
     @Override
@@ -74,7 +73,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     @Override
-    public boolean searchTargetUserFollowersAndSave(TaskQueue task, String maxId) {
+    public void searchTargetUserFollowersAndSave(TaskQueue task, String maxId) {
         try {
             // 取得追蹤者
             FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(client, task.getUserId(), maxId);
@@ -83,17 +82,9 @@ public class Instagram4jServiceImpl implements InstagramService {
             // 保存追蹤者
             followersService.batchInsertFollowers(followersList);
             task.setNextIdForSearch(followersObjFromIg.getMaxId());
-            return true;
-        } catch (ApiException e) {
-            log.error("取得追蹤者失敗ApiException", e);
-            task.setStatus(TaskStatusEnum.FAILED);
-            task.setErrorMessage(e.getMessage());
         } catch (Exception e) {
-            log.error("取得追蹤者失敗Exception", e);
-            task.setStatus(TaskStatusEnum.FAILED);
-            task.setErrorMessage(e.getMessage());
+            throw new TaskExecutionException("获取追踪者失败", e);
         }
-        return false;
     }
 
     @Override
