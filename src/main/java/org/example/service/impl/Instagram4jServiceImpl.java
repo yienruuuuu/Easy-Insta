@@ -10,7 +10,6 @@ import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.dto.FollowersAndMaxIdDTO;
-import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.entity.Followers;
 import org.example.entity.IgUser;
 import org.example.entity.TaskQueue;
@@ -135,9 +134,10 @@ public class Instagram4jServiceImpl implements InstagramService {
      * @param maxId    用於分頁的最大 ID
      * @return 一個包含所有追蹤者 Profile 物件的列表
      */
-    public static FollowersAndMaxIdDTO getFollowersByUserNameAndMaxId(IGClient client, String username, String maxId) {
+    private FollowersAndMaxIdDTO getFollowersByUserNameAndMaxId(IGClient client, String username, String maxId) {
         List<Profile> followers = Lists.newArrayList();
         AtomicReference<String> maxIdRef = new AtomicReference<>(maxId);
+        FeedUsersResponse response = null;
         // 計數器，用於追蹤請求到的資料數量
         int count = 0;
 
@@ -147,9 +147,8 @@ public class Instagram4jServiceImpl implements InstagramService {
 
             while (true) {
                 // 每次循環使用最新的max Id建立請求
-                FeedUsersResponse response = client.sendRequest(
-                        new FriendshipsFeedsRequest(userId, FriendshipsFeedsRequest.FriendshipsFeeds.FOLLOWERS, maxIdRef.get())
-                ).join();
+                response = client.sendRequest(
+                        new FriendshipsFeedsRequest(userId, FriendshipsFeedsRequest.FriendshipsFeeds.FOLLOWERS, maxIdRef.get())).join();
 
                 List<Profile> users = response.getUsers();
                 followers.addAll(users);
@@ -177,6 +176,10 @@ public class Instagram4jServiceImpl implements InstagramService {
                     break;
                 }
             }
+        } catch (CompletionException e) {
+            log.info("Error occurred while getting followers for user ,response = {}", response);
+            log.error("獲取追蹤者失敗: " + e.getMessage(), e);
+            throw new ApiException(SysCode.IG_GET_FOLLOWERS_FAILED, "获取追踪者失败: " + e.getMessage());
         } catch (Exception e) {
             log.error("取得追蹤者失敗", e);
             throw new ApiException(SysCode.IG_GET_FOLLOWERS_FAILED, "取得追蹤者失敗");

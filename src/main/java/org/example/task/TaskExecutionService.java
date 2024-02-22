@@ -1,5 +1,6 @@
 package org.example.task;
 
+import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
 
 /**
@@ -12,5 +13,5 @@ public interface TaskExecutionService {
      *
      * @param task 任務
      */
-    void executeGetFollowerTask(TaskQueue task);
+    void executeGetFollowerTask(TaskQueue task , LoginAccount loginAccount);
 }

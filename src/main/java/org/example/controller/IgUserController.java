@@ -70,10 +70,10 @@ public class IgUserController extends BaseController {
         }
     }
 
-    //TODO: 這個方法應該是用來查詢用戶的所有貼文，但是實際上是空的
     @Operation(summary = "以用戶名查詢所有發文", description = "查詢用戶發文(簡化版)")
     @GetMapping(value = "/post/{username}")
     public void getPostsByUserName(@PathVariable String username) {
+        //TODO: 這個方法應該是用來查詢用戶的所有貼文，但是實際上是空的
         instagramService.searchUserPosts(username);
     }
 

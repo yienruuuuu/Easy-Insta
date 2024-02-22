@@ -1,7 +1,9 @@
 package org.example.task;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.bean.enumtype.TaskStatusEnum;
+import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
@@ -39,8 +41,9 @@ public class CheckTaskQueue extends BaseQueue {
         if (isInProgressTaskExists()) return;
 
         try {
+            LoginAccount loginAccount = getLoginAccount();
             TaskQueue task = getTask(Arrays.asList(TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING));
-            updateAndExecuteTask(task);
+            updateAndExecuteTask(task, loginAccount);
         } catch (ApiException e) {
             log.info("檢查任務序列發生預期事件 {}", e.getMessage());
         } catch (Exception e) {
@@ -66,19 +69,17 @@ public class CheckTaskQueue extends BaseQueue {
     }
 
     /**
-     * 根據任務狀態List處理任務
+     * 根據任務狀態列表statusList查詢須執行的任務是否存在
      *
      * @param statusList 任務狀態列表
      */
     private TaskQueue getTask(List<TaskStatusEnum> statusList) {
-        for (TaskStatusEnum status : statusList) {
-            Optional<TaskQueue> taskOpt = taskQueueService.findFirstTaskQueueByStatusAndNeedLogin(status, true);
-            if (taskOpt.isPresent()) {
-                log.info("發現需要登入且處於{}狀態的任務: {}", status, taskOpt);
-                return taskOpt.get();
-            }
-        }
-        throw new ApiException(SysCode.NO_TASKS_TO_PERFORM, "沒有需要執行的任務");
+        return statusList.stream()
+                .map(status -> taskQueueService.findFirstTaskQueueByStatusAndNeedLogin(status, true))
+                .filter(Optional::isPresent)
+                .findFirst()
+                .orElseThrow(() -> new ApiException(SysCode.NO_TASKS_TO_PERFORM, "沒有需要執行的任務"))
+                .get();
     }
 
     /**
@@ -86,11 +87,21 @@ public class CheckTaskQueue extends BaseQueue {
      *
      * @param taskQueue 任務
      */
-    private void updateAndExecuteTask(TaskQueue taskQueue) {
+    private void updateAndExecuteTask(TaskQueue taskQueue , LoginAccount loginAccount) {
         // 更新任務狀態為IN_PROGRESS
         TaskQueue latestTaskQueue = taskQueueService.updateTaskStatus(taskQueue.getId(), TaskStatusEnum.IN_PROGRESS);
         // 執行任務
-        taskExecutionService.executeGetFollowerTask(latestTaskQueue);
+        taskExecutionService.executeGetFollowerTask(latestTaskQueue , loginAccount);
+    }
+
+    /**
+     * 從資料庫中取得一個可用的登入帳號
+     *
+     * @return 可用的登入帳號
+     */
+    private LoginAccount getLoginAccount() {
+        return loginService.findFirstLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
+                .orElseThrow(() -> new ApiException(SysCode.NO_AVAILABLE_LOGIN_ACCOUNT, "沒有可用的登入帳號"));
     }
 
 }

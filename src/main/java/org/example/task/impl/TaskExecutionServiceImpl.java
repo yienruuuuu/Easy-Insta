@@ -1,11 +1,8 @@
 package org.example.task.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
-import org.example.exception.ApiException;
-import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
 import org.example.service.InstagramService;
 import org.example.service.LoginService;
@@ -32,8 +29,7 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
 
     @Override
     @Transactional
-    public void executeGetFollowerTask(TaskQueue task) {
-        LoginAccount loginAccount = getLoginAccount();
+    public void executeGetFollowerTask(TaskQueue task, LoginAccount loginAccount) {
         try {
             log.info("開始執行任務:{} ,帳號:{}", task.getTaskType(), loginAccount);
             loginAndUpdateAccountStatus(loginAccount);
@@ -76,16 +72,6 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
         }
         loginAccount.loginAccountExhausted();
         loginService.save(loginAccount);
-    }
-
-    /**
-     * 從資料庫中取得一個可用的登入帳號
-     *
-     * @return 可用的登入帳號
-     */
-    private LoginAccount getLoginAccount() {
-        return loginService.findLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
-                .orElseThrow(() -> new ApiException(SysCode.NO_AVAILABLE_LOGIN_ACCOUNT, "沒有可用的登入帳號"));
     }
 
     /**
