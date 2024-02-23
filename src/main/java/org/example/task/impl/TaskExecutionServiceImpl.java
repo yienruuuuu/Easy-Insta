@@ -1,11 +1,8 @@
 package org.example.task.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
-import org.example.exception.ApiException;
-import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
 import org.example.service.*;
 import org.example.task.BaseQueue;
@@ -35,8 +32,7 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
 
     @Override
     @Transactional
-    public void executeGetFollowerTask(TaskQueue task) {
-        LoginAccount loginAccount = getLoginAccount();
+    public void executeGetFollowerTask(TaskQueue task, LoginAccount loginAccount) {
         try {
             log.info("開始執行任務:{} ,帳號:{}", task.getTaskType(), loginAccount);
             //登入、檢查結果並更新登入帳號狀態
