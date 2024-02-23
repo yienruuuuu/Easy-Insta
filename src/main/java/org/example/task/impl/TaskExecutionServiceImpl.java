@@ -112,16 +112,6 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
     }
 
     /**
-     * 從資料庫中取得一個可用的登入帳號
-     *
-     * @return 可用的登入帳號
-     */
-    private LoginAccount getLoginAccount() {
-        return loginService.findFirstLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
-                .orElseThrow(() -> new ApiException(SysCode.NO_AVAILABLE_LOGIN_ACCOUNT, "沒有可用的登入帳號"));
-    }
-
-    /**
      * 處理任務失敗
      */
     private void handleTaskFailure(TaskQueue task, LoginAccount loginAccount, TaskExecutionException e) {
