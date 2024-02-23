@@ -143,11 +143,15 @@ public class Instagram4jServiceImpl implements InstagramService {
         AtomicReference<String> maxIdRef = new AtomicReference<>(maxId);
         // 計數器，用於追蹤請求到的資料數量
         int count = 0;
+        // 是否第一次迭代
+        boolean isFirstIteration = true;
 
         try {
             // 向IG取得用戶PK
             Long userPkFromIg = getUserIdByUsername(client, username);
-            while (shouldContinueFetching(count, maxIdRef.get())) {
+            while (shouldContinueFetching(count, maxIdRef.get(), isFirstIteration)) {
+                // 之后的迭代不再是第一次
+                isFirstIteration = false;
                 // 每次循環使用最新的max Id建立請求
                 FeedUsersResponse response = fetchFollowers(client, userPkFromIg, maxIdRef.get());
                 // 處理請求結果
@@ -192,7 +196,8 @@ public class Instagram4jServiceImpl implements InstagramService {
         }
     }
 
-    private boolean shouldContinueFetching(int count, String maxId) {
-        return count <= MAX_FOLLOWERS_PER_REQUEST && maxId != null;
+    private boolean shouldContinueFetching(int count, String maxId, boolean isFirstIteration) {
+        //條件: 計數器小於規定 && (maxId不為空或是第一次迭代)
+        return count <= MAX_FOLLOWERS_PER_REQUEST && (maxId != null || isFirstIteration);
     }
 }
