@@ -55,6 +55,11 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
         instagramService.searchTargetUserFollowersAndSave(task, task.getNextIdForSearch());
     }
 
+    /**
+     * 結束任務判斷
+     *
+     * @param task 任務
+     */
     private void finalizeTask(TaskQueue task) {
         if (task.getNextIdForSearch() == null) {
             task.completeTask();
@@ -84,7 +89,7 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
      * @return 可用的登入帳號
      */
     private LoginAccount getLoginAccount() {
-        return loginService.findLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
+        return loginService.findFirstLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
                 .orElseThrow(() -> new ApiException(SysCode.NO_AVAILABLE_LOGIN_ACCOUNT, "沒有可用的登入帳號"));
     }
 

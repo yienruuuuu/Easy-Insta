@@ -32,8 +32,8 @@ public class LoginServiceImpl implements LoginService {
     }
 
     @Override
-    public Optional<LoginAccount> findLoginAccountByStatus(LoginAccountStatusEnum status) {
-        return loginAccountDao.findLoginAccountByStatus(status);
+    public Optional<LoginAccount> findFirstLoginAccountByStatus(LoginAccountStatusEnum status) {
+        return loginAccountDao.findFirstByByStatus(status);
     }
 
     @Override

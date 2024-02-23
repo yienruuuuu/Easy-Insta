@@ -13,7 +13,7 @@ public interface LoginService extends BaseService<LoginAccount> {
      *
      * @return 可用的登入帳號
      */
-    Optional<LoginAccount> findLoginAccountByStatus(LoginAccountStatusEnum status);
+    Optional<LoginAccount> findFirstLoginAccountByStatus(LoginAccountStatusEnum status);
 
     /**
      * 更新所有在指定時間之前的狀態為oldStatus的帳號為newStatus
