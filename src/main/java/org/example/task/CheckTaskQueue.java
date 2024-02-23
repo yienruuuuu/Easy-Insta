@@ -82,7 +82,7 @@ public class CheckTaskQueue extends BaseQueue {
     }
 
     /**
-     * 更新任務狀態並執行任務
+     * 先更新任務狀態，再執行任務
      *
      * @param taskQueue 任務
      */

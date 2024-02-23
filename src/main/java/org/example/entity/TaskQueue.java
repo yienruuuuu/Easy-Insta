@@ -28,8 +28,11 @@ public class TaskQueue {
     @Column(name = "id", columnDefinition = "serial")
     private BigInteger id;
 
-    @Column(name = "user_id")
-    private String userId;
+    /**
+     * 任務查詢對象的使用者名稱
+     */
+    @Column(name = "user_name")
+    private String userName;
 
     @Column(name = "task_type")
     @Enumerated(EnumType.STRING)
@@ -66,6 +69,14 @@ public class TaskQueue {
     @Version
     @Column(name = "version")
     private Long version;
+
+    /**
+     * 標記任務為代辦中。
+     */
+    public void pendingTask() {
+        this.status = TaskStatusEnum.PENDING;
+        this.modifyTime = LocalDateTime.now(); // 設定任務修改時間為目前時間
+    }
 
     /**
      * 標記任務為已完成。

@@ -3,14 +3,9 @@ package org.example.service.impl;
 import org.example.dao.FollowersDao;
 import org.example.entity.Followers;
 import org.example.service.FollowersService;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +22,11 @@ public class FollowersServiceImpl implements FollowersService {
     @Override
     public void batchInsertFollowers(List<Followers> followersList) {
         followersDao.batchInsertOrUpdate(followersList);
+    }
+
+    @Override
+    public int countFollowersByIgUserName(String igUserName) {
+        return followersDao.countByIgUserName(igUserName);
     }
 
     @Override

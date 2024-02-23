@@ -10,7 +10,6 @@ import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.dto.FollowersAndMaxIdDTO;
-import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.entity.Followers;
 import org.example.entity.IgUser;
 import org.example.entity.TaskQueue;
@@ -76,9 +75,9 @@ public class Instagram4jServiceImpl implements InstagramService {
     public void searchTargetUserFollowersAndSave(TaskQueue task, String maxId) {
         try {
             // 取得追蹤者
-            FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(client, task.getUserId(), maxId);
+            FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(client, task.getUserName(), maxId);
             // 將 Profile 物件轉換為 Followers 實體
-            List<Followers> followersList = convertProfilesToFollowerEntities(task.getUserId(), followersObjFromIg.getFollowers());
+            List<Followers> followersList = convertProfilesToFollowerEntities(task.getUserName(), followersObjFromIg.getFollowers());
             // 保存追蹤者
             followersService.batchInsertFollowers(followersList);
             task.setNextIdForSearch(followersObjFromIg.getMaxId());

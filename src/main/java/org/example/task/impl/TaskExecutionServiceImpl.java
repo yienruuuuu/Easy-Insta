@@ -7,11 +7,10 @@ import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
-import org.example.service.InstagramService;
-import org.example.service.LoginService;
-import org.example.service.TaskQueueService;
+import org.example.service.*;
 import org.example.task.BaseQueue;
 import org.example.task.TaskExecutionService;
+import org.example.utils.FollowerCrawlingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +28,10 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
     private InstagramService instagramService;
     @Autowired
     private LoginService loginService;
+    @Autowired
+    FollowersService followersService;
+    @Autowired
+    IgUserService igUserService;
 
     @Override
     @Transactional
@@ -36,13 +39,17 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
         LoginAccount loginAccount = getLoginAccount();
         try {
             log.info("開始執行任務:{} ,帳號:{}", task.getTaskType(), loginAccount);
+            //登入、檢查結果並更新登入帳號狀態
             loginAndUpdateAccountStatus(loginAccount);
+            //執行爬蟲任務
             performTaskWithAccount(task);
+            //結束任務，依條件判斷更新任務狀態
             finalizeTask(task);
         } catch (TaskExecutionException e) {
             handleTaskFailure(task, loginAccount, e);
         }
     }
+
 
     //private
 
@@ -61,13 +68,37 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
      * @param task 任務
      */
     private void finalizeTask(TaskQueue task) {
-        if (task.getNextIdForSearch() == null) {
-            task.completeTask();
-        } else {
-            task.pauseTask();
-        }
+        updateTaskStatusBasedOnCondition(task);
         taskQueueService.save(task);
         log.info("任务已保存:{}", task);
+    }
+
+    /**
+     * 根據條件更新任務狀態
+     *
+     * @param task 任務
+     */
+    private void updateTaskStatusBasedOnCondition(TaskQueue task) {
+        if (task.getNextIdForSearch() == null && checkFollowerAmount(task)) {
+            task.completeTask();
+        } else if (task.getNextIdForSearch() != null) {
+            task.pauseTask();
+        } else {
+            task.pendingTask();
+        }
+    }
+
+    /**
+     * 檢查爬取數量是否已達到結束排成標準
+     *
+     * @param task 任務
+     * @return 是否已達到結束任務的標準
+     */
+    private boolean checkFollowerAmount(TaskQueue task) {
+        int crawlerAmount = followersService.countFollowersByIgUserName(task.getUserName());
+        int dbAmount = igUserService.findUserByIgUserName(task.getUserName()).getFollowerCount();
+        log.info("任務:{} ,取追蹤者數量:{},資料庫追蹤者數量:{}", task, dbAmount, crawlerAmount);
+        return FollowerCrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount);
     }
 
     /**
@@ -79,6 +110,7 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
         } catch (TaskExecutionException e) {
             handleLoginFailure(loginAccount, e);
         }
+        //更新登入帳號狀態為已使用
         loginAccount.loginAccountExhausted();
         loginService.save(loginAccount);
     }
