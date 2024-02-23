@@ -20,12 +20,12 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
      * 依據任務類型、用戶ID、任務狀態查詢任務序列
      *
      * @param taskType 任務類型
-     * @param userId   對象用戶Id
+     * @param userName   對象用戶Id
      * @param statuses 任務狀態集合
      * @return 任務序列集合
      */
-    @Query("SELECT t FROM TaskQueue t WHERE t.taskType = :taskType AND t.userId = :userId AND t.status IN :statuses ORDER BY t.submitTime DESC")
-    List<TaskQueue> findTaskQueuesByCustomQuery(@Param("taskType") TaskTypeEnum taskType, @Param("userId") String userId, @Param("statuses") List<TaskStatusEnum> statuses);
+    @Query("SELECT t FROM TaskQueue t WHERE t.taskType = :taskType AND t.userName = :userName AND t.status IN :statuses ORDER BY t.submitTime DESC")
+    List<TaskQueue> findTaskQueuesByCustomQuery(@Param("taskType") TaskTypeEnum taskType, @Param("userName") String userName, @Param("statuses") List<TaskStatusEnum> statuses);
 
     /**
      * 檢查目前是否有某狀態及某登入需求的任務存在
@@ -54,7 +54,7 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
     /**
      * 依據任務ID查詢任務序列
      *
-     * @param taskId    任務ID
+     * @param taskId 任務ID
      * @return boolean
      */
     Optional<TaskQueue> findById(BigInteger taskId);

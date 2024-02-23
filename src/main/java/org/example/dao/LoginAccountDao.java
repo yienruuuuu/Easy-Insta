@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface LoginAccountDao extends JpaRepository<LoginAccount, Integer> {
-    Optional<LoginAccount> findFirstByByStatus(LoginAccountStatusEnum status);
+    Optional<LoginAccount> findFirstByStatus(LoginAccountStatusEnum status);
 
     /**
      * 更新所有在指定時間之前的狀態為oldStatus的帳號為newStatus

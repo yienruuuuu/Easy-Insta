@@ -18,6 +18,7 @@ import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
 import org.example.service.FollowersService;
 import org.example.service.InstagramService;
+import org.example.utils.BrightDataProxy;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,9 @@ public class Instagram4jServiceImpl implements InstagramService {
     FollowersService followersService;
 
     private IGClient client;
+    // 每次請求最大追蹤者數量
+    private static final int MAX_FOLLOWERS_PER_REQUEST = 200;
+
 
     @Override
     public void login(String account, String password) {
@@ -47,6 +51,7 @@ public class Instagram4jServiceImpl implements InstagramService {
             client = IGClient.builder()
                     .username(account)
                     .password(password)
+                    .client(BrightDataProxy.getBrightDataProxy())
                     .login();
             log.info("登入成功, 帳號:{}", account);
         } catch (Exception e) {
@@ -97,7 +102,6 @@ public class Instagram4jServiceImpl implements InstagramService {
     @NotNull
     private static IgUser getIgUser(Optional<IgUser> userOptional, User igUser) {
         IgUser userEntity = userOptional.orElse(new IgUser());
-
         // 设置或更新用户信息
         userEntity.setIgPk(igUser.getPk());
         userEntity.setUserName(igUser.getUsername());
@@ -127,63 +131,68 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     /**
-     * 获取指定用户的所有追踪者。
+     * 向ig爬取指定用户的所有追踪者。
      *
      * @param client   已登入的 IGClient 對象
      * @param username 要取得追蹤者的用戶名
      * @param maxId    用於分頁的最大 ID
      * @return 一個包含所有追蹤者 Profile 物件的列表
      */
-    public static FollowersAndMaxIdDTO getFollowersByUserNameAndMaxId(IGClient client, String username, String maxId) {
+    private FollowersAndMaxIdDTO getFollowersByUserNameAndMaxId(IGClient client, String username, String maxId) {
         List<Profile> followers = Lists.newArrayList();
         AtomicReference<String> maxIdRef = new AtomicReference<>(maxId);
         // 計數器，用於追蹤請求到的資料數量
         int count = 0;
 
         try {
-            UserAction userAction = client.actions().users().findByUsername(username).join();
-            Long userId = userAction.getUser().getPk();
-
-            while (true) {
+            // 向IG取得用戶PK
+            Long userPkFromIg = getUserIdByUsername(client, username);
+            while (shouldContinueFetching(count, maxIdRef.get())) {
                 // 每次循環使用最新的max Id建立請求
-                FeedUsersResponse response = client.sendRequest(
-                        new FriendshipsFeedsRequest(userId, FriendshipsFeedsRequest.FriendshipsFeeds.FOLLOWERS, maxIdRef.get())
-                ).join();
-
-                List<Profile> users = response.getUsers();
-                followers.addAll(users);
-                count += users.size();
+                FeedUsersResponse response = fetchFollowers(client, userPkFromIg, maxIdRef.get());
+                // 處理請求結果
+                processResponse(followers, response, maxIdRef);
+                // 更新計數器
+                count += response.getUsers().size();
                 log.info("目前查詢累計用戶數: " + count);
-
-                // 更新maxId以供下一次请求使用
-                String nextMaxId = response.getNext_max_id();
-                if (nextMaxId == null || nextMaxId.isEmpty()) {
-                    maxIdRef.set(null);
-                    break;
-                }
-                maxIdRef.set(nextMaxId);
-
-                if (count >= 200) {
-                    log.info("達到200个追蹤者資料，跳出循環 count:{}", count);
-                    break;
-                }
-                //請求間暫停五秒
-                try {
-                    TimeUnit.SECONDS.sleep(5);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.info("暂停被中断, 跳出循環");
-                    break;
-                }
+                //請求間暫停
+                pauseBetweenRequests();
             }
+            log.info("達到200个追蹤者資料，跳出循環 count:{}", count);
         } catch (Exception e) {
             log.error("取得追蹤者失敗", e);
             throw new ApiException(SysCode.IG_GET_FOLLOWERS_FAILED, "取得追蹤者失敗");
         }
-
         return FollowersAndMaxIdDTO.builder()
                 .followers(followers)
                 .maxId(maxIdRef.get())
                 .build();
+    }
+
+    private Long getUserIdByUsername(IGClient client, String username) {
+        return client.actions().users().findByUsername(username).join().getUser().getPk();
+    }
+
+    private FeedUsersResponse fetchFollowers(IGClient client, Long userId, String maxId) {
+        return client.sendRequest(new FriendshipsFeedsRequest(userId, FriendshipsFeedsRequest.FriendshipsFeeds.FOLLOWERS, maxId)).join();
+    }
+
+    private void processResponse(List<Profile> followers, FeedUsersResponse response, AtomicReference<String> maxIdRef) {
+        followers.addAll(response.getUsers());
+        String nextMaxId = response.getNext_max_id();
+        maxIdRef.set(nextMaxId);
+    }
+
+    private void pauseBetweenRequests() {
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.info("請求間暫停");
+        }
+    }
+
+    private boolean shouldContinueFetching(int count, String maxId) {
+        return count <= MAX_FOLLOWERS_PER_REQUEST && maxId != null;
     }
 }

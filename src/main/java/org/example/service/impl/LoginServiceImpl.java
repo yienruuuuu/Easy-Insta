@@ -33,7 +33,7 @@ public class LoginServiceImpl implements LoginService {
 
     @Override
     public Optional<LoginAccount> findFirstLoginAccountByStatus(LoginAccountStatusEnum status) {
-        return loginAccountDao.findFirstByByStatus(status);
+        return loginAccountDao.findFirstByStatus(status);
     }
 
     @Override
