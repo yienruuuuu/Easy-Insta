@@ -18,6 +18,7 @@ import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.FollowersService;
 import org.example.service.InstagramService;
+import org.example.utils.BrightDataProxy;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class Instagram4jServiceImpl implements InstagramService {
             client = IGClient.builder()
                     .username(account)
                     .password(password)
+                    .client(BrightDataProxy.getBrightDataProxy())
                     .login();
             log.info("登入成功, 帳號:{}", account);
             return true;
