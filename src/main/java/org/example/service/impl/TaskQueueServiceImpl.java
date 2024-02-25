@@ -35,7 +35,7 @@ public class TaskQueueServiceImpl implements TaskQueueService {
     @Override
     public Optional<TaskQueue> createAndSaveTaskQueue(String username, TaskTypeEnum taskType, TaskStatusEnum status) {
         TaskQueue newTask = TaskQueue.builder()
-                .userId(username)
+                .userName(username)
                 .taskType(taskType)
                 .status(status)
                 .submitTime(LocalDateTime.now())
