@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 
+
 import com.github.instagram4j.instagram4j.IGClient;
 import com.github.instagram4j.instagram4j.actions.users.UserAction;
 import com.github.instagram4j.instagram4j.models.user.Profile;

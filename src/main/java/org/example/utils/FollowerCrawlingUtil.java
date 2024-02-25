@@ -22,6 +22,6 @@ public class FollowerCrawlingUtil {
             throw new ApiException(SysCode.ACTUAL_COUNT_IS_ZERO);
         }
         double percentage = (double) amountFromCrawler / actualAmount;
-        return percentage >= 0.95;
+        return percentage >= 0.90;
     }
 }
