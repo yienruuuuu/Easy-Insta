@@ -14,7 +14,10 @@ import org.example.service.InstagramService;
 import org.example.service.LoginService;
 import org.example.service.TaskQueueService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
@@ -70,11 +73,23 @@ public class IgUserController extends BaseController {
         }
     }
 
-    @Operation(summary = "以用戶名查詢所有發文", description = "查詢用戶發文(簡化版)")
-    @GetMapping(value = "/post/{username}")
-    public void getPostsByUserName(@PathVariable String username) {
-        //TODO: 這個方法應該是用來查詢用戶的所有貼文，但是實際上是空的
-        instagramService.searchUserPosts(username);
+    @Operation(summary = "提交排程，安排任務")
+    @PostMapping(value = "/task/{taskEnum}/{username}")
+    public Object sendTask(@PathVariable String username, @PathVariable TaskTypeEnum taskEnum) {
+        // 檢查對於查詢對象的任務是否存在
+        boolean taskExists = taskQueueService.checkGetFollowersTaskQueueExist(username, taskEnum);
+        if (taskExists) {
+            log.info("用戶: {} 的 {} 任務已存在", taskEnum, username);
+            return new ApiResponse(SysCode.TASK_ALREADY_EXISTS.getCode(), SysCode.TASK_ALREADY_EXISTS.getMessage(), null);
+        }
+        // 保存任务並返回保存的任务
+        Optional<TaskQueue> savedTask = taskQueueService.createAndSaveTaskQueue(username, taskEnum, TaskStatusEnum.PENDING);
+        if (savedTask.isPresent()) {
+            log.info("username: {} 的 {} 任務創建成功", taskEnum, username);
+            return savedTask.get();
+        } else {
+            log.info("username: {}的 {} 任務建立失敗", taskEnum, username);
+            return new ApiResponse(SysCode.TASK_CREATION_FAILED.getCode(), SysCode.TASK_CREATION_FAILED.getMessage(), null);
+        }
     }
-
 }
