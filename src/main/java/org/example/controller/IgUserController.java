@@ -7,6 +7,7 @@ import org.example.bean.dto.ApiResponse;
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.entity.IgUser;
+import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
 import org.example.exception.SysCode;
 import org.example.service.IgUserService;
@@ -42,7 +43,8 @@ public class IgUserController extends BaseController {
     @Operation(summary = "以用戶名查詢用戶，並可控是否紀錄到資料庫")
     @PostMapping(value = "/search/{username}/{needToWriteToDb}")
     public IgUser getUserInfoByUserName(@PathVariable String username, @PathVariable boolean needToWriteToDb) {
-        IgUser igUser = instagramService.searchUser(username);
+        LoginAccount loginAccount = loginService.getLoginAccount();
+        IgUser igUser = instagramService.searchUser(username, loginAccount);
         // 檢查是否需要寫入資料庫,保存或更新使用者訊息
         if (needToWriteToDb) {
             igUserService.save(igUser);
@@ -53,29 +55,11 @@ public class IgUserController extends BaseController {
         return igUser;
     }
 
-    @Operation(summary = "提交排程，安排查詢某用戶下所有追隨者")
-    @PostMapping(value = "/task/followers/{username}")
-    public Object getFollowersByUserName(@PathVariable String username) {
-        // 檢查對於查詢對象的任務是否存在
-        boolean taskExists = taskQueueService.checkGetFollowersTaskQueueExist(username, TaskTypeEnum.GET_FOLLOWERS);
-        if (taskExists) {
-            log.info("用戶: {} 的追隨者任務已存在", username);
-            return new ApiResponse(SysCode.TASK_ALREADY_EXISTS.getCode(), SysCode.TASK_ALREADY_EXISTS.getMessage(), null);
-        }
-        // 保存任务並返回保存的任务
-        Optional<TaskQueue> savedTask = taskQueueService.createAndSaveTaskQueue(username, TaskTypeEnum.GET_FOLLOWERS, TaskStatusEnum.PENDING);
-        if (savedTask.isPresent()) {
-            log.info("username: {} 的追隨者查詢任務創建成功", username);
-            return savedTask.get();
-        } else {
-            log.info("username: {}的追隨者查詢任務建立失敗", username);
-            return new ApiResponse(SysCode.TASK_CREATION_FAILED.getCode(), SysCode.TASK_CREATION_FAILED.getMessage(), null);
-        }
-    }
-
     @Operation(summary = "提交排程，安排任務")
     @PostMapping(value = "/task/{taskEnum}/{username}")
     public Object sendTask(@PathVariable String username, @PathVariable TaskTypeEnum taskEnum) {
+        IgUser targetUser = igUserService.findUserByIgUserName(username);
+        log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
         // 檢查對於查詢對象的任務是否存在
         boolean taskExists = taskQueueService.checkGetFollowersTaskQueueExist(username, taskEnum);
         if (taskExists) {

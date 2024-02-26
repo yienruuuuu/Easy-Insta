@@ -3,7 +3,6 @@ package org.example.entity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import org.example.bean.enumtype.TaskStatusEnum;
-import org.example.bean.enumtype.TaskTypeEnum;
 
 import javax.persistence.*;
 import java.math.BigInteger;
@@ -34,12 +33,9 @@ public class TaskQueue {
     @Column(name = "user_name")
     private String userName;
 
-    @Column(name = "task_type")
-    @Enumerated(EnumType.STRING)
-    private TaskTypeEnum taskType;
-
-    @Column(name = "need_login_ig")
-    private boolean needLoginIg;
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "task_config_id")
+    private TaskConfig taskConfig;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)

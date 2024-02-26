@@ -24,15 +24,17 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
      * @param statuses 任務狀態集合
      * @return 任務序列集合
      */
-    @Query("SELECT t FROM TaskQueue t WHERE t.taskType = :taskType AND t.userName = :userName AND t.status IN :statuses ORDER BY t.submitTime DESC")
+    @Query("SELECT t FROM TaskQueue t WHERE t.taskConfig.taskType = :taskType AND t.userName = :userName AND t.status IN :statuses ORDER BY t.submitTime DESC")
     List<TaskQueue> findTaskQueuesByCustomQuery(@Param("taskType") TaskTypeEnum taskType, @Param("userName") String userName, @Param("statuses") List<TaskStatusEnum> statuses);
 
     /**
      * 檢查目前是否有某狀態及某登入需求的任務存在
      *
-     * @return boolean
+     * @param status 任務狀態
+     * @param needLoginIg 是否需要登入 Instagram
+     * @return 存在任務返回 true，否則返回 false
      */
-    @Query("SELECT COUNT(t) > 0 FROM TaskQueue t WHERE t.status = :status AND t.needLoginIg = :needLoginIg")
+    @Query("SELECT COUNT(t) > 0 FROM TaskQueue t WHERE t.status = :status AND t.taskConfig.needLoginIg = :needLoginIg")
     boolean existsInProgressTasks(@Param("status") TaskStatusEnum status, @Param("needLoginIg") boolean needLoginIg);
 
     /**
@@ -41,7 +43,8 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
      * @param status 任務狀態
      * @return 任務序列
      */
-    Optional<TaskQueue> findFirstByStatusAndNeedLoginIgOrderBySubmitTimeDesc(TaskStatusEnum status, boolean needLoginIg);
+    Optional<TaskQueue> findFirstByStatusAndTaskConfig_NeedLoginIgOrderBySubmitTimeDesc(TaskStatusEnum status, boolean needLoginIg);
+
 
     /**
      * 依據任務狀態查詢任務序列

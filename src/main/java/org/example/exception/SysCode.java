@@ -22,6 +22,7 @@ public enum SysCode implements ErrorCode {
     NO_TASKS_TO_PERFORM(2006, "沒有任務可執行"),
     ACTUAL_COUNT_IS_ZERO(2007, "實際數量為0"),
     IG_USER_NOT_FOUND_IN_DB(2008, "IG用戶在資料庫中找不到"),
+    TASK_CONFIG_NOT_FOUND(2009, "任務配置未找到"),
 
     IG_USER_NOT_FOUND(3000, "IG user not found"),
     NOT_FOUND(7000, "Data not found"),

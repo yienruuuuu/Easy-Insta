@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.entity.IgUser;
+import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
 
 /**
@@ -23,7 +24,7 @@ public interface InstagramService {
      * @param username 用戶名
      * @return 用戶信息
      */
-    IgUser searchUser(String username);
+    IgUser searchUser(String username , LoginAccount loginAccount);
 
     /**
      * 透過Instagram4JApi 查詢用戶追隨者

@@ -34,7 +34,7 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
     @Transactional
     public void executeGetFollowerTask(TaskQueue task, LoginAccount loginAccount) {
         try {
-            log.info("開始執行任務:{} ,帳號:{}", task.getTaskType(), loginAccount);
+            log.info("開始執行任務:{} ,帳號:{}", task.getTaskConfig().getTaskType(), loginAccount);
             //登入、檢查結果並更新登入帳號狀態
             loginAndUpdateAccountStatus(loginAccount);
             //執行爬蟲任務
@@ -66,7 +66,7 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
     private void finalizeTask(TaskQueue task) {
         updateTaskStatusBasedOnCondition(task);
         taskQueueService.save(task);
-        log.info("任务已保存:{}", task);
+        log.info("任務已儲存:{}", task);
     }
 
     /**

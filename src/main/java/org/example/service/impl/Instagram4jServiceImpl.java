@@ -1,7 +1,6 @@
 package org.example.service.impl;
 
 
-
 import com.github.instagram4j.instagram4j.IGClient;
 import com.github.instagram4j.instagram4j.actions.users.UserAction;
 import com.github.instagram4j.instagram4j.models.user.Profile;
@@ -13,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.bean.dto.FollowersAndMaxIdDTO;
 import org.example.entity.Followers;
 import org.example.entity.IgUser;
+import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
@@ -61,7 +61,8 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     @Override
-    public IgUser searchUser(String username) {
+    public IgUser searchUser(String username, LoginAccount loginAccount) {
+        login(loginAccount.getAccount(), loginAccount.getPassword());
         UserAction searchResult = null;
         try {
             searchResult = client.actions().users().findByUsername(username).join();
