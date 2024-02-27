@@ -90,7 +90,7 @@ public class CheckTaskQueue extends BaseQueue {
         // 更新任務狀態為IN_PROGRESS
         TaskQueue latestTaskQueue = taskQueueService.updateTaskStatus(taskQueue.getId(), TaskStatusEnum.IN_PROGRESS);
         // 執行任務
-        taskExecutionService.executeGetFollowerTask(latestTaskQueue, loginAccount);
+        taskExecutionService.executeTask(latestTaskQueue, loginAccount);
     }
 
 }

@@ -17,13 +17,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class WebScraperTest implements CommandLineRunner {
@@ -43,7 +39,7 @@ public class WebScraperTest implements CommandLineRunner {
 //        testForGetFollowers(client);
 
         //測試獲取指定用戶的所有文章
-//        getPostsByUserName(client, "tomato_yuki_", null);
+        getPostsByUserName(client, "tomato_yuki_", null);
         //測試獲取指定用戶的指定文章_翻頁
 //        getPostsByUserName(client, "tomato_yuki_", "3293773151733047571_63972138771");
 
@@ -52,20 +48,8 @@ public class WebScraperTest implements CommandLineRunner {
         //測試獲取指定文章的翻頁留言
 //        getPostDetail(client, "3298906758704944557_59632865840", "{\"server_cursor\": \"QVFDSUhiVVRYVGNfS2ZBRVJBNUtqRDBocjczNXdjb3BzZkpfenBiU2UySXRpalJja1pvMGx5R3VfU2lISlFiY3FRRmUzTHNFeVI3VEFaOHVZUXRGMlY3Yg==\", \"is_server_cursor_inverse\": true}");
 
-        //測試獲取指定文章的liker
-
-        List<Profile> firstCallLikers = getPostLiker(client, "3309754731106610154_63972138771", null);
-        List<Profile> secondCallLikers = getPostLiker(client, "3309754731106610154_63972138771", "91");
-// 从两次调用中获取的 Profile 对象列表中提取 pk
-        List<Long> firstCallPks = firstCallLikers.stream().map(Profile::getPk).toList();
-        List<Long> secondCallPks = secondCallLikers.stream().map(Profile::getPk).toList();
-// 合并两个 pk 列表
-        List<Long> combinedPks = new ArrayList<>(firstCallPks);
-        combinedPks.addAll(secondCallPks);
-// 使用 Set 去重
-        Set<Long> uniquePks = new HashSet<>(combinedPks);
-// 打印去重后的 pk 数量
-        System.out.println("去重后的 Profile pk 数量：" + uniquePks.size());
+        //測試獲取指定文章的liker(最多只能取道100~110個上下)
+//        List<Profile> firstCallLikers = getPostLiker(client, "3309754731106610154_63972138771", null);
     }
 
 
