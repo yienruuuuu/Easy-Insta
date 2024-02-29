@@ -42,6 +42,6 @@ public interface InstagramService {
      *
      * @param username 用戶名
      */
-    void searchUserPosts(String username);
+    void searchUserPostsByTargetUserNameAndSave(TaskQueue task, String maxId);
 
 }

@@ -3,19 +3,20 @@ package org.example.service.impl;
 
 import com.github.instagram4j.instagram4j.IGClient;
 import com.github.instagram4j.instagram4j.actions.users.UserAction;
+import com.github.instagram4j.instagram4j.models.media.timeline.TimelineMedia;
 import com.github.instagram4j.instagram4j.models.user.Profile;
 import com.github.instagram4j.instagram4j.models.user.User;
+import com.github.instagram4j.instagram4j.requests.feed.FeedUserRequest;
 import com.github.instagram4j.instagram4j.requests.friendships.FriendshipsFeedsRequest;
+import com.github.instagram4j.instagram4j.responses.feed.FeedUserResponse;
 import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.dto.FollowersAndMaxIdDTO;
+import org.example.bean.dto.PostsAndMaxIdDTO;
 import org.example.bean.enumtype.ConfigEnum;
 import org.example.config.ConfigCache;
-import org.example.entity.Followers;
-import org.example.entity.IgUser;
-import org.example.entity.LoginAccount;
-import org.example.entity.TaskQueue;
+import org.example.entity.*;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
@@ -102,8 +103,18 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     @Override
-    public void searchUserPosts(String username) {
-
+    public void searchUserPostsByTargetUserNameAndSave(TaskQueue task, String maxId) {
+        try {
+            // 取得追蹤者
+            PostsAndMaxIdDTO postsAndMaxIdDTO = getPostsByUserName(client, task.getUserName(), maxId);
+            // 將 Profile 物件轉換為 Followers 實體
+            List<Media> mediasList = convertProfilesToFollowerEntities(task.getUserName(), postsAndMaxIdDTO.getMedias());
+            // 保存追蹤者
+            followersService.batchInsertFollowers(mediasList);
+            task.setNextIdForSearch(followersObjFromIg.getMaxId());
+        } catch (Exception e) {
+            throw new TaskExecutionException("獲取追蹤者失敗", e);
+        }
     }
 
     //private
@@ -141,6 +152,28 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     /**
+     * 將 TimelineMedia 物件轉換為 Media 實體
+     *
+     * @param igUserName IG用戶名
+     */
+    private static List<Media> convertTimeLineMediaToMediaEntities(String igUserName, List<TimelineMedia> TimeLineMediaObjFromIg) {
+        return TimeLineMediaObjFromIg.stream().map(
+                        TimelineMedia -> Media.builder()
+                                .igUserId(TimelineMedia.getUser().getPk())
+                                .mediaPk()
+                                .mediaId()
+                                .playCount()
+                                .fbPlayCount()
+                                .likeCount().
+                                fbLikeCount().
+                                reshareCount().
+                                commentCount().
+                                numberOfQualities()
+                                .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 向ig爬取指定用户的所有追踪者。
      *
      * @param client   已登入的 IGClient 對象
@@ -155,30 +188,71 @@ public class Instagram4jServiceImpl implements InstagramService {
         int count = 0;
         // 是否第一次迭代
         boolean isFirstIteration = true;
-
+        int maxRequestTimes = Integer.parseInt(configCache.get(ConfigEnum.MAX_FOLLOWERS_PER_REQUEST.name()));
         try {
             // 向IG取得用戶PK
             Long userPkFromIg = getUserIdByUsername(client, username);
-            while (shouldContinueFetching(count, maxIdRef.get(), isFirstIteration)) {
+            while (shouldContinueFetching(count, maxIdRef.get(), isFirstIteration, maxRequestTimes)) {
                 // 之后的迭代不再是第一次
                 isFirstIteration = false;
                 // 每次循環使用最新的max Id建立請求
                 FeedUsersResponse response = fetchFollowers(client, userPkFromIg, maxIdRef.get());
                 // 處理請求結果
-                processResponse(followers, response, maxIdRef);
+                processFollowersResponse(followers, response, maxIdRef);
                 // 更新計數器
                 count += response.getUsers().size();
                 log.info("目前查詢累計用戶數: " + count);
                 //請求間暫停
                 pauseBetweenRequests();
             }
-            log.info("達到200个追蹤者資料，跳出循環 count:{}", count);
+            log.info("達到{}個追蹤者資料，跳出循環 count:{}", maxRequestTimes, count);
         } catch (Exception e) {
             log.error("取得追蹤者失敗", e);
             throw new ApiException(SysCode.IG_GET_FOLLOWERS_FAILED, "取得追蹤者失敗");
         }
         return FollowersAndMaxIdDTO.builder()
                 .followers(followers)
+                .maxId(maxIdRef.get())
+                .build();
+    }
+
+    /**
+     * 獲取指定用戶的所有文章資訊
+     *
+     * @param client   已登录的 IGClient 对象
+     * @param username 要获取文章的用户名
+     * @param maxId    用于分页的最大 ID
+     */
+    private PostsAndMaxIdDTO getPostsByUserName(IGClient client, String username, String maxId) {
+        List<TimelineMedia> medias = Lists.newArrayList();
+        AtomicReference<String> maxIdRef = new AtomicReference<>(maxId);
+        // 計數器，用於追蹤請求到的資料數量
+        int count = 0;
+        boolean isFirstIteration = true;
+        int maxRequestTimes = Integer.parseInt(configCache.get(ConfigEnum.MAX_POSTS_PER_REQUEST.name()));
+
+        try {
+            //取得對象Pk
+            Long userPkFromIg = getUserIdByUsername(client, username);
+            while (shouldContinueFetching(count, maxIdRef.get(), isFirstIteration, maxRequestTimes)) {
+                isFirstIteration = false;
+
+                // 每次循環使用最新的max Id建立請求
+                FeedUserResponse response = fetchPosts(client, userPkFromIg, maxIdRef.get());
+                // 處理請求結果
+                processPostsResponse(medias, response, maxIdRef);
+                count += medias.size();
+                log.info("目前累計文章數: " + count);
+                //請求間暫停
+                pauseBetweenRequests();
+            }
+            log.info("達到{}個貼文資料，跳出循環 count:{}", maxRequestTimes, count);
+        } catch (Exception e) {
+            log.error("取得追蹤者失敗", e);
+            throw new ApiException(SysCode.IG_GET_POSTS_FAILED, "取得貼文失敗");
+        }
+        return PostsAndMaxIdDTO.builder()
+                .medias(medias)
                 .maxId(maxIdRef.get())
                 .build();
     }
@@ -191,8 +265,18 @@ public class Instagram4jServiceImpl implements InstagramService {
         return client.sendRequest(new FriendshipsFeedsRequest(userId, FriendshipsFeedsRequest.FriendshipsFeeds.FOLLOWERS, maxId)).join();
     }
 
-    private void processResponse(List<Profile> followers, FeedUsersResponse response, AtomicReference<String> maxIdRef) {
+    private FeedUserResponse fetchPosts(IGClient client, Long userPkFromIg, String maxId) {
+        return client.sendRequest(new FeedUserRequest(userPkFromIg, maxId)).join();
+    }
+
+    private void processFollowersResponse(List<Profile> followers, FeedUsersResponse response, AtomicReference<String> maxIdRef) {
         followers.addAll(response.getUsers());
+        String nextMaxId = response.getNext_max_id();
+        maxIdRef.set(nextMaxId);
+    }
+
+    private void processPostsResponse(List<TimelineMedia> medias, FeedUserResponse response, AtomicReference<String> maxIdRef) {
+        medias.addAll(response.getItems());
         String nextMaxId = response.getNext_max_id();
         maxIdRef.set(nextMaxId);
     }
@@ -206,8 +290,8 @@ public class Instagram4jServiceImpl implements InstagramService {
         }
     }
 
-    private boolean shouldContinueFetching(int count, String maxId, boolean isFirstIteration) {
+    private boolean shouldContinueFetching(int count, String maxId, boolean isFirstIteration, int requestLimit) {
         //條件: 計數器小於規定 && (maxId不為空或是第一次迭代)
-        return count <= MAX_FOLLOWERS_PER_REQUEST && (maxId != null || isFirstIteration);
+        return count < requestLimit && (maxId != null || isFirstIteration);
     }
 }
