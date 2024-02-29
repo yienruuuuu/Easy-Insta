@@ -15,10 +15,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service("taskStrategyBase")
 public abstract class TaskStrategyBase implements TaskStrategy {
-    @Autowired
-    InstagramService instagramService;
-    @Autowired
-    LoginService loginService;
+    protected final InstagramService instagramService;
+    protected final LoginService loginService;
+
+    protected TaskStrategyBase(InstagramService instagramService, LoginService loginService) {
+        this.instagramService = instagramService;
+        this.loginService = loginService;
+    }
 
     protected void loginAndUpdateAccountStatus(LoginAccount loginAccount) {
         try {

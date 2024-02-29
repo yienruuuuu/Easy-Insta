@@ -25,7 +25,10 @@ class BrightDataProxyTest {
 
     @Test
     public void testMyServiceMethod() throws IOException {
-        OkHttpClient client = getBrightDataProxy(configCache.get(ConfigEnum.BRIGHT_DATA_ACCOUNT.name()), configCache.get(ConfigEnum.BRIGHT_DATA_PASSWORD.name()));
+        OkHttpClient client = getBrightDataProxy(
+                configCache.get(ConfigEnum.BRIGHT_DATA_ACCOUNT.name()),
+                configCache.get(ConfigEnum.BRIGHT_DATA_PASSWORD.name()),
+                StringUtils.generateRandomString(8));
 
         Request request = new Request.Builder()
                 .url("http://lumtest.com/myip.json")

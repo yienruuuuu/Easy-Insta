@@ -3,12 +3,8 @@ package org.example.strategy;
 import lombok.extern.slf4j.Slf4j;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
-import org.example.service.FollowersService;
-import org.example.service.IgUserService;
-import org.example.service.InstagramService;
-import org.example.service.TaskQueueService;
+import org.example.service.*;
 import org.example.utils.FollowerCrawlingUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service("getFollowerStrategy")
 public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrategy {
-    @Autowired
-    TaskQueueService taskQueueService;
-    @Autowired
-    InstagramService instagramService;
-    @Autowired
-    FollowersService followersService;
-    @Autowired
-    IgUserService igUserService;
+    private final TaskQueueService taskQueueService;
+    private final FollowersService followersService;
+    private final IgUserService igUserService;
+
+    protected GetFollowerStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, FollowersService followersService, IgUserService igUserService) {
+        super(instagramService, loginService);
+        this.taskQueueService = taskQueueService;
+        this.followersService = followersService;
+        this.igUserService = igUserService;
+    }
 
     @Override
     @Transactional

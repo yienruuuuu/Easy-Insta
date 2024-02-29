@@ -7,6 +7,7 @@ import org.example.exception.TaskExecutionException;
 import org.example.service.FollowersService;
 import org.example.service.IgUserService;
 import org.example.service.TaskQueueService;
+import org.example.strategy.TaskExecutionStrategyFactory;
 import org.example.strategy.TaskStrategy;
 import org.example.task.BaseQueue;
 import org.example.task.TaskExecutionService;
@@ -29,10 +30,10 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
     @Autowired
     IgUserService igUserService;
     @Autowired
-    private Map<String, TaskStrategy> strategies; // 策略的映射
+    private TaskExecutionStrategyFactory strategyFactory; // 注入策略工廠
 
     public void executeTask(TaskQueue task, LoginAccount loginAccount) {
-        TaskStrategy strategy = strategies.get(task.getTaskConfig().getTaskType());
+        TaskStrategy strategy = strategyFactory.getStrategy(task.getTaskConfig().getTaskType());
         if (strategy != null) {
             try {
                 strategy.executeTask(task, loginAccount);
