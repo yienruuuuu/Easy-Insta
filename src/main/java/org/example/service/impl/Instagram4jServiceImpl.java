@@ -10,6 +10,8 @@ import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.dto.FollowersAndMaxIdDTO;
+import org.example.bean.enumtype.ConfigEnum;
+import org.example.config.ConfigCache;
 import org.example.entity.Followers;
 import org.example.entity.IgUser;
 import org.example.entity.LoginAccount;
@@ -40,6 +42,8 @@ public class Instagram4jServiceImpl implements InstagramService {
     IgUserServiceImpl igUserService;
     @Autowired
     FollowersService followersService;
+    @Autowired
+    ConfigCache configCache;
 
     private IGClient client;
     // 每次請求最大追蹤者數量
@@ -52,7 +56,8 @@ public class Instagram4jServiceImpl implements InstagramService {
             client = IGClient.builder()
                     .username(account)
                     .password(password)
-                    .client(BrightDataProxy.getBrightDataProxy())
+                    .client(BrightDataProxy.getBrightDataProxy(
+                            configCache.get(ConfigEnum.BRIGHT_DATA_ACCOUNT.name()), configCache.get(ConfigEnum.BRIGHT_DATA_PASSWORD.name())))
                     .login();
             log.info("登入成功, 帳號:{}", account);
         } catch (Exception e) {
