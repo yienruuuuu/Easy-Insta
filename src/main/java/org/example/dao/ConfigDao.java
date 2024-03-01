@@ -1,6 +1,5 @@
 package org.example.dao;
 
-import org.example.bean.enumtype.ConfigEnum;
 import org.example.entity.Config;
 import org.springframework.data.jpa.repository.JpaRepository;
 

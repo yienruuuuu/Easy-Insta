@@ -1,4 +1,4 @@
-package org.example.dao.Impl;
+package org.example.dao.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.dao.CustomFollowersRepository;
