@@ -3,9 +3,9 @@ package org.example.strategy;
 import lombok.extern.slf4j.Slf4j;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
-import org.example.service.FollowersService;
 import org.example.service.InstagramService;
 import org.example.service.LoginService;
+import org.example.service.MediaService;
 import org.example.service.TaskQueueService;
 import org.example.utils.CrawlingUtil;
 import org.springframework.stereotype.Service;
@@ -13,18 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Eric.Lee
- * Date: 2024/2/27
+ * Date: 2024/3/1
  */
 @Slf4j
-@Service("getFollowerStrategy")
-public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrategy {
+@Service("getMediaStrategy")
+public class GetMediaStrategy extends TaskStrategyBase implements TaskStrategy {
     private final TaskQueueService taskQueueService;
-    private final FollowersService followersService;
+    private final MediaService mediaService;
 
-    protected GetFollowerStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, FollowersService followersService) {
+    protected GetMediaStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, MediaService mediaService) {
         super(instagramService, loginService);
         this.taskQueueService = taskQueueService;
-        this.followersService = followersService;
+        this.mediaService = mediaService;
     }
 
     @Override
@@ -78,15 +78,15 @@ public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrateg
     }
 
     /**
-     * 檢查爬取數量是否已達到結束排成標準
+     * 檢查爬取數量是否已達到結束標準
      *
      * @param task 任務
      * @return 是否已達到結束任務的標準
      */
     private boolean checkFollowerAmount(TaskQueue task) {
-        int crawlerAmount = followersService.countFollowersByIgUserName(task.getIgUser().getUserName());
-        int dbAmount = task.getIgUser().getFollowerCount();
+        int crawlerAmount = mediaService.countMediaByIgUser(task.getIgUser());
+        int dbAmount = task.getIgUser().getMediaCount();
         log.info("任務:{} ,取追蹤者數量:{},資料庫追蹤者數量:{}", task, dbAmount, crawlerAmount);
-        return CrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount, 0.9);
+        return CrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount, 1.0);
     }
 }

@@ -45,12 +45,11 @@ public class Instagram4jServiceImpl implements InstagramService {
     @Autowired
     FollowersService followersService;
     @Autowired
+    MediaServiceImpl mediaService;
+    @Autowired
     ConfigCache configCache;
 
     private IGClient client;
-    // 每次請求最大追蹤者數量
-    private static final int MAX_FOLLOWERS_PER_REQUEST = 200;
-
 
     @Override
     public void login(String account, String password) {
@@ -88,7 +87,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     @Override
-    public void searchTargetUserFollowersAndSave(TaskQueue task, String maxId) {
+    public void searchFollowersAndSave(TaskQueue task, String maxId) {
         try {
             // 取得追蹤者
             FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(client, task.getIgUser().getUserName(), maxId);
@@ -103,17 +102,17 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     @Override
-    public void searchUserPostsByTargetUserNameAndSave(TaskQueue task, String maxId) {
+    public void searchUserMediasAndSave(TaskQueue task, String maxId) {
         try {
             // 取得追蹤者
-            PostsAndMaxIdDTO postsAndMaxIdDTO = getPostsByUserName(client, task.getUserName(), maxId);
-            // 將 Profile 物件轉換為 Followers 實體
-            List<Media> mediasList = convertProfilesToFollowerEntities(task.getUserName(), postsAndMaxIdDTO.getMedias());
-            // 保存追蹤者
-            followersService.batchInsertFollowers(mediasList);
-            task.setNextIdForSearch(followersObjFromIg.getMaxId());
+            PostsAndMaxIdDTO postsAndMaxIdDTO = getPostsByUserName(client, task.getIgUser().getUserName(), maxId);
+            // 將 TimelineMedia 物件轉換為 Media 實體
+            List<Media> mediasList = convertTimeLineMediaToMediaEntities(task.getIgUser(), postsAndMaxIdDTO.getMedias());
+            // 保存貼文
+            mediaService.batchInsertMedias(mediasList);
+            task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
         } catch (Exception e) {
-            throw new TaskExecutionException("獲取追蹤者失敗", e);
+            throw new TaskExecutionException("獲取貼文失敗", e);
         }
     }
 
@@ -154,21 +153,21 @@ public class Instagram4jServiceImpl implements InstagramService {
     /**
      * 將 TimelineMedia 物件轉換為 Media 實體
      *
-     * @param igUserName IG用戶名
+     * @param igUser IG用戶名
      */
-    private static List<Media> convertTimeLineMediaToMediaEntities(String igUserName, List<TimelineMedia> TimeLineMediaObjFromIg) {
-        return TimeLineMediaObjFromIg.stream().map(
-                        TimelineMedia -> Media.builder()
-                                .igUserId(TimelineMedia.getUser().getPk())
-                                .mediaPk()
-                                .mediaId()
-                                .playCount()
-                                .fbPlayCount()
-                                .likeCount().
-                                fbLikeCount().
-                                reshareCount().
-                                commentCount().
-                                numberOfQualities()
+    private static List<Media> convertTimeLineMediaToMediaEntities(IgUser igUser, List<TimelineMedia> timeLineMediaObjFromIg) {
+        return timeLineMediaObjFromIg.stream().map(
+                        timelineMedia -> Media.builder()
+                                .igUserId(igUser)
+                                .mediaPk(timelineMedia.getPk())
+                                .mediaId(timelineMedia.getId())
+                                .playCount(timelineMedia.getPlay_count())
+                                .fbPlayCount(timelineMedia.getFb_play_count())
+                                .likeCount(timelineMedia.getLike_count())
+                                .fbLikeCount(timelineMedia.getFb_like_count())
+                                .reshareCount(timelineMedia.getRershare_count())
+                                .commentCount(timelineMedia.getComment_count())
+                                .numberOfQualities(timelineMedia.getNumber_of_qualities())
                                 .build())
                 .collect(Collectors.toList());
     }
@@ -249,7 +248,7 @@ public class Instagram4jServiceImpl implements InstagramService {
             log.info("達到 {} 個貼文資料，跳出循環 count:{}", maxRequestTimes, count);
         } catch (Exception e) {
             log.error("取得追蹤者失敗", e);
-            throw new ApiException(SysCode.IG_GET_POSTS_FAILED, "取得貼文失敗");
+            throw new ApiException(SysCode.IG_GET_MEDIA_FAILED, "取得貼文失敗");
         }
         return PostsAndMaxIdDTO.builder()
                 .medias(medias)
