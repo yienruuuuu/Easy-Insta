@@ -3,6 +3,7 @@ package org.example.service.impl;
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.dao.TaskQueueDao;
+import org.example.entity.IgUser;
 import org.example.entity.TaskConfig;
 import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
@@ -31,16 +32,16 @@ public class TaskQueueServiceImpl implements TaskQueueService {
     TaskConfigService taskConfigService;
 
     @Override
-    public boolean checkGetFollowersTaskQueueExist(String userId, TaskTypeEnum taskType) {
-        List<TaskQueue> taskQueues = taskQueueDao.findTaskQueuesByCustomQuery(taskType, userId, TaskStatusEnum.getUnfinishedStatus());
+    public boolean checkGetFollowersTaskQueueExist(IgUser targetUser, TaskTypeEnum taskType) {
+        List<TaskQueue> taskQueues = taskQueueDao.findTaskQueuesByCustomQuery(taskType, targetUser, TaskStatusEnum.getUnfinishedStatus());
         return !taskQueues.isEmpty();
     }
 
     @Override
-    public Optional<TaskQueue> createAndSaveTaskQueue(String username, TaskTypeEnum taskType, TaskStatusEnum status) {
+    public Optional<TaskQueue> createAndSaveTaskQueue(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status) {
         TaskConfig taskConfig = taskConfigService.findByTaskType(taskType);
         TaskQueue newTask = TaskQueue.builder()
-                .userName(username)
+                .igUser(igUser)
                 .taskConfig(taskConfig)
                 .status(status)
                 .submitTime(LocalDateTime.now())

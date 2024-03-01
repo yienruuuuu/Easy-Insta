@@ -2,6 +2,7 @@ package org.example.dao;
 
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
+import org.example.entity.IgUser;
 import org.example.entity.TaskQueue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,12 +21,12 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
      * 依據任務類型、用戶ID、任務狀態查詢任務序列
      *
      * @param taskType 任務類型
-     * @param userName   對象用戶Id
+     * @param igUser   對象用戶
      * @param statuses 任務狀態集合
      * @return 任務序列集合
      */
-    @Query("SELECT t FROM TaskQueue t WHERE t.taskConfig.taskType = :taskType AND t.userName = :userName AND t.status IN :statuses ORDER BY t.submitTime DESC")
-    List<TaskQueue> findTaskQueuesByCustomQuery(@Param("taskType") TaskTypeEnum taskType, @Param("userName") String userName, @Param("statuses") List<TaskStatusEnum> statuses);
+    @Query("SELECT t FROM TaskQueue t WHERE t.taskConfig.taskType = :taskType AND t.igUser = :igUser AND t.status IN :statuses ORDER BY t.submitTime DESC")
+    List<TaskQueue> findTaskQueuesByCustomQuery(@Param("taskType") TaskTypeEnum taskType, @Param("igUser") IgUser igUser, @Param("statuses") List<TaskStatusEnum> statuses);
 
     /**
      * 檢查目前是否有某狀態及某登入需求的任務存在

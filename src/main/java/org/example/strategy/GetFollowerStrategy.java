@@ -83,8 +83,8 @@ public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrateg
      * @return 是否已達到結束任務的標準
      */
     private boolean checkFollowerAmount(TaskQueue task) {
-        int crawlerAmount = followersService.countFollowersByIgUserName(task.getUserName());
-        int dbAmount = igUserService.findUserByIgUserName(task.getUserName()).getFollowerCount();
+        int crawlerAmount = followersService.countFollowersByIgUserName(task.getIgUser().getUserName());
+        int dbAmount = task.getIgUser().getFollowerCount();
         log.info("任務:{} ,取追蹤者數量:{},資料庫追蹤者數量:{}", task, dbAmount, crawlerAmount);
         return FollowerCrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount);
     }

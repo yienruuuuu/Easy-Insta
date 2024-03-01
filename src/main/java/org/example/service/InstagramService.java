@@ -24,7 +24,7 @@ public interface InstagramService {
      * @param username 用戶名
      * @return 用戶信息
      */
-    IgUser searchUser(String username , LoginAccount loginAccount);
+    IgUser searchUser(String username, LoginAccount loginAccount);
 
     /**
      * 透過Instagram4JApi 查詢用戶追隨者
@@ -40,7 +40,8 @@ public interface InstagramService {
     /**
      * 查詢用戶發文
      *
-     * @param username 用戶名
+     * @param task  任務資訊
+     * @param maxId 最大查詢數量 初次執行可能為null
      */
     void searchUserPostsByTargetUserNameAndSave(TaskQueue task, String maxId);
 

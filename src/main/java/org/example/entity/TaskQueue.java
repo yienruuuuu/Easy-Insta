@@ -27,11 +27,9 @@ public class TaskQueue {
     @Column(name = "id", columnDefinition = "serial")
     private BigInteger id;
 
-    /**
-     * 任務查詢對象的使用者名稱
-     */
-    @Column(name = "user_name")
-    private String userName;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ig_user_id", referencedColumnName = "id")
+    private IgUser igUser;
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "task_config_id")

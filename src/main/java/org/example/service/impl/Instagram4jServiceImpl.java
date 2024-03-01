@@ -91,9 +91,9 @@ public class Instagram4jServiceImpl implements InstagramService {
     public void searchTargetUserFollowersAndSave(TaskQueue task, String maxId) {
         try {
             // 取得追蹤者
-            FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(client, task.getUserName(), maxId);
+            FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(client, task.getIgUser().getUserName(), maxId);
             // 將 Profile 物件轉換為 Followers 實體
-            List<Followers> followersList = convertProfilesToFollowerEntities(task.getUserName(), followersObjFromIg.getFollowers());
+            List<Followers> followersList = convertProfilesToFollowerEntities(task.getIgUser().getUserName(), followersObjFromIg.getFollowers());
             // 保存追蹤者
             followersService.batchInsertFollowers(followersList);
             task.setNextIdForSearch(followersObjFromIg.getMaxId());
@@ -208,7 +208,7 @@ public class Instagram4jServiceImpl implements InstagramService {
             log.info("達到{}個追蹤者資料，跳出循環 count:{}", maxRequestTimes, count);
         } catch (Exception e) {
             log.error("取得追蹤者失敗", e);
-            throw new ApiException(SysCode.IG_GET_FOLLOWERS_FAILED, "取得追蹤者失敗");
+            throw new ApiException(SysCode.IG_GET_FOLLOWERS_FAILED);
         }
         return FollowersAndMaxIdDTO.builder()
                 .followers(followers)
@@ -246,7 +246,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                 //請求間暫停
                 pauseBetweenRequests();
             }
-            log.info("達到{}個貼文資料，跳出循環 count:{}", maxRequestTimes, count);
+            log.info("達到 {} 個貼文資料，跳出循環 count:{}", maxRequestTimes, count);
         } catch (Exception e) {
             log.error("取得追蹤者失敗", e);
             throw new ApiException(SysCode.IG_GET_POSTS_FAILED, "取得貼文失敗");
