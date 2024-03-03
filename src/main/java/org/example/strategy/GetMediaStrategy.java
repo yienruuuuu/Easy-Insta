@@ -11,6 +11,8 @@ import org.example.utils.CrawlingUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 /**
  * @author Eric.Lee
  * Date: 2024/3/1
@@ -33,6 +35,8 @@ public class GetMediaStrategy extends TaskStrategyBase implements TaskStrategy {
         log.info("開始執行任務:{} ,帳號:{}", taskQueue.getTaskConfig().getTaskType(), loginAccount);
         //登入、檢查結果並更新登入帳號狀態
         loginAndUpdateAccountStatus(loginAccount);
+        //刪除舊的媒體資料
+        mediaService.deleteOldMediaDataByIgUserId(taskQueue.getIgUser().getId());
         //執行爬蟲任務
         performTaskWithAccount(taskQueue);
         //結束任務，依條件判斷更新任務狀態
@@ -48,7 +52,7 @@ public class GetMediaStrategy extends TaskStrategyBase implements TaskStrategy {
      * @param task 任務
      */
     private void performTaskWithAccount(TaskQueue task) {
-        instagramService.searchFollowersAndSave(task, task.getNextIdForSearch());
+        instagramService.searchUserMediasAndSave(task, task.getNextIdForSearch());
     }
 
     /**
@@ -68,7 +72,7 @@ public class GetMediaStrategy extends TaskStrategyBase implements TaskStrategy {
      * @param task 任務
      */
     private void updateTaskStatusBasedOnCondition(TaskQueue task) {
-        if (task.getNextIdForSearch() == null && checkFollowerAmount(task)) {
+        if (checkMedia(task)) {
             task.completeTask();
         } else if (task.getNextIdForSearch() != null) {
             task.pauseTask();
@@ -78,15 +82,21 @@ public class GetMediaStrategy extends TaskStrategyBase implements TaskStrategy {
     }
 
     /**
-     * 檢查爬取數量是否已達到結束標準
+     * 檢查爬取數量是否已達到結束標準 條件:最早貼文日期>當前日期-1年 || 爬取數量/實際貼文樹量>0.9
      *
      * @param task 任務
      * @return 是否已達到結束任務的標準
      */
-    private boolean checkFollowerAmount(TaskQueue task) {
+    private boolean checkMedia(TaskQueue task) {
         int crawlerAmount = mediaService.countMediaByIgUser(task.getIgUser());
         int dbAmount = task.getIgUser().getMediaCount();
         log.info("任務:{} ,取追蹤者數量:{},資料庫追蹤者數量:{}", task, dbAmount, crawlerAmount);
-        return CrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount, 1.0);
+
+        // 計算當前日期-1年
+        LocalDateTime cutoffDate = LocalDateTime.now().minusYears(1);
+        // 檢查是否存在最早的貼文日期大於當前日期-1年
+        boolean existsEarlyMedia = mediaService.existsEarlyMediaBeforeCutoff(task.getIgUser(), cutoffDate);
+        log.info("任務:{} ,是否已爬到最早的貼文日期，大於當前日期-1年 existsEarlyMedia:{}", task, existsEarlyMedia);
+        return CrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount, 0.9) || existsEarlyMedia;
     }
 }

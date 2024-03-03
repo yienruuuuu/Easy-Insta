@@ -23,6 +23,9 @@ public class TaskExecutionStrategyFactory {
             if (strategy instanceof GetFollowerStrategy) {
                 strategies.put(TaskTypeEnum.GET_FOLLOWERS, strategy);
             }
+            if (strategy instanceof GetMediaStrategy) {
+                strategies.put(TaskTypeEnum.GET_MEDIA, strategy);
+            }
         });
     }
     public TaskStrategy getStrategy(TaskTypeEnum taskType) {

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -29,12 +30,12 @@ public class CustomMediaRepositoryImpl implements CustomMediaRepository {
      */
     @Override
     public void batchInsertOrUpdate(List<Media> mediaList) {
-        String sql = "INSERT INTO media (media_id, ig_user_id, media_pk, play_count, fb_play_count, like_count, fb_like_count, reshare_count, comment_count, number_of_qualities) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        String sql = "INSERT INTO media (media_id, ig_user_id, media_pk, play_count, fb_play_count, like_count, fb_like_count, reshare_count, comment_count, number_of_qualities, taken_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE " +
                 "media_pk = VALUES(media_pk), play_count = VALUES(play_count), fb_play_count = VALUES(fb_play_count), " +
                 "like_count = VALUES(like_count), fb_like_count = VALUES(fb_like_count), reshare_count = VALUES(reshare_count), " +
-                "comment_count = VALUES(comment_count), number_of_qualities = VALUES(number_of_qualities)";
+                "comment_count = VALUES(comment_count), number_of_qualities = VALUES(number_of_qualities), taken_at = VALUES(taken_at)";
 
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -50,6 +51,7 @@ public class CustomMediaRepositoryImpl implements CustomMediaRepository {
                 ps.setInt(8, media.getReshareCount() == null ? 0 : media.getReshareCount());
                 ps.setInt(9, media.getCommentCount() == null ? 0 : media.getCommentCount());
                 ps.setInt(10, media.getNumberOfQualities() == null ? 0 : media.getNumberOfQualities());
+                ps.setTimestamp(11, Timestamp.valueOf(media.getTakenAt()));
             }
 
             @Override

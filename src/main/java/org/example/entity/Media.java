@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 /**
  * @author Eric.Lee
@@ -56,4 +57,7 @@ public class Media {
 
     @Column(name = "number_of_qualities")
     private Integer numberOfQualities;
+
+    @Column(name = "taken_at")
+    private LocalDateTime takenAt;
 }

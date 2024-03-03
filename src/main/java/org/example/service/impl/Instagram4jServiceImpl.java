@@ -28,6 +28,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
@@ -104,7 +107,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     @Override
     public void searchUserMediasAndSave(TaskQueue task, String maxId) {
         try {
-            // 取得追蹤者
+            // 取得對象貼文
             PostsAndMaxIdDTO postsAndMaxIdDTO = getPostsByUserName(client, task.getIgUser().getUserName(), maxId);
             // 將 TimelineMedia 物件轉換為 Media 實體
             List<Media> mediasList = convertTimeLineMediaToMediaEntities(task.getIgUser(), postsAndMaxIdDTO.getMedias());
@@ -156,20 +159,22 @@ public class Instagram4jServiceImpl implements InstagramService {
      * @param igUser IG用戶名
      */
     private static List<Media> convertTimeLineMediaToMediaEntities(IgUser igUser, List<TimelineMedia> timeLineMediaObjFromIg) {
-        return timeLineMediaObjFromIg.stream().map(
-                        timelineMedia -> Media.builder()
-                                .igUserId(igUser)
-                                .mediaPk(timelineMedia.getPk())
-                                .mediaId(timelineMedia.getId())
-                                .playCount(timelineMedia.getPlay_count())
-                                .fbPlayCount(timelineMedia.getFb_play_count())
-                                .likeCount(timelineMedia.getLike_count())
-                                .fbLikeCount(timelineMedia.getFb_like_count())
-                                .reshareCount(timelineMedia.getRershare_count())
-                                .commentCount(timelineMedia.getComment_count())
-                                .numberOfQualities(timelineMedia.getNumber_of_qualities())
-                                .build())
-                .collect(Collectors.toList());
+        return timeLineMediaObjFromIg.stream().map(timelineMedia -> {
+            LocalDateTime takenAt = Instant.ofEpochMilli(timelineMedia.getTaken_at()).atZone(ZoneId.systemDefault()).toLocalDateTime();
+            return Media.builder()
+                    .igUserId(igUser)
+                    .mediaPk(timelineMedia.getPk())
+                    .mediaId(timelineMedia.getId())
+                    .playCount(timelineMedia.getPlay_count())
+                    .fbPlayCount(timelineMedia.getFb_play_count())
+                    .likeCount(timelineMedia.getLike_count())
+                    .fbLikeCount(timelineMedia.getFb_like_count())
+                    .reshareCount(timelineMedia.getRershare_count())
+                    .commentCount(timelineMedia.getComment_count())
+                    .numberOfQualities(timelineMedia.getNumber_of_qualities())
+                    .takenAt(takenAt) // 設置轉換後的Local Date Time
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -245,7 +250,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                 //請求間暫停
                 pauseBetweenRequests();
             }
-            log.info("達到 {} 個貼文資料，跳出循環 count:{}", maxRequestTimes, count);
+            log.info("達到目標之一，跳出循環 ，目標請求數: {}, maxId: {},已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
         } catch (Exception e) {
             log.error("取得追蹤者失敗", e);
             throw new ApiException(SysCode.IG_GET_MEDIA_FAILED, "取得貼文失敗");
@@ -268,13 +273,15 @@ public class Instagram4jServiceImpl implements InstagramService {
         return client.sendRequest(new FeedUserRequest(userPkFromIg, maxId)).join();
     }
 
-    private void processFollowersResponse(List<Profile> followers, FeedUsersResponse response, AtomicReference<String> maxIdRef) {
+    private void processFollowersResponse(List<Profile> followers, FeedUsersResponse
+            response, AtomicReference<String> maxIdRef) {
         followers.addAll(response.getUsers());
         String nextMaxId = response.getNext_max_id();
         maxIdRef.set(nextMaxId);
     }
 
-    private void processPostsResponse(List<TimelineMedia> medias, FeedUserResponse response, AtomicReference<String> maxIdRef) {
+    private void processPostsResponse(List<TimelineMedia> medias, FeedUserResponse
+            response, AtomicReference<String> maxIdRef) {
         medias.addAll(response.getItems());
         String nextMaxId = response.getNext_max_id();
         maxIdRef.set(nextMaxId);

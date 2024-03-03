@@ -7,6 +7,7 @@ import org.example.service.MediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +42,16 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     public int countMediaByIgUser(IgUser igUser) {
-        return mediaDao.countByIgUserId(igUser.getId());
+        return mediaDao.countByIgUserId(igUser);
+    }
+
+    @Override
+    public boolean existsEarlyMediaBeforeCutoff(IgUser igUser, LocalDateTime cutoffDate) {
+        return mediaDao.existsEarlyMediaBeforeCutoff(igUser, cutoffDate);
+    }
+
+    @Override
+    public void deleteOldMediaDataByIgUserId(Integer igUserId) {
+        mediaDao.deleteByIgUserId(igUserId);
     }
 }
