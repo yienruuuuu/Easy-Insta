@@ -30,8 +30,8 @@ public class CustomMediaRepositoryImpl implements CustomMediaRepository {
      */
     @Override
     public void batchInsertOrUpdate(List<Media> mediaList) {
-        String sql = "INSERT INTO media (media_id, ig_user_id, media_pk, play_count, fb_play_count, like_count, fb_like_count, reshare_count, comment_count, number_of_qualities, taken_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        String sql = "INSERT INTO media (media_id, ig_user_id, media_pk, play_count, fb_play_count, like_count, fb_like_count, reshare_count, comment_count, number_of_qualities, taken_at, text) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE " +
                 "media_pk = VALUES(media_pk), play_count = VALUES(play_count), fb_play_count = VALUES(fb_play_count), " +
                 "like_count = VALUES(like_count), fb_like_count = VALUES(fb_like_count), reshare_count = VALUES(reshare_count), " +
@@ -52,6 +52,8 @@ public class CustomMediaRepositoryImpl implements CustomMediaRepository {
                 ps.setInt(9, media.getCommentCount() == null ? 0 : media.getCommentCount());
                 ps.setInt(10, media.getNumberOfQualities() == null ? 0 : media.getNumberOfQualities());
                 ps.setTimestamp(11, Timestamp.valueOf(media.getTakenAt()));
+                ps.setString(12, media.getText());
+
             }
 
             @Override

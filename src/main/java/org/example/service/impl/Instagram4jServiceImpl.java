@@ -23,6 +23,7 @@ import org.example.exception.TaskExecutionException;
 import org.example.service.FollowersService;
 import org.example.service.InstagramService;
 import org.example.utils.BrightDataProxy;
+import org.example.utils.CrawlingUtil;
 import org.example.utils.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,6 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -111,6 +111,8 @@ public class Instagram4jServiceImpl implements InstagramService {
             PostsAndMaxIdDTO postsAndMaxIdDTO = getPostsByUserName(client, task.getIgUser().getUserName(), maxId);
             // 將 TimelineMedia 物件轉換為 Media 實體
             List<Media> mediasList = convertTimeLineMediaToMediaEntities(task.getIgUser(), postsAndMaxIdDTO.getMedias());
+            log.info("取得貼文數量:{}", mediasList.size());
+            log.info("貼文資訊:{}", mediasList);
             // 保存貼文
             mediaService.batchInsertMedias(mediasList);
             task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
@@ -160,7 +162,7 @@ public class Instagram4jServiceImpl implements InstagramService {
      */
     private static List<Media> convertTimeLineMediaToMediaEntities(IgUser igUser, List<TimelineMedia> timeLineMediaObjFromIg) {
         return timeLineMediaObjFromIg.stream().map(timelineMedia -> {
-            LocalDateTime takenAt = Instant.ofEpochMilli(timelineMedia.getTaken_at()).atZone(ZoneId.systemDefault()).toLocalDateTime();
+            LocalDateTime takenAt = Instant.ofEpochSecond(timelineMedia.getTaken_at()).atZone(ZoneId.systemDefault()).toLocalDateTime();
             return Media.builder()
                     .igUserId(igUser)
                     .mediaPk(timelineMedia.getPk())
@@ -173,6 +175,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                     .commentCount(timelineMedia.getComment_count())
                     .numberOfQualities(timelineMedia.getNumber_of_qualities())
                     .takenAt(takenAt) // 設置轉換後的Local Date Time
+                    .text(timelineMedia.getCaption().getText())
                     .build();
         }).collect(Collectors.toList());
     }
@@ -207,7 +210,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                 count += response.getUsers().size();
                 log.info("目前查詢累計用戶數: " + count);
                 //請求間暫停
-                pauseBetweenRequests();
+                CrawlingUtil.pauseBetweenRequests();
             }
             log.info("達到{}個追蹤者資料，跳出循環 count:{}", maxRequestTimes, count);
         } catch (Exception e) {
@@ -245,12 +248,12 @@ public class Instagram4jServiceImpl implements InstagramService {
                 FeedUserResponse response = fetchPosts(client, userPkFromIg, maxIdRef.get());
                 // 處理請求結果
                 processPostsResponse(medias, response, maxIdRef);
-                count += medias.size();
+                count += response.getItems().size();
                 log.info("目前累計文章數: " + count);
                 //請求間暫停
-                pauseBetweenRequests();
+                CrawlingUtil.pauseBetweenRequests();
             }
-            log.info("達到目標之一，跳出循環 ，目標請求數: {}, maxId: {},已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
+            log.info("出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
         } catch (Exception e) {
             log.error("取得追蹤者失敗", e);
             throw new ApiException(SysCode.IG_GET_MEDIA_FAILED, "取得貼文失敗");
@@ -273,27 +276,17 @@ public class Instagram4jServiceImpl implements InstagramService {
         return client.sendRequest(new FeedUserRequest(userPkFromIg, maxId)).join();
     }
 
-    private void processFollowersResponse(List<Profile> followers, FeedUsersResponse
-            response, AtomicReference<String> maxIdRef) {
+    private void processFollowersResponse(List<Profile> followers, FeedUsersResponse response, AtomicReference<String> maxIdRef) {
         followers.addAll(response.getUsers());
         String nextMaxId = response.getNext_max_id();
         maxIdRef.set(nextMaxId);
     }
 
-    private void processPostsResponse(List<TimelineMedia> medias, FeedUserResponse
-            response, AtomicReference<String> maxIdRef) {
+    private void processPostsResponse(List<TimelineMedia> medias, FeedUserResponse response, AtomicReference<String> maxIdRef) {
         medias.addAll(response.getItems());
         String nextMaxId = response.getNext_max_id();
+        log.info("下一個maxId:{}", nextMaxId);
         maxIdRef.set(nextMaxId);
-    }
-
-    private void pauseBetweenRequests() {
-        try {
-            TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.info("請求間暫停");
-        }
     }
 
     private boolean shouldContinueFetching(int count, String maxId, boolean isFirstIteration, int requestLimit) {

@@ -60,4 +60,8 @@ public class Media {
 
     @Column(name = "taken_at")
     private LocalDateTime takenAt;
+
+    @Lob
+    @Column(name = "text")
+    private String text;
 }

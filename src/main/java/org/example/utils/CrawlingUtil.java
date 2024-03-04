@@ -4,6 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author Eric.Lee
  * Date: 2024/2/23
@@ -16,7 +19,7 @@ public final class CrawlingUtil {
     }
 
     /**
-     * 检查已爬取的追蹤者数量是否达到实际追蹤者数量的95%。
+     * 檢查已爬取的追蹤者数量是否達到目標比率。
      *
      * @param amountFromCrawler 已爬取的追蹤者数量
      * @param actualAmount      实际的追蹤者数量
@@ -29,5 +32,19 @@ public final class CrawlingUtil {
         }
         double percentage = (double) amountFromCrawler / actualAmount;
         return percentage >= rate;
+    }
+
+    public static void pauseBetweenRequests() {
+        int minSeconds = 5;
+        int maxSeconds = 15;
+        int randomSleepTime = ThreadLocalRandom.current().nextInt(minSeconds, maxSeconds + 1);
+
+        try {
+            log.info("暫停 {} 秒以模擬真實請求...", randomSleepTime);
+            TimeUnit.SECONDS.sleep(randomSleepTime);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.info("請求間暫停被中斷");
+        }
     }
 }
