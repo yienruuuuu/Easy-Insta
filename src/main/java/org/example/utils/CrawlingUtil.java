@@ -34,6 +34,9 @@ public final class CrawlingUtil {
         return percentage >= rate;
     }
 
+    /**
+     * 暫停一段隨機5~15秒時間，以模擬真實請求。
+     */
     public static void pauseBetweenRequests() {
         int minSeconds = 5;
         int maxSeconds = 15;
