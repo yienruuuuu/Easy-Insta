@@ -1,20 +1,20 @@
 package org.example.task.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.bean.enumtype.LoginAccountStatusEnum;
-import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
-import org.example.service.InstagramService;
-import org.example.service.LoginService;
+import org.example.exception.TaskExecutionException;
+import org.example.service.FollowersService;
+import org.example.service.IgUserService;
 import org.example.service.TaskQueueService;
+import org.example.strategy.TaskExecutionStrategyFactory;
+import org.example.strategy.TaskStrategy;
 import org.example.task.BaseQueue;
 import org.example.task.TaskExecutionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * @author Eric.Lee
@@ -26,59 +26,34 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
     @Autowired
     private TaskQueueService taskQueueService;
     @Autowired
-    private InstagramService instagramService;
+    FollowersService followersService;
     @Autowired
-    private LoginService loginService;
+    IgUserService igUserService;
+    @Autowired
+    private TaskExecutionStrategyFactory strategyFactory; // 注入策略工廠
 
-    @Override
-    @Transactional
-    public void executeGetFollowerTask(TaskQueue task) {
-        log.info("開始執行任務: {}", task);
-        String maxId = task.getNextIdForSearch() == null ? null : task.getNextIdForSearch();
-        loginAndCheckResult(getLoginAccount(), task);
-
-        boolean result = instagramService.searchTargetUserFollowersAndSave(task, maxId);
-        if (!result) {
-            log.error("取得追蹤者失敗，任務終止: {}", task);
-            stopTasks();
-            return;
-        }
-
-        if (task.getNextIdForSearch() == null) {
-            task.setStatus(TaskStatusEnum.COMPLETED);
-            task.setEndTime(LocalDateTime.now());
+    public void executeTask(TaskQueue task, LoginAccount loginAccount) {
+        TaskStrategy strategy = strategyFactory.getStrategy(task.getTaskConfig().getTaskType());
+        if (strategy != null) {
+            try {
+                strategy.executeTask(task, loginAccount);
+            } catch (TaskExecutionException e) {
+                handleTaskFailure(task, loginAccount, e);
+            }
         } else {
-            task.setStatus(TaskStatusEnum.PAUSED);
+            log.error("找不到對應的策略類型: {}", task.getTaskConfig().getTaskType());
         }
+    }
+
+    /**
+     * 處理任務失敗
+     */
+    private void handleTaskFailure(TaskQueue task, LoginAccount loginAccount, TaskExecutionException e) {
+        log.error("任務失敗，任務:{},帳號:{} ,更新任務狀態，並暫停掃描task_queue排程. 錯誤詳情: {}", task, loginAccount, e.getMessage());
+        task.failTask(e.getMessage());
+        stopBaseQueue();
         taskQueueService.save(task);
-        log.info("任務完成:{}", task);
     }
 
-    //private
 
-    /**
-     * 從資料庫中取得一個可用的登入帳號
-     *
-     * @return 可用的登入帳號
-     */
-    private LoginAccount getLoginAccount() {
-        return loginService.findLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
-                .orElseThrow(() -> new RuntimeException("目前沒有可用的登入帳號"));
-    }
-
-    /**
-     * 登入並檢查結果
-     *
-     * @param loginAccount 登入帳號
-     * @param task         任務
-     */
-    private void loginAndCheckResult(LoginAccount loginAccount, TaskQueue task) {
-        boolean loginResult = instagramService.login(loginAccount.getAccount(), loginAccount.getPassword());
-        if (!loginResult) {
-            loginAccount.setStatus(LoginAccountStatusEnum.DEVIANT);
-            loginAccount.setStatusRemark(String.valueOf(LocalDateTime.now()));
-            log.info("登入失敗，任務終止: {}, 帳號:{}", task, loginAccount);
-            loginService.save(loginAccount);
-        }
-    }
 }

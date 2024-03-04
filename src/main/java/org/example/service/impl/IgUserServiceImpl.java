@@ -2,6 +2,8 @@ package org.example.service.impl;
 
 import org.example.dao.IgUserDao;
 import org.example.entity.IgUser;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.IgUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,5 +34,10 @@ public class IgUserServiceImpl implements IgUserService {
     @Override
     public Optional<IgUser> findUserByIgPk(long igPk) {
         return Optional.ofNullable(userDao.findByIgPk(igPk));
+    }
+
+    @Override
+    public IgUser findUserByIgUserName(String igUserName) {
+        return userDao.findByUserName(igUserName).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
     }
 }

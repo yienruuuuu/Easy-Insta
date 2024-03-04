@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Date:2024/2/18
  */
 public interface FollowersDao extends JpaRepository<Followers, Integer>, CustomFollowersRepository {
+    int countByIgUserName(String igUserName);
 }
