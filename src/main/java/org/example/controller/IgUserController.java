@@ -1,25 +1,26 @@
 package org.example.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.dto.ApiResponse;
+import org.example.bean.dto.CalculateMediaParams;
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.entity.IgUser;
 import org.example.entity.LoginAccount;
+import org.example.entity.Media;
 import org.example.entity.TaskQueue;
 import org.example.exception.SysCode;
-import org.example.service.IgUserService;
-import org.example.service.InstagramService;
-import org.example.service.LoginService;
-import org.example.service.TaskQueueService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.example.service.*;
+import org.example.utils.CrawlingUtil;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,14 +32,19 @@ import java.util.Optional;
 @RequestMapping("iguser")
 public class IgUserController extends BaseController {
 
-    @Autowired
-    LoginService loginService;
-    @Autowired
-    InstagramService instagramService;
-    @Autowired
-    IgUserService igUserService;
-    @Autowired
-    TaskQueueService taskQueueService;
+    private final LoginService loginService;
+    private final InstagramService instagramService;
+    private final IgUserService igUserService;
+    private final TaskQueueService taskQueueService;
+    private final MediaService mediaService;
+
+    public IgUserController(LoginService loginService, InstagramService instagramService, IgUserService igUserService, TaskQueueService taskQueueService, MediaService mediaService) {
+        this.loginService = loginService;
+        this.instagramService = instagramService;
+        this.igUserService = igUserService;
+        this.taskQueueService = taskQueueService;
+        this.mediaService = mediaService;
+    }
 
     @Operation(summary = "以用戶名查詢用戶，並可控是否紀錄到資料庫")
     @PostMapping(value = "/search/{username}/{needToWriteToDb}")
@@ -75,5 +81,43 @@ public class IgUserController extends BaseController {
             log.info("username: {}的 {} 任務建立失敗", taskEnum, username);
             return new ApiResponse(SysCode.TASK_CREATION_FAILED.getCode(), SysCode.TASK_CREATION_FAILED.getMessage(), null);
         }
+    }
+
+    @Operation(summary = "計算互動率", description = "請先確定都取得了當下的最新資料")
+    @PostMapping(value = "/interactionRate/{userName}")
+    public double calculateInteractionRate(@PathVariable String userName,
+                                           @Parameter(description = "日期格式为 YYYY-MM-DD",
+                                                  example = "2024-03-04",
+                                                  schema = @Schema(type = "string", format = "date"))
+                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        IgUser targetUser = igUserService.findUserByIgUserName(userName);
+        log.info("確認對象，用戶: {}存在, date={}", targetUser.getUserName(), date.atStartOfDay());
+        //取出media
+        List<Media> mediaList = mediaService.listMediaByIgUserIdAndDateRange(targetUser, date.atStartOfDay());
+        CalculateMediaParams params = getCalculateMediaParams(targetUser, mediaList);
+        log.info("計算互動率，用戶: {} ，計算參數:{}", targetUser.getUserName(), params);
+        return CrawlingUtil.calculateEngagementRate(params.getLikes(), params.getComments(), params.getShares(), params.getFollowers(), params.getPostAmounts());
+    }
+
+
+    // private
+
+    private CalculateMediaParams getCalculateMediaParams(IgUser targetUser, List<Media> mediaList) {
+        int totalLikes = 0;
+        int totalComments = 0;
+        int totalReshares = 0;
+        // 遍歷mediaList來累積likes, comments和reshares
+        for (Media media : mediaList) {
+            totalLikes += media.getLikeCount() != null ? media.getLikeCount() : 0;
+            totalComments += media.getCommentCount() != null ? media.getCommentCount() : 0;
+            totalReshares += media.getReshareCount() != null ? media.getReshareCount() : 0;
+        }
+        return CalculateMediaParams.builder()
+                .likes(totalLikes)
+                .comments(totalComments)
+                .shares(totalReshares)
+                .followers(targetUser.getFollowerCount())
+                .postAmounts(targetUser.getMediaCount())
+                .build();
     }
 }
