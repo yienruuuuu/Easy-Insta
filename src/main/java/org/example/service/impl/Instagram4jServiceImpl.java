@@ -171,7 +171,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                     .fbPlayCount(timelineMedia.getFb_play_count())
                     .likeCount(timelineMedia.getLike_count())
                     .fbLikeCount(timelineMedia.getFb_like_count())
-                    .reshareCount(timelineMedia.getRershare_count())
+                    .reshareCount(timelineMedia.getReshare_count())
                     .commentCount(timelineMedia.getComment_count())
                     .numberOfQualities(timelineMedia.getNumber_of_qualities())
                     .takenAt(takenAt) // 設置轉換後的Local Date Time
