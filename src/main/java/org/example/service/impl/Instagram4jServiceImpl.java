@@ -111,8 +111,6 @@ public class Instagram4jServiceImpl implements InstagramService {
             PostsAndMaxIdDTO postsAndMaxIdDTO = getPostsByUserName(client, task.getIgUser().getUserName(), maxId);
             // 將 TimelineMedia 物件轉換為 Media 實體
             List<Media> mediasList = convertTimeLineMediaToMediaEntities(task.getIgUser(), postsAndMaxIdDTO.getMedias());
-            log.info("取得貼文數量:{}", mediasList.size());
-            log.info("貼文資訊:{}", mediasList);
             // 保存貼文
             mediaService.batchInsertMedias(mediasList);
             task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
