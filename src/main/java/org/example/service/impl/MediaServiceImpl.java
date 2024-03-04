@@ -3,6 +3,8 @@ package org.example.service.impl;
 import org.example.dao.MediaDao;
 import org.example.entity.IgUser;
 import org.example.entity.Media;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.MediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,5 +55,16 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public void deleteOldMediaDataByIgUserId(Integer igUserId) {
         mediaDao.deleteByIgUserId(igUserId);
+    }
+
+    @Override
+    public List<Media> listMediaByIgUserIdAndDateRange(IgUser igUser, LocalDateTime time) {
+        // 如果 time 為 null，則預設為兩週前
+        if (time == null) time = LocalDateTime.now().minusWeeks(2);
+        List<Media> mediaList = mediaDao.findMediaInTime(igUser, time);
+        // 使用Optional来检查列表是否为空
+        return Optional.ofNullable(mediaList)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new ApiException(SysCode.MEDIA_NOT_FOUND));
     }
 }

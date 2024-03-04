@@ -27,7 +27,7 @@ public class Media {
     @Column(name = "id")
     private int id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ig_user_id", referencedColumnName = "id", nullable = false)
     private IgUser igUserId;
 

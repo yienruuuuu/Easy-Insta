@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author Eric.Lee
@@ -24,4 +25,15 @@ public interface MediaDao extends JpaRepository<Media, Integer>, CustomMediaRepo
     @Modifying
     @Query("delete from Media m where m.igUserId.id = :igUserId")
     void deleteByIgUserId(@Param("igUserId") Integer igUserId);
+
+    /**
+     * 尋找小於一定時間內的貼文
+     *
+     * @param igUser      用戶
+     * @param time 時間
+     * @return 貼文列表
+     */
+    @Query("SELECT m FROM Media m WHERE m.igUserId = :igUserId AND m.takenAt > :time")
+    List<Media> findMediaInTime(@Param("igUserId") IgUser igUser, @Param("time") LocalDateTime time);
+
 }
