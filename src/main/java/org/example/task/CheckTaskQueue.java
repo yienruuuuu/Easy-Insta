@@ -1,7 +1,6 @@
 package org.example.task;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
@@ -41,7 +40,7 @@ public class CheckTaskQueue extends BaseQueue {
         if (isInProgressTaskExists()) return;
 
         try {
-            LoginAccount loginAccount = getLoginAccount();
+            LoginAccount loginAccount = loginService.getLoginAccount();
             TaskQueue task = getTask(Arrays.asList(TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING));
             updateAndExecuteTask(task, loginAccount);
         } catch (ApiException e) {
@@ -91,17 +90,7 @@ public class CheckTaskQueue extends BaseQueue {
         // 更新任務狀態為IN_PROGRESS
         TaskQueue latestTaskQueue = taskQueueService.updateTaskStatus(taskQueue.getId(), TaskStatusEnum.IN_PROGRESS);
         // 執行任務
-        taskExecutionService.executeGetFollowerTask(latestTaskQueue, loginAccount);
-    }
-
-    /**
-     * 從資料庫中取得一個可用的登入帳號
-     *
-     * @return 可用的登入帳號
-     */
-    private LoginAccount getLoginAccount() {
-        return loginService.findFirstLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
-                .orElseThrow(() -> new ApiException(SysCode.NO_AVAILABLE_LOGIN_ACCOUNT, "沒有可用的登入帳號"));
+        taskExecutionService.executeTask(latestTaskQueue, loginAccount);
     }
 
 }

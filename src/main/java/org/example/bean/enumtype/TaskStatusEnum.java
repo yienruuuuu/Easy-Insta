@@ -44,7 +44,7 @@ public enum TaskStatusEnum {
      */
     public static List<TaskStatusEnum> getUnfinishedStatus() {
         return Arrays.stream(TaskStatusEnum.values())
-                .filter(status -> status == PENDING || status == IN_PROGRESS)
+                .filter(status -> status == PENDING || status == IN_PROGRESS || status == PAUSED)
                 .collect(Collectors.toList());
     }
 }

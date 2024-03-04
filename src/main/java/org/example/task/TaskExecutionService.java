@@ -9,9 +9,9 @@ import org.example.entity.TaskQueue;
  */
 public interface TaskExecutionService {
     /**
-     * 執行取得追蹤者任務
+     * 採策略模式執行任務
      *
      * @param task 任務
      */
-    void executeGetFollowerTask(TaskQueue task , LoginAccount loginAccount);
+    void executeTask(TaskQueue task, LoginAccount loginAccount);
 }

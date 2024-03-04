@@ -3,6 +3,8 @@ package org.example.service.impl;
 import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.dao.LoginAccountDao;
 import org.example.entity.LoginAccount;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,5 +41,11 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public int updateExhaustedAccounts(LocalDateTime thresholdTime, LoginAccountStatusEnum newStatus, LoginAccountStatusEnum oldStatus) {
         return loginAccountDao.updateStatusForExhaustedAccountsBefore(thresholdTime, newStatus, oldStatus);
+    }
+
+    @Override
+    public LoginAccount getLoginAccount() {
+        return findFirstLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
+                .orElseThrow(() -> new ApiException(SysCode.NO_AVAILABLE_LOGIN_ACCOUNT, "沒有可用的登入帳號"));
     }
 }

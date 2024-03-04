@@ -3,9 +3,12 @@ package org.example.service.impl;
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.dao.TaskQueueDao;
+import org.example.entity.IgUser;
+import org.example.entity.TaskConfig;
 import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
+import org.example.service.TaskConfigService;
 import org.example.service.TaskQueueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,18 +28,21 @@ public class TaskQueueServiceImpl implements TaskQueueService {
 
     @Autowired
     TaskQueueDao taskQueueDao;
+    @Autowired
+    TaskConfigService taskConfigService;
 
     @Override
-    public boolean checkGetFollowersTaskQueueExist(String userId, TaskTypeEnum taskType) {
-        List<TaskQueue> taskQueues = taskQueueDao.findTaskQueuesByCustomQuery(taskType, userId, TaskStatusEnum.getUnfinishedStatus());
+    public boolean checkGetFollowersTaskQueueExist(IgUser targetUser, TaskTypeEnum taskType) {
+        List<TaskQueue> taskQueues = taskQueueDao.findTaskQueuesByCustomQuery(taskType, targetUser, TaskStatusEnum.getUnfinishedStatus());
         return !taskQueues.isEmpty();
     }
 
     @Override
-    public Optional<TaskQueue> createAndSaveTaskQueue(String username, TaskTypeEnum taskType, TaskStatusEnum status) {
+    public Optional<TaskQueue> createAndSaveTaskQueue(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status) {
+        TaskConfig taskConfig = taskConfigService.findByTaskType(taskType);
         TaskQueue newTask = TaskQueue.builder()
-                .userName(username)
-                .taskType(taskType)
+                .igUser(igUser)
+                .taskConfig(taskConfig)
                 .status(status)
                 .submitTime(LocalDateTime.now())
                 .build();
@@ -50,7 +56,7 @@ public class TaskQueueServiceImpl implements TaskQueueService {
 
     @Override
     public Optional<TaskQueue> findFirstTaskQueueByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg) {
-        return taskQueueDao.findFirstByStatusAndNeedLoginIgOrderBySubmitTimeDesc(status, needLoginIg);
+        return taskQueueDao.findFirstByStatusAndTaskConfig_NeedLoginIgOrderBySubmitTimeDesc(status, needLoginIg);
     }
 
     @Override
