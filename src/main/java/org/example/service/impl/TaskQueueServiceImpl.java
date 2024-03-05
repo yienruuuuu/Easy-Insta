@@ -8,9 +8,10 @@ import org.example.entity.TaskConfig;
 import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
+import org.example.service.FollowersService;
+import org.example.service.MediaService;
 import org.example.service.TaskConfigService;
 import org.example.service.TaskQueueService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +27,18 @@ import java.util.Optional;
 @Service("taskQueueService")
 public class TaskQueueServiceImpl implements TaskQueueService {
 
-    @Autowired
-    TaskQueueDao taskQueueDao;
-    @Autowired
-    TaskConfigService taskConfigService;
+
+    private final TaskQueueDao taskQueueDao;
+    private final TaskConfigService taskConfigService;
+    private final FollowersService followersService;
+    private final MediaService mediaService;
+
+    public TaskQueueServiceImpl(TaskQueueDao taskQueueDao, TaskConfigService taskConfigService, FollowersService followersService, MediaService mediaService) {
+        this.taskQueueDao = taskQueueDao;
+        this.taskConfigService = taskConfigService;
+        this.followersService = followersService;
+        this.mediaService = mediaService;
+    }
 
     @Override
     public boolean checkGetFollowersTaskQueueExist(IgUser targetUser, TaskTypeEnum taskType) {
@@ -38,15 +47,10 @@ public class TaskQueueServiceImpl implements TaskQueueService {
     }
 
     @Override
-    public Optional<TaskQueue> createAndSaveTaskQueue(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status) {
-        TaskConfig taskConfig = taskConfigService.findByTaskType(taskType);
-        TaskQueue newTask = TaskQueue.builder()
-                .igUser(igUser)
-                .taskConfig(taskConfig)
-                .status(status)
-                .submitTime(LocalDateTime.now())
-                .build();
-        return save(newTask);
+    @Transactional
+    public Optional<TaskQueue> createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status) {
+        deleteOldDataByTaskTypeAndIgUser(taskType, igUser);
+        return createAndSaveTaskQueue(igUser, taskType, status);
     }
 
     @Override
@@ -91,4 +95,30 @@ public class TaskQueueServiceImpl implements TaskQueueService {
         return taskQueueDao.findAll();
     }
 
+
+    //private
+
+    private Optional<TaskQueue> createAndSaveTaskQueue(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status) {
+        TaskConfig taskConfig = taskConfigService.findByTaskType(taskType);
+        TaskQueue newTask = TaskQueue.builder()
+                .igUser(igUser)
+                .taskConfig(taskConfig)
+                .status(status)
+                .submitTime(LocalDateTime.now())
+                .build();
+        return save(newTask);
+    }
+
+    private void deleteOldDataByTaskTypeAndIgUser(TaskTypeEnum taskType, IgUser igUser) {
+        switch (taskType) {
+            case GET_FOLLOWERS:
+                followersService.deleteOldFollowersDataByIgUser(igUser);
+                break;
+            case GET_MEDIA:
+                mediaService.deleteOldMediaDataByIgUserId(igUser.getId());
+                break;
+            default:
+                throw new ApiException(SysCode.TASK_TYPE_NOT_FOUND);
+        }
+    }
 }
