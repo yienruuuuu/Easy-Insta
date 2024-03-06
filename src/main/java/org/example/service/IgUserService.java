@@ -14,5 +14,13 @@ public interface IgUserService extends BaseService<IgUser> {
      * @param igUserName IG用戶名
      * @return 用戶
      */
-    IgUser findUserByIgUserName(String igUserName);
+    Optional<IgUser> findUserByIgUserName(String igUserName);
+
+    /**
+     * 保存或更新用戶
+     *
+     * @param newUser 用戶
+     * @return 用戶
+     */
+    IgUser saveOrUpdateIgUser(IgUser newUser);
 }

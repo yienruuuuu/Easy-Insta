@@ -2,8 +2,6 @@ package org.example.service.impl;
 
 import org.example.dao.IgUserDao;
 import org.example.entity.IgUser;
-import org.example.exception.ApiException;
-import org.example.exception.SysCode;
 import org.example.service.IgUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,11 +31,26 @@ public class IgUserServiceImpl implements IgUserService {
 
     @Override
     public Optional<IgUser> findUserByIgPk(long igPk) {
-        return Optional.ofNullable(userDao.findByIgPk(igPk));
+        return userDao.findByIgPk(igPk);
     }
 
     @Override
-    public IgUser findUserByIgUserName(String igUserName) {
-        return userDao.findByUserName(igUserName).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
+    public Optional<IgUser> findUserByIgUserName(String igUserName) {
+        return userDao.findByUserName(igUserName);
+    }
+
+    @Override
+    public IgUser saveOrUpdateIgUser(IgUser newUser) {
+        return userDao.findByIgPk(newUser.getIgPk())
+                .map(existingUser -> {
+                    // 更新現有用戶的信息
+                    existingUser.setUserName(newUser.getUserName());
+                    existingUser.setFullName(newUser.getFullName());
+                    existingUser.setMediaCount(newUser.getMediaCount());
+                    existingUser.setFollowerCount(newUser.getFollowerCount());
+                    existingUser.setFollowingCount(newUser.getFollowingCount());
+                    return userDao.save(existingUser);
+                })
+                .orElseGet(() -> userDao.save(newUser)); // 如果沒有找到，儲存新用戶
     }
 }

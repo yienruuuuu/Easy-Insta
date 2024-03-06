@@ -12,7 +12,7 @@ public interface IgUserDao extends JpaRepository<IgUser, Integer> {
      * @param igPk 用戶Pk
      * @return 用戶信息
      */
-    IgUser findByIgPk(long igPk);
+    Optional<IgUser> findByIgPk(long igPk);
 
     /**
      * 以用戶名查詢用戶

@@ -14,8 +14,6 @@ import org.example.task.TaskExecutionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
 /**
  * @author Eric.Lee
  * Date:2024/2/19
@@ -49,7 +47,7 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
      * 處理任務失敗
      */
     private void handleTaskFailure(TaskQueue task, LoginAccount loginAccount, TaskExecutionException e) {
-        log.error("任務失敗，任務:{},帳號:{} ,更新任務狀態，並暫停掃描task_queue排程. 錯誤詳情: {}", task, loginAccount, e.getMessage());
+        log.error("任務失敗，任務:{},帳號:{} ,更新任務狀態，並暫停掃描task_queue排程. 錯誤詳情: {}", task, loginAccount, e.getMessage(), e);
         task.failTask(e.getMessage());
         stopBaseQueue();
         taskQueueService.save(task);

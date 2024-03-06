@@ -13,19 +13,26 @@ import com.github.instagram4j.instagram4j.responses.feed.FeedUserResponse;
 import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
 import com.github.instagram4j.instagram4j.responses.media.MediaGetCommentsResponse;
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
+import org.example.exception.TaskExecutionException;
+import org.example.utils.BrightDataProxy;
+import org.example.utils.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.List;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SpringBootApplication
+@Slf4j
 public class WebScraperTest implements CommandLineRunner {
 
-    private String loginAccount = "barbrafyfe383";
-    private String loginPassword = "Ha6707mitovuke";
+    private String loginAccount = "";
+    private String loginPassword = "";
+    private IGClient client;
 
     public static void main(String[] args) {
         SpringApplication.run(WebScraperTest.class, args);
@@ -34,13 +41,13 @@ public class WebScraperTest implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         //登入
-        IGClient client = IGClient.builder().username(loginAccount).password(loginPassword).login();
+        login(loginAccount, loginPassword);
         //測試獲取追蹤者
-//        testForGetFollowers(client);
+        testForGetFollowers(client);
 
         //測試獲取指定用戶的所有文章
-        getPostsByUserName(client, "tomato_yuki_", null);
-        //測試獲取指定用戶的指定文章_翻頁
+//        getPostsByUserName(client, "tomato_yuki_", null);
+//        測試獲取指定用戶的指定文章_翻頁
 //        getPostsByUserName(client, "tomato_yuki_", "3293773151733047571_63972138771");
 
         //測試獲取指定文章的資訊
@@ -279,10 +286,30 @@ public class WebScraperTest implements CommandLineRunner {
                     break;
                 }
             }
+        } catch (CompletionException e) {
+            if (e.getCause().toString().contains("challenge_required")) {
+                log.info("帳號異常");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return followers;
+    }
+
+    public void login(String account, String password) {
+        try {
+            client = IGClient.builder()
+                    .username(account)
+                    .password(password)
+                    .client(BrightDataProxy.getBrightDataProxy(
+                            "",
+                            "",
+                            StringUtils.generateRandomString(8)))
+                    .login();
+            log.info("登入成功, 帳號:{}", account);
+        } catch (Exception e) {
+            throw new TaskExecutionException("登入失敗");
+        }
     }
 }

@@ -37,4 +37,23 @@ public class Followers {
     @Column(name = "follower_full_name")
     private String followerFullName;
 
+    @Column(name = "is_private")
+    private Boolean isPrivate;
+
+    @Lob
+    @Column(name = "profile_pic_url")
+    private String profilePicUrl;
+
+    @Column(name = "profile_pic_id")
+    private String profilePicId;
+
+    @Column(name = "is_verified")
+    private Boolean isVerified;
+
+    @Column(name = "has_anonymous_profile_picture")
+    private Boolean hasAnonymousProfilePicture;
+
+    @Column(name = "latest_reel_media")
+    private Long latestReelMedia;
+
 }

@@ -100,7 +100,7 @@ public class Instagram4jServiceImpl implements InstagramService {
             followersService.batchInsertFollowers(followersList);
             task.setNextIdForSearch(followersObjFromIg.getMaxId());
         } catch (Exception e) {
-            throw new TaskExecutionException("获取追踪者失败", e);
+            throw new TaskExecutionException("獲取追蹤者失敗", e);
         }
     }
 
@@ -149,6 +149,12 @@ public class Instagram4jServiceImpl implements InstagramService {
                                 .followerPk(profile.getPk())
                                 .followerUserName(profile.getUsername())
                                 .followerFullName(profile.getFull_name())
+                                .isPrivate(profile.is_private())
+                                .profilePicUrl(profile.getProfile_pic_url())
+                                .profilePicId(profile.getProfile_pic_id())
+                                .isVerified(profile.is_verified())
+                                .hasAnonymousProfilePicture(profile.isHas_anonymous_profile_picture())
+                                .latestReelMedia(profile.getLatest_reel_media())
                                 .build())
                 .collect(Collectors.toList());
     }

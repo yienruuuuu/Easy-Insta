@@ -13,6 +13,7 @@ import org.example.entity.IgUser;
 import org.example.entity.LoginAccount;
 import org.example.entity.Media;
 import org.example.entity.TaskQueue;
+import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.*;
 import org.example.utils.CrawlingUtil;
@@ -52,19 +53,20 @@ public class IgUserController extends BaseController {
         LoginAccount loginAccount = loginService.getLoginAccount();
         IgUser igUser = instagramService.searchUser(username, loginAccount);
         // 檢查是否需要寫入資料庫,保存或更新使用者訊息
-        if (needToWriteToDb) {
-            igUserService.save(igUser);
-            log.info("用户信息已保存或更新 : {}", igUser.getUserName());
-        } else {
-            log.info("不需要寫入資料庫 使用者名稱: {}", igUser.getUserName());
+        if (!needToWriteToDb) {
+            return igUser;
         }
+        // 保存或更新使用者訊息
+        igUserService.saveOrUpdateIgUser(igUser);
+        loginAccount.loginAccountExhausted();
+        loginService.save(loginAccount);
         return igUser;
     }
 
     @Operation(summary = "提交排程，安排任務")
     @PostMapping(value = "/task/{taskEnum}/{username}")
     public Object sendTask(@PathVariable String username, @PathVariable TaskTypeEnum taskEnum) {
-        IgUser targetUser = igUserService.findUserByIgUserName(username);
+        IgUser targetUser = igUserService.findUserByIgUserName(username).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
         log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
         // 檢查對於查詢對象的任務是否存在
         if (taskQueueService.checkGetFollowersTaskQueueExist(targetUser, taskEnum)) {
@@ -91,7 +93,7 @@ public class IgUserController extends BaseController {
                                                    example = "2024-03-04",
                                                    schema = @Schema(type = "string", format = "date"))
                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        IgUser targetUser = igUserService.findUserByIgUserName(userName);
+        IgUser targetUser = igUserService.findUserByIgUserName(userName).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
         log.info("確認對象，用戶: {}存在, date={}", targetUser.getUserName(), date.atStartOfDay());
         //取出media
         List<Media> mediaList = mediaService.listMediaByIgUserIdAndDateRange(targetUser, date.atStartOfDay());
@@ -103,6 +105,13 @@ public class IgUserController extends BaseController {
 
     // private
 
+    /**
+     * 取得計算互動率的參數
+     *
+     * @param targetUser 用戶
+     * @param mediaList  用戶的media列表
+     * @return CalculateMediaParams
+     */
     private CalculateMediaParams getCalculateMediaParams(IgUser targetUser, List<Media> mediaList) {
         int totalLikes = 0;
         int totalComments = 0;

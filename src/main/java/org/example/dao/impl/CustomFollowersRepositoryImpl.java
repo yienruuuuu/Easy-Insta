@@ -24,7 +24,17 @@ public class CustomFollowersRepositoryImpl implements CustomFollowersRepository 
 
     @Override
     public void batchInsertOrUpdate(List<Followers> followersList) {
-        String sql = "INSERT IGNORE INTO followers (ig_user_name, follower_pk, follower_user_name, follower_full_name) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO followers (ig_user_id, follower_pk, follower_user_name, follower_full_name, is_private, profile_pic_url, profile_pic_id, is_verified, has_anonymous_profile_picture, latest_reel_media) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE " +
+                "follower_user_name = VALUES(follower_user_name), " +
+                "follower_full_name = VALUES(follower_full_name), " +
+                "is_private = VALUES(is_private), " +
+                "profile_pic_url = VALUES(profile_pic_url), " +
+                "profile_pic_id = VALUES(profile_pic_id), " +
+                "is_verified = VALUES(is_verified), " +
+                "has_anonymous_profile_picture = VALUES(has_anonymous_profile_picture), " +
+                "latest_reel_media = VALUES(latest_reel_media)";
+
         int[] updateCounts = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -33,6 +43,12 @@ public class CustomFollowersRepositoryImpl implements CustomFollowersRepository 
                 ps.setLong(2, follower.getFollowerPk());
                 ps.setString(3, follower.getFollowerUserName());
                 ps.setString(4, follower.getFollowerFullName());
+                ps.setBoolean(5, follower.getIsPrivate());
+                ps.setString(6, follower.getProfilePicUrl());
+                ps.setString(7, follower.getProfilePicId());
+                ps.setBoolean(8, follower.getIsVerified());
+                ps.setBoolean(9, follower.getHasAnonymousProfilePicture());
+                ps.setLong(10, follower.getLatestReelMedia());
             }
 
             @Override
