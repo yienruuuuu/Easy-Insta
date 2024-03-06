@@ -56,7 +56,7 @@ public final class CrawlingUtil {
      */
     public static double calculateEngagementRate(int likes, int comments, int reshareCounts, int followers, int postAmounts) {
         if (followers <= 0 || postAmounts <= 0) {
-            throw new ApiException(SysCode.FOLLOWERS_OR_POST_AMOUNT_IS_ZERO);
+            throw new ApiException(SysCode.FOLLOWERS_OR_MEDIA_AMOUNT_IS_ZERO);
         }
         return (double) (likes + comments + reshareCounts) / postAmounts / followers * 100;
     }

@@ -2,8 +2,8 @@ package org.example.service.impl;
 
 import org.example.dao.FollowersDao;
 import org.example.entity.Followers;
+import org.example.entity.IgUser;
 import org.example.service.FollowersService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,8 +15,11 @@ import java.util.Optional;
  */
 @Service("followersService")
 public class FollowersServiceImpl implements FollowersService {
-    @Autowired
-    FollowersDao followersDao;
+    private final FollowersDao followersDao;
+
+    public FollowersServiceImpl(FollowersDao followersDao) {
+        this.followersDao = followersDao;
+    }
 
 
     @Override
@@ -25,8 +28,8 @@ public class FollowersServiceImpl implements FollowersService {
     }
 
     @Override
-    public int countFollowersByIgUserName(String igUserName) {
-        return followersDao.countByIgUserName(igUserName);
+    public int countFollowersByIgUserName(IgUser igUser) {
+        return followersDao.countByIgUser(igUser);
     }
 
     @Override
@@ -42,5 +45,10 @@ public class FollowersServiceImpl implements FollowersService {
     @Override
     public List<Followers> findAll() {
         return followersDao.findAll();
+    }
+
+    @Override
+    public void deleteOldFollowersDataByIgUser(IgUser igUser) {
+        followersDao.deleteByIgUser(igUser);
     }
 }

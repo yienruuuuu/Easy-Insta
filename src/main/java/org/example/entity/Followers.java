@@ -24,8 +24,9 @@ public class Followers {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "ig_user_name")
-    private String igUserName;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ig_user_id", referencedColumnName = "id", nullable = false)
+    private IgUser igUser;
 
     @Column(name = "follower_pk")
     private Long followerPk;

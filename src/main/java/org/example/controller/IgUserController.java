@@ -67,13 +67,14 @@ public class IgUserController extends BaseController {
         IgUser targetUser = igUserService.findUserByIgUserName(username);
         log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
         // 檢查對於查詢對象的任務是否存在
-        boolean taskExists = taskQueueService.checkGetFollowersTaskQueueExist(targetUser, taskEnum);
-        if (taskExists) {
+        if (taskQueueService.checkGetFollowersTaskQueueExist(targetUser, taskEnum)) {
             log.info("用戶: {} 的 {} 任務已存在", taskEnum, username);
             return new ApiResponse(SysCode.TASK_ALREADY_EXISTS.getCode(), SysCode.TASK_ALREADY_EXISTS.getMessage(), null);
         }
         // 保存任务並返回保存的任务
-        Optional<TaskQueue> savedTask = taskQueueService.createAndSaveTaskQueue(targetUser, taskEnum, TaskStatusEnum.PENDING);
+        Optional<TaskQueue> savedTask =
+                taskQueueService.createTaskQueueAndDeleteOldData(targetUser, taskEnum, TaskStatusEnum.PENDING);
+
         if (savedTask.isPresent()) {
             log.info("username: {} 的 {} 任務創建成功", taskEnum, username);
             return savedTask.get();
@@ -87,9 +88,9 @@ public class IgUserController extends BaseController {
     @PostMapping(value = "/interactionRate/{userName}")
     public double calculateInteractionRate(@PathVariable String userName,
                                            @Parameter(description = "日期格式为 YYYY-MM-DD",
-                                                  example = "2024-03-04",
-                                                  schema = @Schema(type = "string", format = "date"))
-                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+                                                   example = "2024-03-04",
+                                                   schema = @Schema(type = "string", format = "date"))
+                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         IgUser targetUser = igUserService.findUserByIgUserName(userName);
         log.info("確認對象，用戶: {}存在, date={}", targetUser.getUserName(), date.atStartOfDay());
         //取出media

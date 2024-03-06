@@ -95,7 +95,7 @@ public class Instagram4jServiceImpl implements InstagramService {
             // 取得追蹤者
             FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(client, task.getIgUser().getUserName(), maxId);
             // 將 Profile 物件轉換為 Followers 實體
-            List<Followers> followersList = convertProfilesToFollowerEntities(task.getIgUser().getUserName(), followersObjFromIg.getFollowers());
+            List<Followers> followersList = convertProfilesToFollowerEntities(task.getIgUser(), followersObjFromIg.getFollowers());
             // 保存追蹤者
             followersService.batchInsertFollowers(followersList);
             task.setNextIdForSearch(followersObjFromIg.getMaxId());
@@ -138,14 +138,14 @@ public class Instagram4jServiceImpl implements InstagramService {
     /**
      * 將 Profile 物件轉換為 Followers 實體
      *
-     * @param igUserName         IG用戶名
+     * @param igUser             IG用戶名
      * @param followersObjFromIg IG追蹤者物件
      * @return Followers 實體列表
      */
-    private static List<Followers> convertProfilesToFollowerEntities(String igUserName, List<Profile> followersObjFromIg) {
+    private static List<Followers> convertProfilesToFollowerEntities(IgUser igUser, List<Profile> followersObjFromIg) {
         return followersObjFromIg.stream().map(
                         profile -> Followers.builder()
-                                .igUserName(igUserName)
+                                .igUser(igUser)
                                 .followerPk(profile.getPk())
                                 .followerUserName(profile.getUsername())
                                 .followerFullName(profile.getFull_name())

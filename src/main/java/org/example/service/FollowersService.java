@@ -2,6 +2,7 @@ package org.example.service;
 
 
 import org.example.entity.Followers;
+import org.example.entity.IgUser;
 
 import java.util.List;
 
@@ -20,8 +21,15 @@ public interface FollowersService extends BaseService<Followers> {
     /**
      * 透過用戶ID查詢追蹤者數量
      *
-     * @param userId 用戶ID
+     * @param igUser 用戶
      * @return 追蹤者數量
      */
-    int countFollowersByIgUserName(String userId);
+    int countFollowersByIgUserName(IgUser igUser);
+
+    /**
+     * 透過用戶刪除舊的追蹤者資料
+     *
+     * @param igUser 用戶
+     */
+    void deleteOldFollowersDataByIgUser(IgUser igUser);
 }

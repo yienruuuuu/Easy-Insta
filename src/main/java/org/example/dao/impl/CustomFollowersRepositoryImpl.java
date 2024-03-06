@@ -29,7 +29,7 @@ public class CustomFollowersRepositoryImpl implements CustomFollowersRepository 
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 Followers follower = followersList.get(i);
-                ps.setString(1, follower.getIgUserName());
+                ps.setInt(1, follower.getIgUser().getId());
                 ps.setLong(2, follower.getFollowerPk());
                 ps.setString(3, follower.getFollowerUserName());
                 ps.setString(4, follower.getFollowerFullName());

@@ -26,7 +26,8 @@ public enum SysCode implements ErrorCode {
     CONFIG_NOT_FOUND(2010, "配置未找到"),
     IG_GET_MEDIA_FAILED(2013, "IG獲取貼文失敗"),
     MEDIA_NOT_FOUND(2014, "未找到貼文資訊，請確認已跑過貼文排程"),
-    FOLLOWERS_OR_POST_AMOUNT_IS_ZERO(2015, "粉絲數和貼文數必須大於0"),
+    FOLLOWERS_OR_MEDIA_AMOUNT_IS_ZERO(2015, "粉絲數和貼文數必須大於0"),
+    TASK_TYPE_NOT_FOUND(2016, "任務類型未找到"),
 
     IG_USER_NOT_FOUND(3000, "IG user not found"),
     NOT_FOUND(7000, "Data not found"),
