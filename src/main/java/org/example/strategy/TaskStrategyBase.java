@@ -2,10 +2,10 @@ package org.example.strategy;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.entity.LoginAccount;
+import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
 import org.example.service.InstagramService;
 import org.example.service.LoginService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,7 +28,7 @@ public abstract class TaskStrategyBase implements TaskStrategy {
             instagramService.login(loginAccount.getAccount(), loginAccount.getPassword());
         } catch (TaskExecutionException e) {
             handleLoginFailure(loginAccount, e);
-            throw new TaskExecutionException("登入失敗");
+            throw new TaskExecutionException(SysCode.IG_LOGIN_FAILED, e);
         }
         //更新登入帳號狀態為已使用
         loginAccount.loginAccountExhausted();

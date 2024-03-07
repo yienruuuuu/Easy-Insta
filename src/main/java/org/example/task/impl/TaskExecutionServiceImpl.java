@@ -3,15 +3,15 @@ package org.example.task.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
-import org.example.service.FollowersService;
-import org.example.service.IgUserService;
+import org.example.service.LoginService;
 import org.example.service.TaskQueueService;
 import org.example.strategy.TaskExecutionStrategyFactory;
 import org.example.strategy.TaskStrategy;
 import org.example.task.BaseQueue;
 import org.example.task.TaskExecutionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,37 +21,56 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service("taskExecutionService")
 public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecutionService {
-    @Autowired
-    private TaskQueueService taskQueueService;
-    @Autowired
-    FollowersService followersService;
-    @Autowired
-    IgUserService igUserService;
-    @Autowired
-    private TaskExecutionStrategyFactory strategyFactory; // 注入策略工廠
+
+    private final TaskQueueService taskQueueService;
+    private final TaskExecutionStrategyFactory strategyFactory; // 注入策略工廠
+    private final LoginService loginService;
+
+    public TaskExecutionServiceImpl(TaskQueueService taskQueueService, TaskExecutionStrategyFactory strategyFactory, LoginService loginService) {
+        this.taskQueueService = taskQueueService;
+        this.strategyFactory = strategyFactory;
+        this.loginService = loginService;
+    }
 
     public void executeTask(TaskQueue task, LoginAccount loginAccount) {
-        TaskStrategy strategy = strategyFactory.getStrategy(task.getTaskConfig().getTaskType());
-        if (strategy != null) {
-            try {
-                strategy.executeTask(task, loginAccount);
-            } catch (TaskExecutionException e) {
-                handleTaskFailure(task, loginAccount, e);
-            }
-        } else {
-            log.error("找不到對應的策略類型: {}", task.getTaskConfig().getTaskType());
+        TaskStrategy strategy = getStrategy(task);
+        try {
+            strategy.executeTask(task, loginAccount);
+        } catch (TaskExecutionException e) {
+            handleTaskFailure(task, loginAccount, e);
         }
     }
+
+    // private
 
     /**
      * 處理任務失敗
      */
     private void handleTaskFailure(TaskQueue task, LoginAccount loginAccount, TaskExecutionException e) {
         log.error("任務失敗，任務:{},帳號:{} ,更新任務狀態，並暫停掃描task_queue排程. 錯誤詳情: {}", task, loginAccount, e.getMessage(), e);
-        task.failTask(e.getMessage());
+        //停止任務檢核排程
         stopBaseQueue();
+        //更新任務狀態
+        task.failTask(e.getMessage());
         taskQueueService.save(task);
+        //更新登入帳號狀態
+        loginAccount.loginAccountDeviant(e.getMessage());
+        loginService.save(loginAccount);
+
     }
 
+    /**
+     * 取得策略，如果找不到對應的策略類型，則更新任務狀態
+     */
+    private TaskStrategy getStrategy(TaskQueue task) {
+        TaskStrategy strategy = strategyFactory.getStrategy(task.getTaskConfig().getTaskType());
 
+        if (strategy == null) {
+            task.failTask(SysCode.TASK_TYPE_NOT_FOUND_IN_STRATEGY_FACTORY.getMessage());
+            taskQueueService.save(task);
+            throw new ApiException(SysCode.TASK_TYPE_NOT_FOUND_IN_STRATEGY_FACTORY);
+        }
+
+        return strategy;
+    }
 }

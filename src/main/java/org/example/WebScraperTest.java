@@ -14,6 +14,7 @@ import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
 import com.github.instagram4j.instagram4j.responses.media.MediaGetCommentsResponse;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
 import org.example.utils.BrightDataProxy;
 import org.example.utils.StringUtils;
@@ -309,7 +310,7 @@ public class WebScraperTest implements CommandLineRunner {
                     .login();
             log.info("登入成功, 帳號:{}", account);
         } catch (Exception e) {
-            throw new TaskExecutionException("登入失敗");
+            throw new TaskExecutionException(SysCode.IG_LOGIN_FAILED);
         }
     }
 }

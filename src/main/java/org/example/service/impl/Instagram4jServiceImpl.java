@@ -67,7 +67,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                     .login();
             log.info("登入成功, 帳號:{}", account);
         } catch (Exception e) {
-            throw new TaskExecutionException("登入失敗");
+            throw new TaskExecutionException(SysCode.IG_LOGIN_FAILED, e);
         }
     }
 
@@ -100,7 +100,7 @@ public class Instagram4jServiceImpl implements InstagramService {
             followersService.batchInsertFollowers(followersList);
             task.setNextIdForSearch(followersObjFromIg.getMaxId());
         } catch (Exception e) {
-            throw new TaskExecutionException("獲取追蹤者失敗", e);
+            throw new TaskExecutionException(SysCode.IG_GET_FOLLOWERS_FAILED, e);
         }
     }
 
@@ -115,7 +115,8 @@ public class Instagram4jServiceImpl implements InstagramService {
             mediaService.batchInsertMedias(mediasList);
             task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
         } catch (Exception e) {
-            throw new TaskExecutionException("獲取貼文失敗", e);
+            log.error("取得貼文失敗", e);
+            throw new TaskExecutionException(SysCode.IG_GET_MEDIA_FAILED, e);
         }
     }
 
