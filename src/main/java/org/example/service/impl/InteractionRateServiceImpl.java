@@ -1,11 +1,8 @@
 package org.example.service.impl;
 
 import org.example.dao.InteractionRateDao;
-import org.example.entity.IgUser;
 import org.example.entity.InteractionRate;
-import org.example.entity.Media;
 import org.example.service.InteractionRateService;
-import org.example.service.MediaService;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,10 +13,8 @@ import java.util.Optional;
  */
 public class InteractionRateServiceImpl implements InteractionRateService {
     private InteractionRateDao interactionRateDao;
-    private MediaService mediaService;
 
-    public InteractionRateServiceImpl(InteractionRateDao interactionRateDao, MediaService mediaService) {
-        this.mediaService = mediaService;
+    public InteractionRateServiceImpl(InteractionRateDao interactionRateDao) {
         this.interactionRateDao = interactionRateDao;
     }
 
