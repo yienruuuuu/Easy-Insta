@@ -31,7 +31,7 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     public Optional<Media> findById(Integer id) {
-        return Optional.of(mediaDao.findById(id).get());
+        return mediaDao.findById(id);
     }
 
     @Override

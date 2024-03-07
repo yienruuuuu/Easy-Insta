@@ -27,7 +27,7 @@ public class LoginServiceImpl implements LoginService {
 
     @Override
     public Optional<LoginAccount> findById(Integer id) {
-        return Optional.of(loginAccountDao.findById(id).get());
+        return loginAccountDao.findById(id);
     }
 
     @Override

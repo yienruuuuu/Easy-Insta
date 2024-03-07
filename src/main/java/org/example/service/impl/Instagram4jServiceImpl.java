@@ -74,7 +74,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     @Override
     public IgUser searchUser(String username, LoginAccount loginAccount) {
         login(loginAccount.getAccount(), loginAccount.getPassword());
-        UserAction searchResult = null;
+        UserAction searchResult;
         try {
             searchResult = client.actions().users().findByUsername(username).join();
         } catch (CompletionException e) {

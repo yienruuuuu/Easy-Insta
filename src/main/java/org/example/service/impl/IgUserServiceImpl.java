@@ -23,7 +23,7 @@ public class IgUserServiceImpl implements IgUserService {
 
     @Override
     public Optional<IgUser> findById(Integer id) {
-        return Optional.of(userDao.findById(id).get());
+        return userDao.findById(id);
     }
 
     @Override

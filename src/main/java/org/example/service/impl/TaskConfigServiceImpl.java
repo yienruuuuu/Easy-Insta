@@ -31,7 +31,7 @@ public class TaskConfigServiceImpl implements TaskConfigService {
 
     @Override
     public Optional<TaskConfig> findById(Integer id) {
-        return Optional.of(taskConfigDao.findById(BigInteger.valueOf(id)).get());
+        return taskConfigDao.findById(BigInteger.valueOf(id));
     }
 
     @Override
