@@ -6,7 +6,6 @@ import org.example.entity.TaskConfig;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.TaskConfigService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -19,8 +18,11 @@ import java.util.Optional;
  */
 @Service("taskConfigService")
 public class TaskConfigServiceImpl implements TaskConfigService {
-    @Autowired
-    TaskConfigDao taskConfigDao;
+    private final TaskConfigDao taskConfigDao;
+
+    public TaskConfigServiceImpl(TaskConfigDao taskConfigDao) {
+        this.taskConfigDao = taskConfigDao;
+    }
 
     @Override
     public Optional<TaskConfig> save(TaskConfig target) {

@@ -26,7 +26,6 @@ import org.example.utils.BrightDataProxy;
 import org.example.utils.CrawlingUtil;
 import org.example.utils.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -41,16 +40,17 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service("instagramService")
 public class Instagram4jServiceImpl implements InstagramService {
-    @Autowired
-    LoginServiceImpl loginService;
-    @Autowired
-    IgUserServiceImpl igUserService;
-    @Autowired
-    FollowersService followersService;
-    @Autowired
-    MediaServiceImpl mediaService;
-    @Autowired
-    ConfigCache configCache;
+    private final IgUserServiceImpl igUserService;
+    private final FollowersService followersService;
+    private final MediaServiceImpl mediaService;
+    private final ConfigCache configCache;
+
+    public Instagram4jServiceImpl(IgUserServiceImpl igUserService, FollowersService followersService, MediaServiceImpl mediaService, ConfigCache configCache) {
+        this.igUserService = igUserService;
+        this.followersService = followersService;
+        this.mediaService = mediaService;
+        this.configCache = configCache;
+    }
 
     private IGClient client;
 
@@ -79,7 +79,7 @@ public class Instagram4jServiceImpl implements InstagramService {
             searchResult = client.actions().users().findByUsername(username).join();
         } catch (CompletionException e) {
             log.error("IG查詢用戶異常", e);
-            throw new ApiException(SysCode.IG_USER_NOT_FOUND, "查詢用戶異常");
+            throw new ApiException(SysCode.IG_USER_NOT_FOUND);
         }
         User igUser = searchResult.getUser();
         log.info("IG查詢結果,用戶名稱: {} ,查詢用戶PK: {}", igUser.getUsername(), igUser.getPk());
@@ -122,7 +122,13 @@ public class Instagram4jServiceImpl implements InstagramService {
 
     //private
 
-    //資料實體處理
+    /**
+     * 建立新的User實體，或是從資料庫中獲取已存在的實體，並以ig響應設置或更新用戶信息
+     *
+     * @param userOptional 資料庫中已存在的用戶
+     * @param igUser       IG用戶(實體)
+     * @return 用戶實體
+     */
     @NotNull
     private static IgUser getIgUser(Optional<IgUser> userOptional, User igUser) {
         IgUser userEntity = userOptional.orElse(new IgUser());

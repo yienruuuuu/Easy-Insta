@@ -6,10 +6,8 @@ import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
-import org.example.service.InstagramService;
 import org.example.service.LoginService;
 import org.example.service.TaskQueueService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +22,15 @@ import java.util.Optional;
 @Slf4j
 @Service("checkTaskQueue")
 public class CheckTaskQueue extends BaseQueue {
-    @Autowired
-    TaskQueueService taskQueueService;
-    @Autowired
-    InstagramService instagramService;
-    @Autowired
-    LoginService loginService;
-    @Autowired
-    TaskExecutionService taskExecutionService;
+    private final TaskQueueService taskQueueService;
+    private final LoginService loginService;
+    private final TaskExecutionService taskExecutionService;
+
+    public CheckTaskQueue(TaskQueueService taskQueueService, LoginService loginService, TaskExecutionService taskExecutionService) {
+        this.taskQueueService = taskQueueService;
+        this.loginService = loginService;
+        this.taskExecutionService = taskExecutionService;
+    }
 
     @Scheduled(fixedDelayString = "${taskQueue.checkDelay:10000}")
     public void checkAndExecuteNeedLoginTasks() {

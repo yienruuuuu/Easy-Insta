@@ -6,7 +6,6 @@ import org.example.entity.Config;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.ConfigService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,8 +16,11 @@ import java.util.List;
  */
 @Service
 public class ConfigServiceImpl implements ConfigService {
-    @Autowired
-    private ConfigDao configDao;
+    private final ConfigDao configDao;
+
+    public ConfigServiceImpl(ConfigDao configDao) {
+        this.configDao = configDao;
+    }
 
     @Override
     public Config getConfig(ConfigEnum param) {

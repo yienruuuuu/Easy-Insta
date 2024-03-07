@@ -6,7 +6,6 @@ import org.example.entity.LoginAccount;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.LoginService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,8 +14,11 @@ import java.util.Optional;
 
 @Service("loginService")
 public class LoginServiceImpl implements LoginService {
-    @Autowired
-    LoginAccountDao loginAccountDao;
+    private final LoginAccountDao loginAccountDao;
+
+    public LoginServiceImpl(LoginAccountDao loginAccountDao) {
+        this.loginAccountDao = loginAccountDao;
+    }
 
     @Override
     public Optional<LoginAccount> save(LoginAccount target) {

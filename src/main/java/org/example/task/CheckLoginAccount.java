@@ -3,7 +3,6 @@ package org.example.task;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.service.LoginService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,11 +16,14 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 public class CheckLoginAccount {
-    @Autowired
-    private LoginService loginService;
+    private final LoginService loginService;
 
     @Value("${exhausted.account.resurrection.coldtime:2}")
     private int accountColdtime;
+
+    public CheckLoginAccount(LoginService loginService) {
+        this.loginService = loginService;
+    }
 
     // 每小時和半小時執行一次，例如 01:00, 01:30, 02:00, 02:30...
 //    @Scheduled(cron = "0 0/30 * * * ?")

@@ -1,7 +1,6 @@
 package org.example.strategy;
 
 import org.example.bean.enumtype.TaskTypeEnum;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -17,7 +16,6 @@ import java.util.Optional;
 public class TaskExecutionStrategyFactory {
     private final Map<TaskTypeEnum, TaskStrategy> strategies = new HashMap<>();
 
-    @Autowired
     public TaskExecutionStrategyFactory(List<TaskStrategy> strategyList) {
         strategyList.forEach(strategy -> {
             if (strategy instanceof GetFollowerStrategy) {
@@ -28,6 +26,7 @@ public class TaskExecutionStrategyFactory {
             }
         });
     }
+
     public TaskStrategy getStrategy(TaskTypeEnum taskType) {
         return Optional.ofNullable(strategies.get(taskType))
                 .orElseThrow(() -> new IllegalArgumentException("無效的任務類型 : " + taskType));

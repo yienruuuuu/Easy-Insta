@@ -6,7 +6,6 @@ import org.example.entity.Media;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.MediaService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,8 +18,11 @@ import java.util.Optional;
  */
 @Service
 public class MediaServiceImpl implements MediaService {
-    @Autowired
-    MediaDao mediaDao;
+    private final MediaDao mediaDao;
+
+    public MediaServiceImpl(MediaDao mediaDao) {
+        this.mediaDao = mediaDao;
+    }
 
     @Override
     public Optional<Media> save(Media target) {
