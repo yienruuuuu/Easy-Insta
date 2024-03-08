@@ -24,6 +24,9 @@ public class TaskExecutionStrategyFactory {
             if (strategy instanceof GetMediaStrategy) {
                 strategies.put(TaskTypeEnum.GET_MEDIA, strategy);
             }
+            if (strategy instanceof GetMediaCommentStrategy) {
+                strategies.put(TaskTypeEnum.GET_MEDIA_COMMENT, strategy);
+            }
         });
     }
 

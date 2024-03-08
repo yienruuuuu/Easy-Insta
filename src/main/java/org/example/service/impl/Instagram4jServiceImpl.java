@@ -3,15 +3,19 @@ package org.example.service.impl;
 
 import com.github.instagram4j.instagram4j.IGClient;
 import com.github.instagram4j.instagram4j.actions.users.UserAction;
+import com.github.instagram4j.instagram4j.models.media.timeline.Comment;
 import com.github.instagram4j.instagram4j.models.media.timeline.TimelineMedia;
 import com.github.instagram4j.instagram4j.models.user.Profile;
 import com.github.instagram4j.instagram4j.models.user.User;
 import com.github.instagram4j.instagram4j.requests.feed.FeedUserRequest;
 import com.github.instagram4j.instagram4j.requests.friendships.FriendshipsFeedsRequest;
+import com.github.instagram4j.instagram4j.requests.media.MediaGetCommentsRequest;
 import com.github.instagram4j.instagram4j.responses.feed.FeedUserResponse;
 import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
+import com.github.instagram4j.instagram4j.responses.media.MediaGetCommentsResponse;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.example.bean.dto.CommentsAndMaxIdDTO;
 import org.example.bean.dto.FollowersAndMaxIdDTO;
 import org.example.bean.dto.PostsAndMaxIdDTO;
 import org.example.bean.enumtype.ConfigEnum;
@@ -22,6 +26,7 @@ import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
 import org.example.service.FollowersService;
 import org.example.service.InstagramService;
+import org.example.service.MediaCommentService;
 import org.example.utils.BrightDataProxy;
 import org.example.utils.CrawlingUtil;
 import org.example.utils.StringUtils;
@@ -44,12 +49,14 @@ public class Instagram4jServiceImpl implements InstagramService {
     private final FollowersService followersService;
     private final MediaServiceImpl mediaService;
     private final ConfigCache configCache;
+    private final MediaCommentService mediaCommentService;
 
-    public Instagram4jServiceImpl(IgUserServiceImpl igUserService, FollowersService followersService, MediaServiceImpl mediaService, ConfigCache configCache) {
+    public Instagram4jServiceImpl(IgUserServiceImpl igUserService, FollowersService followersService, MediaServiceImpl mediaService, ConfigCache configCache, MediaCommentService mediaCommentService) {
         this.igUserService = igUserService;
         this.followersService = followersService;
         this.mediaService = mediaService;
         this.configCache = configCache;
+        this.mediaCommentService = mediaCommentService;
     }
 
     private IGClient client;
@@ -112,6 +119,22 @@ public class Instagram4jServiceImpl implements InstagramService {
             // 將 TimelineMedia 物件轉換為 Media 實體
             List<Media> mediasList = convertTimeLineMediaToMediaEntities(task.getIgUser(), postsAndMaxIdDTO.getMedias());
             // 保存貼文
+            mediaService.batchInsertMedias(mediasList);
+            task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
+        } catch (Exception e) {
+            log.error(SysCode.IG_GET_MEDIA_FAILED.getMessage(), e);
+            throw new TaskExecutionException(SysCode.IG_GET_MEDIA_FAILED, e);
+        }
+    }
+
+    @Override
+    public void searchMediaCommentsAndSave(TaskQueue task, String maxId) {
+        try {
+            // 取得對象貼文
+            CommentsAndMaxIdDTO commentsAndMaxIdDTO = getCommentsByMediaPk(client, task, maxId);
+            // 將 Comment 物件轉換為 Media_comment 實體
+            List<MediaComment> mediasList = convertCommentToMediaCommentEntity(task, commentsAndMaxIdDTO.getComments());
+            // TODO 保存
             mediaService.batchInsertMedias(mediasList);
             task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
         } catch (Exception e) {
@@ -192,6 +215,31 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     /**
+     * 將 Comment 物件轉換為 MediaComment 實體
+     *
+     * @param taskQueue       任務
+     * @param commentFromIg   IG留言物件
+     */
+    private static List<MediaComment> convertCommentToMediaCommentEntity(TaskQueue taskQueue, List<Comment> commentFromIg) {
+        return commentFromIg.stream().map(comment -> MediaComment.builder()
+                .mediaId(taskQueue.getTaskQueueMediaId().getMedia())
+                .text(comment.getText())
+                .commenterUserId(comment.getUser().getPk())
+                .commenterFullName(comment.getUser().getFull_name())
+                .commenterUserName(comment.getUser().getUsername())
+                .commentPk(comment.getPk())
+                .commenterIsPrivate(comment.getUser().is_private())
+                .commenterIsVerified(comment.getUser().is_verified())
+                .commenterProfilePicId(comment.getUser().getProfile_pic_id())
+                .commenterProfilePicUrl(comment.getUser().getProfile_pic_url())
+                .commenterLatestReelMedia(comment.getUser().getLatest_reel_media())
+                .contentType(comment.getContent_type())
+                .status(comment.getStatus())
+                .commentLikeCount(comment.getComment_like_count())
+                .build()).collect(Collectors.toList());
+    }
+
+    /**
      * 向ig爬取指定用户的所有追踪者。
      *
      * @param client   已登入的 IGClient 對象
@@ -266,11 +314,43 @@ public class Instagram4jServiceImpl implements InstagramService {
             }
             log.info("出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
         } catch (Exception e) {
-            log.error("取得追蹤者失敗", e);
+            log.error(SysCode.IG_GET_MEDIA_FAILED.getMessage(), e);
             throw new ApiException(SysCode.IG_GET_MEDIA_FAILED, "取得貼文失敗");
         }
         return PostsAndMaxIdDTO.builder()
                 .medias(medias)
+                .maxId(maxIdRef.get())
+                .build();
+    }
+
+    private CommentsAndMaxIdDTO getCommentsByMediaPk(IGClient client, TaskQueue task, String maxId) {
+        String mediaId = task.getTaskQueueMediaId().getMedia().getMediaId();
+        List<Comment> comments = Lists.newArrayList();
+        AtomicReference<String> maxIdRef = new AtomicReference<>(maxId);
+        // 計數器，用於追蹤請求到的資料數量
+        int count = 0;
+        boolean isFirstIteration = true;
+        int maxRequestTimes = Integer.parseInt(configCache.get(ConfigEnum.MAX_POSTS_PER_REQUEST.name()));
+
+        try {
+            while (shouldContinueFetching(count, maxIdRef.get(), isFirstIteration, maxRequestTimes)) {
+                isFirstIteration = false;
+                // 每次循环使用最新的maxId创建请求
+                MediaGetCommentsResponse response = fetchComments(client, mediaId, maxIdRef.get());
+                // 處理請求結果
+                processCommentsResponse(comments, response, maxIdRef);
+                count += response.getComments().size();
+                log.info("目前累計數: " + count);
+                //請求間暫停
+                CrawlingUtil.pauseBetweenRequests();
+            }
+            log.info("出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
+        } catch (Exception e) {
+            log.error(SysCode.IG_GET_COMMENTS_FAILED.getMessage(), e);
+            throw new ApiException(SysCode.IG_GET_COMMENTS_FAILED, e);
+        }
+        return CommentsAndMaxIdDTO.builder()
+                .comments(comments)
                 .maxId(maxIdRef.get())
                 .build();
     }
@@ -287,6 +367,10 @@ public class Instagram4jServiceImpl implements InstagramService {
         return client.sendRequest(new FeedUserRequest(userPkFromIg, maxId)).join();
     }
 
+    private MediaGetCommentsResponse fetchComments(IGClient client, String mediaId, String maxId) {
+        return client.sendRequest(new MediaGetCommentsRequest(mediaId, maxId)).join();
+    }
+
     private void processFollowersResponse(List<Profile> followers, FeedUsersResponse response, AtomicReference<String> maxIdRef) {
         followers.addAll(response.getUsers());
         String nextMaxId = response.getNext_max_id();
@@ -296,6 +380,13 @@ public class Instagram4jServiceImpl implements InstagramService {
     private void processPostsResponse(List<TimelineMedia> medias, FeedUserResponse response, AtomicReference<String> maxIdRef) {
         medias.addAll(response.getItems());
         String nextMaxId = response.getNext_max_id();
+        log.info("下一個maxId:{}", nextMaxId);
+        maxIdRef.set(nextMaxId);
+    }
+
+    private void processCommentsResponse(List<Comment> comments, MediaGetCommentsResponse response, AtomicReference<String> maxIdRef) {
+        comments.addAll(response.getComments());
+        String nextMaxId = response.getNext_min_id();
         log.info("下一個maxId:{}", nextMaxId);
         maxIdRef.set(nextMaxId);
     }

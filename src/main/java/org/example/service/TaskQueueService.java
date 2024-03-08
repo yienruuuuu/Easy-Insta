@@ -14,9 +14,9 @@ import java.util.Optional;
  * Date: 2024/2/17
  */
 public interface TaskQueueService extends BaseService<TaskQueue> {
-    boolean checkGetFollowersTaskQueueExist(IgUser targetUser, TaskTypeEnum taskType);
+    boolean checkTaskQueueExistByUserAndTaskType(IgUser targetUser, TaskTypeEnum taskType);
 
-    Optional<TaskQueue> createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status);
+    TaskQueue createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status);
 
     boolean checkTasksByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg);
 

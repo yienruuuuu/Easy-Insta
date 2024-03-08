@@ -4,6 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 
+import java.time.LocalDateTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -59,5 +62,14 @@ public final class CrawlingUtil {
             throw new ApiException(SysCode.FOLLOWERS_OR_MEDIA_AMOUNT_IS_ZERO);
         }
         return (double) (likes + comments + reshareCounts) / postAmounts / followers * 100;
+    }
+
+    /**
+     * 獲取1970年1月1日的LocalDateTime對象
+     *
+     * @return 1970年1月1日的LocalDateTime對象
+     */
+    public static LocalDateTime getEarlyDateTime() {
+        return LocalDateTime.of(1970, 1, 1, 0, 0, 0);
     }
 }

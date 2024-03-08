@@ -60,6 +60,10 @@ public class TaskQueue {
     @Column(name = "next_id_for_search")
     private String nextIdForSearch;
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "task_queue_media_id")
+    private TaskQueueMedia taskQueueMediaId;
+
     @Version
     @Column(name = "version")
     private Long version;
@@ -98,5 +102,14 @@ public class TaskQueue {
         this.status = TaskStatusEnum.FAILED;
         this.endTime = LocalDateTime.now(); // 設定任務結束時間為目前時間
         this.errorMessage = errorMessage; // 設定錯誤訊息
+    }
+
+    /**
+     * 指向任務要執行的的task_queue_media的id。
+     *
+     * @param taskQueueMedia task_queue_media的id
+     */
+    public void updateTaskQueueMedia(TaskQueueMedia taskQueueMedia) {
+        this.taskQueueMediaId = taskQueueMedia;
     }
 }
