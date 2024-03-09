@@ -36,4 +36,14 @@ public interface MediaDao extends JpaRepository<Media, Integer>, CustomMediaRepo
     @Query("SELECT m FROM Media m WHERE m.igUserId = :igUserId AND m.takenAt > :time")
     List<Media> findMediaInTime(@Param("igUserId") IgUser igUser, @Param("time") LocalDateTime time);
 
+    /**
+     * 透過用戶ID及comment來查詢貼文列表
+     *
+     * @param igUser 用戶
+     * @param commentCount   留言數量
+     * @return 貼文列表
+     */
+    @Query("SELECT m FROM Media m WHERE m.igUserId = :igUserId AND m.commentCount > :commentCount")
+    List<Media> findAllByIgUserIdAndCommentCount(@Param("igUserId") IgUser igUser, @Param("commentCount") int commentCount);
+
 }

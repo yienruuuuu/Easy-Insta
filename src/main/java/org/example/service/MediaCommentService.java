@@ -21,5 +21,5 @@ public interface MediaCommentService extends BaseService<MediaComment> {
      *
      * @param commentList 留言列表
      */
-    void batchInsertMedias(List<MediaComment> commentList)
+    void batchInsertMedias(List<MediaComment> commentList);
 }

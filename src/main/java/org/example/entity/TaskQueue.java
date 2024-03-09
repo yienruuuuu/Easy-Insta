@@ -60,8 +60,9 @@ public class TaskQueue {
     @Column(name = "next_id_for_search")
     private String nextIdForSearch;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "task_queue_media_id")
+    @ToString.Exclude
     private TaskQueueMedia taskQueueMediaId;
 
     @Version

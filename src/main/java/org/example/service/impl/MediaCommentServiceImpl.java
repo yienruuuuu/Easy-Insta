@@ -42,6 +42,6 @@ public class MediaCommentServiceImpl implements MediaCommentService {
 
     @Override
     public void batchInsertMedias(List<MediaComment> commentList) {
-        mediaCommentDao.batchInsertOrUpdate(mediasList);
+        mediaCommentDao.batchInsertOrUpdate(commentList);
     }
 }

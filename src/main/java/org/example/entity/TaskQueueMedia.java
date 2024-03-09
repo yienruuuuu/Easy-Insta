@@ -40,5 +40,6 @@ public class TaskQueueMedia {
     private String nextMediaId;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private TaskStatusEnum status;
 }

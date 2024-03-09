@@ -1,6 +1,7 @@
 package org.example.task.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
@@ -36,12 +37,49 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
         TaskStrategy strategy = getStrategy(task);
         try {
             strategy.executeTask(task, loginAccount);
+        } catch (ApiException apiException) {
+            if (apiException.getCode() == SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED) {
+                handleChallengeRequired(task, loginAccount, apiException);
+            } else if (apiException.getCode() == SysCode.SOCKET_TIMEOUT) {
+                handleSocketTimeOut(task, loginAccount, apiException);
+            } else {
+                throw apiException;
+            }
         } catch (TaskExecutionException e) {
             handleTaskFailure(task, loginAccount, e);
         }
     }
 
     // private
+
+    /**
+     * 處理連線失敗
+     */
+    private void handleSocketTimeOut(TaskQueue task, LoginAccount loginAccount, ApiException e) {
+        log.error("任務失敗，任務:{},帳號:{} ,更新帳號為EXHAUSTED 錯誤詳情: {}", task, loginAccount, e.getMessage(), e);
+        //更新任務狀態
+        task.pauseTask();
+        log.info("任務暫停，任務:{}", task);
+        taskQueueService.save(task);
+        //更新登入帳號狀態
+        loginAccount.loginAccountExhausted();
+        loginService.save(loginAccount);
+    }
+
+    /**
+     * 處理帳號失敗
+     */
+    private void handleChallengeRequired(TaskQueue task, LoginAccount loginAccount, ApiException e) {
+        log.error("任務失敗，任務:{},帳號:{} ,更新帳號為DEVIANT 錯誤詳情: {}", task, loginAccount, e.getMessage(), e);
+        //更新任務狀態
+        task.pauseTask();
+        task.getTaskQueueMediaId().setStatus(TaskStatusEnum.PAUSED);
+        log.info("任務暫停，任務:{}", task);
+        taskQueueService.save(task);
+        //更新登入帳號狀態
+        loginAccount.loginAccountDeviant(e.getMessage());
+        loginService.save(loginAccount);
+    }
 
     /**
      * 處理任務失敗

@@ -3,7 +3,6 @@ package org.example.dao.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dao.CustomMediaRepository;
 import org.example.entity.Media;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -20,8 +19,12 @@ import java.util.List;
 @Slf4j
 @Repository
 public class CustomMediaRepositoryImpl implements CustomMediaRepository {
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public CustomMediaRepositoryImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     /**
      * 批量插入，發生衝突則更新

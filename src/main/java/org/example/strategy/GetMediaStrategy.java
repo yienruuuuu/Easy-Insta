@@ -36,9 +36,6 @@ public class GetMediaStrategy extends TaskStrategyBase implements TaskStrategy {
         log.info("開始執行任務:{} ,帳號:{}", taskQueue.getTaskConfig().getTaskType(), loginAccount);
         //登入、檢查結果並更新登入帳號狀態
         loginAndUpdateAccountStatus(loginAccount);
-        //初次進行時刪除舊的媒體資料
-        if (TaskStatusEnum.PENDING.equals(taskQueue.getStatus()))
-            mediaService.deleteOldMediaDataByIgUserId(taskQueue.getIgUser().getId());
         //執行爬蟲任務
         performTaskWithAccount(taskQueue);
         //結束任務，依條件判斷更新任務狀態

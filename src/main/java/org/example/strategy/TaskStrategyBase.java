@@ -1,11 +1,15 @@
 package org.example.strategy;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.entity.LoginAccount;
+import org.example.entity.TaskQueue;
+import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.exception.TaskExecutionException;
 import org.example.service.InstagramService;
 import org.example.service.LoginService;
+import org.example.service.TaskQueueService;
 import org.springframework.stereotype.Service;
 
 /**

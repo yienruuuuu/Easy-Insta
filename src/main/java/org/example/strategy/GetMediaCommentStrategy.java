@@ -15,10 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Eric.Lee
- * Date: 2024/3/1
+ * Date: 2024/3/9
  */
 @Slf4j
 @Service("getMediaCommentStrategy")
@@ -61,10 +62,8 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
      * @param taskQueue 任務
      */
     private void getTaskQueueMediaAndSetInTaskQueue(TaskQueue taskQueue) {
-        TaskQueueMedia taskQueueMedia = taskQueueMediaService.findOneByTaskQueue(taskQueue, TaskStatusEnum.PAUSED)
-                .orElseGet(() -> taskQueueMediaService.findOneByTaskQueue(taskQueue, TaskStatusEnum.PENDING)
-                        .orElseThrow(() -> new TaskExecutionException(SysCode.TASK_QUEUE_MEDIA_NOT_FOUND))
-                );
+        TaskQueueMedia taskQueueMedia = getTaskQueueMediaWhichIsPausedOrPending(taskQueue)
+                .orElseThrow(() -> new TaskExecutionException(SysCode.TASK_QUEUE_MEDIA_NOT_FOUND));
         taskQueue.updateTaskQueueMedia(taskQueueMedia);
         log.info("taskQueue 任務資料已更新:{} ", taskQueue);
     }
@@ -110,31 +109,26 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
      * @param task 任務
      */
     private void updateTaskStatusBasedOnCondition(TaskQueue task) {
-        if (checkMedia(task)) {
-            task.completeTask();
-        } else if (task.getNextIdForSearch() != null) {
+        //若TaskQueueMedia.nextMediaId不為null，代表仍需繼續查詢，僅暫停任務
+        if (task.getTaskQueueMediaId().getNextMediaId() != null) {
             task.pauseTask();
-        } else {
-            task.pendingTask();
         }
+        //若TaskQueueMedia.nextMediaId為null，代表該貼文已查詢完畢，更新子任務狀態為已完成
+        task.getTaskQueueMediaId().setStatus(TaskStatusEnum.COMPLETED);
+        //若TaskQueueMedia.nextMediaId為null，代表已查詢完畢，更新下一筆子任務指針，並暫停任務等待繼續
+        getTaskQueueMediaWhichIsPausedOrPending(task).ifPresentOrElse(taskQueueMedia -> {
+            task.updateTaskQueueMedia(taskQueueMedia);
+            task.pauseTask();
+        }, task::completeTask);
     }
 
     /**
-     * 檢查爬取數量是否已達到結束標準 條件:最早貼文日期>當前日期-1年 || 爬取數量/實際貼文樹量>0.9
+     * 找出一個當前應執行的taskQueueMedia，有優先順序的條件為PAUSED>PENDING，如果都沒有則拋出例外
      *
-     * @param task 任務
-     * @return 是否已達到結束任務的標準
+     * @param taskQueue 任務
      */
-    private boolean checkMedia(TaskQueue task) {
-        int crawlerAmount = mediaService.countMediaByIgUser(task.getIgUser());
-        int dbAmount = task.getIgUser().getMediaCount();
-        log.info("任務:{} ,取得貼文數量:{},資料庫貼文數量:{}", task, dbAmount, crawlerAmount);
-
-        // 計算當前日期-1年
-        LocalDateTime cutoffDate = LocalDateTime.now().minusYears(1);
-        // 檢查是否存在最早的貼文日期大於當前日期-1年
-        boolean existsEarlyMedia = mediaService.existsEarlyMediaBeforeCutoff(task.getIgUser(), cutoffDate);
-        log.info("任務:{} ,是否已爬到最早的貼文日期，大於當前日期-1年 existsEarlyMedia:{}", task, existsEarlyMedia);
-        return CrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount, 0.9) || existsEarlyMedia;
+    private Optional<TaskQueueMedia> getTaskQueueMediaWhichIsPausedOrPending(TaskQueue taskQueue) {
+        return taskQueueMediaService.findOneByTaskQueue(taskQueue, TaskStatusEnum.PAUSED)
+                .or(() -> taskQueueMediaService.findOneByTaskQueue(taskQueue, TaskStatusEnum.PENDING));
     }
 }

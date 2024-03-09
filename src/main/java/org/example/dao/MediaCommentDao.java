@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface MediaCommentDao extends JpaRepository<MediaComment, Integer> {
+public interface MediaCommentDao extends JpaRepository<MediaComment, Integer>, CustomMediaCommentRepository {
     void deleteAllByMediaIdIsIn(List<Integer> mediaIds);
 }

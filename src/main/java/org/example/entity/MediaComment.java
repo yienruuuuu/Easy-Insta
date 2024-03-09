@@ -28,7 +28,7 @@ public class MediaComment {
     @ManyToOne
     @JoinColumn(name = "media_id", unique = true)
     @JsonIgnore
-    private Media mediaId;
+    private Media media;
     
     @Column(name = "text")
     private String text;

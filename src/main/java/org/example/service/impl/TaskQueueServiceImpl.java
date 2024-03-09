@@ -156,7 +156,7 @@ public class TaskQueueServiceImpl implements TaskQueueService {
         if (!TaskTypeEnum.GET_MEDIA_COMMENT.equals(taskType)) {
             return null;
         }
-        List<Media> medias = mediaService.listMediaByIgUserIdAndDateRange(igUser, CrawlingUtil.getEarlyDateTime());
+        List<Media> medias = mediaService.listMediaByIgUserIdAndCommentCount(igUser, 0);
         List<TaskQueueMedia> taskQueueMedias = medias.stream()
                 .map(media -> TaskQueueMedia.builder()
                         .media(media)

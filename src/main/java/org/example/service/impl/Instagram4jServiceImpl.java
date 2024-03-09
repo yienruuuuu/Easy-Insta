@@ -3,6 +3,7 @@ package org.example.service.impl;
 
 import com.github.instagram4j.instagram4j.IGClient;
 import com.github.instagram4j.instagram4j.actions.users.UserAction;
+import com.github.instagram4j.instagram4j.exceptions.IGResponseException;
 import com.github.instagram4j.instagram4j.models.media.timeline.Comment;
 import com.github.instagram4j.instagram4j.models.media.timeline.TimelineMedia;
 import com.github.instagram4j.instagram4j.models.user.Profile;
@@ -60,6 +61,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     private IGClient client;
+    public static final String CHALLENGE_REQUIRED = "challenge_required";
 
     @Override
     public void login(String account, String password) {
@@ -74,6 +76,17 @@ public class Instagram4jServiceImpl implements InstagramService {
                     .login();
             log.info("登入成功, 帳號:{}", account);
         } catch (Exception e) {
+            Throwable cause = e;
+            while (cause != null) {
+                if (cause instanceof IGResponseException && CHALLENGE_REQUIRED.equals(cause.getMessage())) {
+                    throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, cause);
+                }
+                // 檢查是否因為網路逾時而失敗
+                if (cause instanceof java.net.SocketTimeoutException) {
+                    throw new ApiException(SysCode.SOCKET_TIMEOUT, cause);
+                }
+                cause = cause.getCause();
+            }
             throw new TaskExecutionException(SysCode.IG_LOGIN_FAILED, e);
         }
     }
@@ -134,16 +147,19 @@ public class Instagram4jServiceImpl implements InstagramService {
             CommentsAndMaxIdDTO commentsAndMaxIdDTO = getCommentsByMediaPk(client, task, maxId);
             // 將 Comment 物件轉換為 Media_comment 實體
             List<MediaComment> mediasList = convertCommentToMediaCommentEntity(task, commentsAndMaxIdDTO.getComments());
-            // TODO 保存
-            mediaService.batchInsertMedias(mediasList);
-            task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
+            // 保存
+            mediaCommentService.batchInsertMedias(mediasList);
+            task.getTaskQueueMediaId().setNextMediaId(commentsAndMaxIdDTO.getMaxId());
+            log.info("Task = {}", task);
+        } catch (ApiException apiException) {
+            throw apiException;
         } catch (Exception e) {
-            log.error("取得貼文失敗", e);
-            throw new TaskExecutionException(SysCode.IG_GET_MEDIA_FAILED, e);
+            throw new TaskExecutionException(SysCode.IG_GET_COMMENTS_FAILED, e);
         }
     }
 
-    //private
+
+    // private
 
     /**
      * 建立新的User實體，或是從資料庫中獲取已存在的實體，並以ig響應設置或更新用戶信息
@@ -186,7 +202,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                                 .hasAnonymousProfilePicture(profile.isHas_anonymous_profile_picture())
                                 .latestReelMedia(profile.getLatest_reel_media())
                                 .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -196,7 +212,9 @@ public class Instagram4jServiceImpl implements InstagramService {
      */
     private static List<Media> convertTimeLineMediaToMediaEntities(IgUser igUser, List<TimelineMedia> timeLineMediaObjFromIg) {
         return timeLineMediaObjFromIg.stream().map(timelineMedia -> {
-            LocalDateTime takenAt = Instant.ofEpochSecond(timelineMedia.getTaken_at()).atZone(ZoneId.systemDefault()).toLocalDateTime();
+            LocalDateTime takenAt = Instant.ofEpochSecond(timelineMedia.getTaken_at())
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
             return Media.builder()
                     .igUserId(igUser)
                     .mediaPk(timelineMedia.getPk())
@@ -208,35 +226,36 @@ public class Instagram4jServiceImpl implements InstagramService {
                     .reshareCount(timelineMedia.getReshare_count())
                     .commentCount(timelineMedia.getComment_count())
                     .numberOfQualities(timelineMedia.getNumber_of_qualities())
-                    .takenAt(takenAt) // 設置轉換後的Local Date Time
-                    .text(timelineMedia.getCaption().getText())
+                    .takenAt(takenAt) // 设置转换后的LocalDateTime
+                    .text(timelineMedia.getCaption() != null ? timelineMedia.getCaption().getText() : null) // 添加空值检查
                     .build();
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     /**
      * 將 Comment 物件轉換為 MediaComment 實體
      *
-     * @param taskQueue       任務
-     * @param commentFromIg   IG留言物件
+     * @param taskQueue     任務
+     * @param commentFromIg IG留言物件
      */
     private static List<MediaComment> convertCommentToMediaCommentEntity(TaskQueue taskQueue, List<Comment> commentFromIg) {
         return commentFromIg.stream().map(comment -> MediaComment.builder()
-                .mediaId(taskQueue.getTaskQueueMediaId().getMedia())
-                .text(comment.getText())
-                .commenterUserId(comment.getUser().getPk())
-                .commenterFullName(comment.getUser().getFull_name())
-                .commenterUserName(comment.getUser().getUsername())
-                .commentPk(comment.getPk())
-                .commenterIsPrivate(comment.getUser().is_private())
-                .commenterIsVerified(comment.getUser().is_verified())
-                .commenterProfilePicId(comment.getUser().getProfile_pic_id())
-                .commenterProfilePicUrl(comment.getUser().getProfile_pic_url())
-                .commenterLatestReelMedia(comment.getUser().getLatest_reel_media())
-                .contentType(comment.getContent_type())
-                .status(comment.getStatus())
-                .commentLikeCount(comment.getComment_like_count())
-                .build()).collect(Collectors.toList());
+                        .media(taskQueue.getTaskQueueMediaId().getMedia())
+                        .text(comment.getText())
+                        .commenterUserId(comment.getUser().getPk())
+                        .commenterFullName(comment.getUser().getFull_name())
+                        .commenterUserName(comment.getUser().getUsername())
+                        .commentPk(comment.getPk())
+                        .commenterIsPrivate(comment.getUser().is_private())
+                        .commenterIsVerified(comment.getUser().is_verified())
+                        .commenterProfilePicId(comment.getUser().getProfile_pic_id())
+                        .commenterProfilePicUrl(comment.getUser().getProfile_pic_url())
+                        .commenterLatestReelMedia(comment.getUser().getLatest_reel_media())
+                        .contentType(comment.getContent_type())
+                        .status(comment.getStatus())
+                        .commentLikeCount(comment.getComment_like_count())
+                        .build())
+                .toList();
     }
 
     /**
@@ -272,9 +291,12 @@ public class Instagram4jServiceImpl implements InstagramService {
                 CrawlingUtil.pauseBetweenRequests();
             }
             log.info("達到{}個追蹤者資料，跳出循環 count:{}", maxRequestTimes, count);
-        } catch (Exception e) {
-            log.error("取得追蹤者失敗", e);
-            throw new ApiException(SysCode.IG_GET_FOLLOWERS_FAILED);
+        } catch (CompletionException completionException) {
+            if (completionException.getCause() instanceof IGResponseException && CHALLENGE_REQUIRED.equals(completionException.getCause().getMessage())) {
+                throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, completionException);
+            } else {
+                throw completionException;
+            }
         }
         return FollowersAndMaxIdDTO.builder()
                 .followers(followers)
@@ -313,9 +335,13 @@ public class Instagram4jServiceImpl implements InstagramService {
                 CrawlingUtil.pauseBetweenRequests();
             }
             log.info("出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
-        } catch (Exception e) {
-            log.error(SysCode.IG_GET_MEDIA_FAILED.getMessage(), e);
-            throw new ApiException(SysCode.IG_GET_MEDIA_FAILED, "取得貼文失敗");
+        } catch (CompletionException completionException) {
+            if (completionException.getCause() instanceof IGResponseException && CHALLENGE_REQUIRED.equals(completionException.getCause().getMessage())) {
+                log.error("處理 challenge_required", completionException);
+                throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, completionException);
+            } else {
+                throw completionException;
+            }
         }
         return PostsAndMaxIdDTO.builder()
                 .medias(medias)
@@ -330,7 +356,7 @@ public class Instagram4jServiceImpl implements InstagramService {
         // 計數器，用於追蹤請求到的資料數量
         int count = 0;
         boolean isFirstIteration = true;
-        int maxRequestTimes = Integer.parseInt(configCache.get(ConfigEnum.MAX_POSTS_PER_REQUEST.name()));
+        int maxRequestTimes = Integer.parseInt(configCache.get(ConfigEnum.MAX_COMMENTS_PER_REQUEST.name()));
 
         try {
             while (shouldContinueFetching(count, maxIdRef.get(), isFirstIteration, maxRequestTimes)) {
@@ -345,9 +371,13 @@ public class Instagram4jServiceImpl implements InstagramService {
                 CrawlingUtil.pauseBetweenRequests();
             }
             log.info("出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
-        } catch (Exception e) {
-            log.error(SysCode.IG_GET_COMMENTS_FAILED.getMessage(), e);
-            throw new ApiException(SysCode.IG_GET_COMMENTS_FAILED, e);
+        } catch (CompletionException completionException) {
+            if (completionException.getCause() instanceof IGResponseException && CHALLENGE_REQUIRED.equals(completionException.getCause().getMessage())) {
+                log.error("處理 challenge_required", completionException);
+                throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, completionException);
+            } else {
+                throw completionException;
+            }
         }
         return CommentsAndMaxIdDTO.builder()
                 .comments(comments)
