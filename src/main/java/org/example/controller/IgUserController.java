@@ -12,7 +12,6 @@ import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.entity.IgUser;
 import org.example.entity.LoginAccount;
 import org.example.entity.Media;
-import org.example.entity.TaskQueue;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.*;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author Eric.Lee
@@ -69,21 +67,13 @@ public class IgUserController extends BaseController {
         IgUser targetUser = igUserService.findUserByIgUserName(username).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
         log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
         // 檢查對於查詢對象的任務是否存在
-        if (taskQueueService.checkGetFollowersTaskQueueExist(targetUser, taskEnum)) {
+        if (taskQueueService.checkTaskQueueExistByUserAndTaskType(targetUser, taskEnum)) {
             log.info("用戶: {} 的 {} 任務已存在", taskEnum, username);
             return new ApiResponse(SysCode.TASK_ALREADY_EXISTS.getCode(), SysCode.TASK_ALREADY_EXISTS.getMessage(), null);
         }
-        // 保存任务並返回保存的任务
-        Optional<TaskQueue> savedTask =
-                taskQueueService.createTaskQueueAndDeleteOldData(targetUser, taskEnum, TaskStatusEnum.PENDING);
+        // 保存任務並返回保存的任務
+        return taskQueueService.createTaskQueueAndDeleteOldData(targetUser, taskEnum, TaskStatusEnum.PENDING);
 
-        if (savedTask.isPresent()) {
-            log.info("username: {} 的 {} 任務創建成功", taskEnum, username);
-            return savedTask.get();
-        } else {
-            log.info("username: {}的 {} 任務建立失敗", taskEnum, username);
-            return new ApiResponse(SysCode.TASK_CREATION_FAILED.getCode(), SysCode.TASK_CREATION_FAILED.getMessage(), null);
-        }
     }
 
     @Operation(summary = "計算互動率", description = "請先確定都取得了當下的最新資料")

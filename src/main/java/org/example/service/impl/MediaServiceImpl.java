@@ -67,6 +67,14 @@ public class MediaServiceImpl implements MediaService {
         // 使用Optional来检查列表是否为空
         return Optional.ofNullable(mediaList)
                 .filter(list -> !list.isEmpty())
-                .orElseThrow(() -> new ApiException(SysCode.ANALYSIS_MEDIA_NOT_FOUND));
+                .orElseThrow(() -> new ApiException(SysCode.MEDIA_NOT_FOUND));
+    }
+
+    @Override
+    public List<Media> listMediaByIgUserIdAndCommentCount(IgUser igUser, int commentCount) {
+        List<Media> mediaList = mediaDao.findAllByIgUserIdAndCommentCount(igUser, commentCount);
+        return Optional.ofNullable(mediaList)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new ApiException(SysCode.MEDIA_NOT_FOUND));
     }
 }

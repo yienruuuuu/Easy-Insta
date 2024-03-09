@@ -51,4 +51,13 @@ public interface MediaService extends BaseService<Media> {
      * @return 貼文列表
      */
     List<Media> listMediaByIgUserIdAndDateRange(IgUser igUser, LocalDateTime time);
+
+    /**
+     * 透過用戶ID及comment來查詢貼文列表
+     *
+     * @param igUser 用戶
+     * @param commentCount   留言數量
+     * @return 貼文列表
+     */
+    List<Media> listMediaByIgUserIdAndCommentCount(IgUser igUser,int commentCount);
 }

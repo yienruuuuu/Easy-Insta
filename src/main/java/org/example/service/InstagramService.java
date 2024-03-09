@@ -45,4 +45,12 @@ public interface InstagramService {
      */
     void searchUserMediasAndSave(TaskQueue task, String maxId);
 
+    /**
+     * 查詢貼文留言
+     *
+     * @param task  任務資訊
+     * @param maxId 最大查詢數量 初次執行可能為null
+     */
+    void searchMediaCommentsAndSave(TaskQueue task, String maxId);
+
 }

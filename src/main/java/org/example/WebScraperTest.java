@@ -52,7 +52,7 @@ public class WebScraperTest implements CommandLineRunner {
 //        getPostsByUserName(client, "tomato_yuki_", "3293773151733047571_63972138771");
 
         //測試獲取指定文章的資訊
-//        getPostDetail(client, "3298906758704944557_59632865840", null);
+        getPostDetail(client, "3298906758704944557_59632865840", null);
         //測試獲取指定文章的翻頁留言
 //        getPostDetail(client, "3298906758704944557_59632865840", "{\"server_cursor\": \"QVFDSUhiVVRYVGNfS2ZBRVJBNUtqRDBocjczNXdjb3BzZkpfenBiU2UySXRpalJja1pvMGx5R3VfU2lISlFiY3FRRmUzTHNFeVI3VEFaOHVZUXRGMlY3Yg==\", \"is_server_cursor_inverse\": true}");
 
