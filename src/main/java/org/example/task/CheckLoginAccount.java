@@ -16,10 +16,11 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 public class CheckLoginAccount {
-    private final LoginService loginService;
 
     @Value("${exhausted.account.resurrection.coldtime:2}")
     private int accountColdtime;
+
+    private final LoginService loginService;
 
     public CheckLoginAccount(LoginService loginService) {
         this.loginService = loginService;

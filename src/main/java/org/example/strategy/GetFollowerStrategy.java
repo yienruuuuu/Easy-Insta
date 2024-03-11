@@ -3,10 +3,7 @@ package org.example.strategy;
 import lombok.extern.slf4j.Slf4j;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
-import org.example.service.FollowersService;
-import org.example.service.InstagramService;
-import org.example.service.LoginService;
-import org.example.service.TaskQueueService;
+import org.example.service.*;
 import org.example.utils.CrawlingUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +18,8 @@ public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrateg
     private final TaskQueueService taskQueueService;
     private final FollowersService followersService;
 
-    protected GetFollowerStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, FollowersService followersService) {
-        super(instagramService, loginService);
+    protected GetFollowerStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, FollowersService followersService, TaskQueueMediaService taskQueueMediaService) {
+        super(instagramService, loginService, taskQueueMediaService);
         this.taskQueueService = taskQueueService;
         this.followersService = followersService;
     }
@@ -30,7 +27,6 @@ public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrateg
     @Override
     @Transactional
     public void executeTask(TaskQueue taskQueue, LoginAccount loginAccount) {
-        log.info("開始執行任務:{} ,帳號:{}", taskQueue.getTaskConfig().getTaskType(), loginAccount);
         //登入、檢查結果並更新登入帳號狀態
         loginAndUpdateAccountStatus(loginAccount);
         //執行爬蟲任務
@@ -67,7 +63,8 @@ public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrateg
      *
      * @param task 任務
      */
-    private void updateTaskStatusBasedOnCondition(TaskQueue task) {
+    @Override
+    protected void updateTaskStatusBasedOnCondition(TaskQueue task) {
         if (task.getNextIdForSearch() == null && checkFollowerAmount(task)) {
             task.completeTask();
         } else if (task.getNextIdForSearch() != null) {

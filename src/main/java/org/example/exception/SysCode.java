@@ -37,6 +37,8 @@ public enum SysCode implements ErrorCode {
     IG_GET_MEDIA_FAILED(2204, "IG獲取貼文失敗"),
     IG_GET_COMMENTS_FAILED(2205, "IG獲取貼文留言失敗"),
     IG_ACCOUNT_CHALLENGE_REQUIRED(2206, "IG帳戶需要進行人機驗證，放棄使用"),
+    IG_GET_LIKERS_FAILED(2207, "IG獲取貼文按讚者失敗"),
+
 
     //分析相關錯誤,
     MEDIA_NOT_FOUND(2301, "未找到貼文資訊，請確認已跑過貼文排程"),

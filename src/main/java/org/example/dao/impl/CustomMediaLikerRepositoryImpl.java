@@ -3,6 +3,7 @@ package org.example.dao.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dao.CustomMediaLikerRepository;
 import org.example.entity.MediaLiker;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -34,10 +35,10 @@ public class CustomMediaLikerRepositoryImpl implements CustomMediaLikerRepositor
 
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
+            public void setValues(@NotNull PreparedStatement ps, int i) throws SQLException {
                 MediaLiker mediaLiker = mediaLikerList.get(i);
                 // 設置PreparedStatement的值
-                ps.setInt(1, mediaLiker.getMediaId().getId());
+                ps.setInt(1, mediaLiker.getMedia().getId());
                 ps.setString(2, mediaLiker.getLikerUserName());
                 ps.setString(3, mediaLiker.getLikerFullName());
                 ps.setLong(4, mediaLiker.getLikerPk());
@@ -47,7 +48,6 @@ public class CustomMediaLikerRepositoryImpl implements CustomMediaLikerRepositor
                 ps.setString(8, mediaLiker.getLikerProfilePicUrl());
                 ps.setLong(9, mediaLiker.getLikerLatestReelMedia());
             }
-
             @Override
             public int getBatchSize() {
                 return mediaLikerList.size();

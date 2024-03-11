@@ -27,6 +27,9 @@ public class TaskExecutionStrategyFactory {
             if (strategy instanceof GetMediaCommentStrategy) {
                 strategies.put(TaskTypeEnum.GET_MEDIA_COMMENT, strategy);
             }
+            if (strategy instanceof GetMediaLikerStrategy) {
+                strategies.put(TaskTypeEnum.GET_MEDIA_LIKER, strategy);
+            }
         });
     }
 

@@ -24,8 +24,9 @@ import org.springframework.stereotype.Service;
 public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecutionService {
 
     private final TaskQueueService taskQueueService;
-    private final TaskExecutionStrategyFactory strategyFactory; // 注入策略工廠
     private final LoginService loginService;
+    // 注入策略工廠
+    private final TaskExecutionStrategyFactory strategyFactory;
 
     public TaskExecutionServiceImpl(TaskQueueService taskQueueService, TaskExecutionStrategyFactory strategyFactory, LoginService loginService) {
         this.taskQueueService = taskQueueService;
@@ -37,20 +38,29 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
         TaskStrategy strategy = getStrategy(task);
         try {
             strategy.executeTask(task, loginAccount);
+
         } catch (ApiException apiException) {
-            if (apiException.getCode() == SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED) {
-                handleChallengeRequired(task, loginAccount, apiException);
-            } else if (apiException.getCode() == SysCode.SOCKET_TIMEOUT) {
-                handleSocketTimeOut(task, loginAccount, apiException);
-            } else {
-                throw apiException;
-            }
+            handleApiException(apiException, task, loginAccount);
         } catch (TaskExecutionException e) {
             handleTaskFailure(task, loginAccount, e);
         }
     }
 
+
     // private
+
+    /**
+     * 處理ApiException
+     */
+    private void handleApiException(ApiException apiException, TaskQueue task, LoginAccount loginAccount) {
+        if (apiException.getCode() == SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED) {
+            handleChallengeRequired(task, loginAccount, apiException);
+        } else if (apiException.getCode() == SysCode.SOCKET_TIMEOUT) {
+            handleSocketTimeOut(task, loginAccount, apiException);
+        } else {
+            throw apiException;
+        }
+    }
 
     /**
      * 處理連線失敗

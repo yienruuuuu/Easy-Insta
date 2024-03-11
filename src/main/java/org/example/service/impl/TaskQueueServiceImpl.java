@@ -8,7 +8,6 @@ import org.example.entity.*;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.*;
-import org.example.utils.CrawlingUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -153,10 +152,11 @@ public class TaskQueueServiceImpl implements TaskQueueService {
      * @param igUser   IG用戶
      */
     private Integer arrangeMediaToTaskQueueMedia(TaskTypeEnum taskType, IgUser igUser, TaskQueue taskQueue) {
-        if (!TaskTypeEnum.GET_MEDIA_COMMENT.equals(taskType)) {
-            return null;
+        if (!TaskTypeEnum.GET_MEDIA_COMMENT.equals(taskType) && !TaskTypeEnum.GET_MEDIA_LIKER.equals(taskType)) {
+            return 0;
         }
-        List<Media> medias = mediaService.listMediaByIgUserIdAndCommentCount(igUser, 0);
+        int commentCount = taskType.equals(TaskTypeEnum.GET_MEDIA_COMMENT) ? 0 : -1;
+        List<Media> medias = mediaService.listMediaByIgUserIdAndCommentCount(igUser, commentCount);
         List<TaskQueueMedia> taskQueueMedias = medias.stream()
                 .map(media -> TaskQueueMedia.builder()
                         .media(media)

@@ -18,7 +18,11 @@ public abstract class BaseQueue {
         return this.enableTask;
     }
 
-    // 在Base Queue中加入一個方法，這個方法檢查任務是否啟用，並記錄日誌
+    /**
+     * 檢查根任務是否啟用
+     *
+     * @return 是否啟用
+     */
     protected boolean checkTaskEnabled() {
         if (!isTaskEnabled()) {
             log.info("任務調度已停止");

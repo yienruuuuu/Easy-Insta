@@ -20,17 +20,17 @@ import java.util.List;
  * Date: 2024/3/9
  */
 @Slf4j
-@Service("getMediaCommentStrategy")
-public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStrategy {
+@Service("getMediaLikerStrategy")
+public class GetMediaLikerStrategy extends TaskStrategyBase implements TaskStrategy {
     private final TaskQueueService taskQueueService;
     private final MediaService mediaService;
-    private final MediaCommentService mediaCommentService;
+    private final MediaLikerService mediaLikerService;
 
-    protected GetMediaCommentStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, MediaService mediaService, MediaCommentService mediaCommentService, TaskQueueMediaService taskQueueMediaService) {
+    protected GetMediaLikerStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, MediaService mediaService, MediaLikerService mediaLikerService, TaskQueueMediaService taskQueueMediaService) {
         super(instagramService, loginService, taskQueueMediaService);
         this.taskQueueService = taskQueueService;
         this.mediaService = mediaService;
-        this.mediaCommentService = mediaCommentService;
+        this.mediaLikerService = mediaLikerService;
     }
 
     @Override
@@ -64,18 +64,18 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
     }
 
     /**
-     * 刪除舊的媒體留言資料
+     * 刪除舊的媒體按讚資料
      *
      * @param taskQueue 任務
      */
     private void deleteOldMediaContentData(TaskQueue taskQueue) {
+        if (!TaskStatusEnum.PENDING.equals(taskQueue.getStatus())) return;
+
+        //初次進行時刪除舊的媒體留言資料
         List<Integer> mediaIds = mediaService.listMediaByIgUserIdAndDateRange(taskQueue.getIgUser(), CrawlingUtil.getEarlyDateTime())
                 .stream().map(Media::getId).toList();
         log.info("任務:{} ,貼文ID:{}", taskQueue, mediaIds);
-        //初次進行時刪除舊的媒體留言資料
-        if (TaskStatusEnum.PENDING.equals(taskQueue.getStatus())) {
-            mediaCommentService.deleteOldMediaCotentDataByIgUserId(mediaIds);
-        }
+        mediaLikerService.deleteOldMediaLikerByIgUserId(mediaIds);
     }
 
     /**
@@ -84,7 +84,7 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
      * @param task 任務
      */
     private void performTaskWithAccount(TaskQueue task) {
-        instagramService.searchMediaCommentsAndSave(task, task.getNextIdForSearch());
+        instagramService.searchMediaLikersAndSave(task, task.getNextIdForSearch());
     }
 
     /**
@@ -97,4 +97,5 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
         taskQueueService.save(task);
         log.info("任務已儲存:{}", task);
     }
+
 }

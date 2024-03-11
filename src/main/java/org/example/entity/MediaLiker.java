@@ -28,7 +28,7 @@ public class MediaLiker {
     @ManyToOne
     @JoinColumn(name = "media_id", unique = true)
     @JsonIgnore
-    private Media mediaId;
+    private Media media;
 
     @Column(name = "liker_user_name")
     private String likerUserName;
