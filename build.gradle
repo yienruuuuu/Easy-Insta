@@ -46,6 +46,10 @@ dependencies {
     // build.gradle
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    //easyPoi
+    implementation group: 'cn.afterturn', name: 'easypoi-spring-boot-starter', version: '4.5.0'
+
+
 }
 
 
