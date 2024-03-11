@@ -45,7 +45,7 @@ public class CheckTaskQueue extends BaseQueue {
         } catch (ApiException e) {
             log.info("檢查任務序列發生預期事件 {}", e.getMessage());
         } catch (Exception e) {
-            log.error("檢查任務序列發生特殊錯誤", e);
+            log.error("檢查任務序列發生特殊錯誤事件,暫停任務排程,請人工處理錯誤", e);
             stopBaseQueue();
         }
         log.info("檢查任務序列結束");

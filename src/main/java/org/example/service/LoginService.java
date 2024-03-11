@@ -25,5 +25,10 @@ public interface LoginService extends BaseService<LoginAccount> {
      */
     int updateExhaustedAccounts(LocalDateTime thresholdTime, LoginAccountStatusEnum newStatus, LoginAccountStatusEnum oldStatus);
 
+    /**
+     * 取得登入帳號
+     *
+     * @return 登入帳號
+     */
     LoginAccount getLoginAccount();
 }

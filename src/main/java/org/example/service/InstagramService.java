@@ -7,7 +7,7 @@ import org.example.entity.TaskQueue;
 /**
  * Instagram操作相關Service
  *
- * @Author: Eric.Lee
+ * @author: Eric.Lee
  */
 public interface InstagramService {
     /**
@@ -33,7 +33,6 @@ public interface InstagramService {
      *              task.getUserId() 查詢對象Id
      * @param maxId 最大查詢數量 初次執行可能為null
      *              之後執行需帶入最後一次查詢的最後一筆Id
-     * @return 是否查詢成功
      */
     void searchFollowersAndSave(TaskQueue task, String maxId);
 
@@ -52,5 +51,13 @@ public interface InstagramService {
      * @param maxId 最大查詢數量 初次執行可能為null
      */
     void searchMediaCommentsAndSave(TaskQueue task, String maxId);
+
+    /**
+     * 查詢貼文按讚者
+     *
+     * @param task  任務資訊
+     * @param maxId 最大查詢數量 初次執行可能為null
+     */
+    void searchMediaLikersAndSave(TaskQueue task, String maxId);
 
 }

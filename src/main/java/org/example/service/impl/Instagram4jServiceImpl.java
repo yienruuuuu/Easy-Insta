@@ -11,6 +11,7 @@ import com.github.instagram4j.instagram4j.models.user.User;
 import com.github.instagram4j.instagram4j.requests.feed.FeedUserRequest;
 import com.github.instagram4j.instagram4j.requests.friendships.FriendshipsFeedsRequest;
 import com.github.instagram4j.instagram4j.requests.media.MediaGetCommentsRequest;
+import com.github.instagram4j.instagram4j.requests.media.MediaGetLikersRequest;
 import com.github.instagram4j.instagram4j.responses.feed.FeedUserResponse;
 import com.github.instagram4j.instagram4j.responses.feed.FeedUsersResponse;
 import com.github.instagram4j.instagram4j.responses.media.MediaGetCommentsResponse;
@@ -18,6 +19,7 @@ import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.dto.CommentsAndMaxIdDTO;
 import org.example.bean.dto.FollowersAndMaxIdDTO;
+import org.example.bean.dto.LikerProfilesAndMaxIdDTO;
 import org.example.bean.dto.PostsAndMaxIdDTO;
 import org.example.bean.enumtype.ConfigEnum;
 import org.example.config.ConfigCache;
@@ -28,6 +30,7 @@ import org.example.exception.TaskExecutionException;
 import org.example.service.FollowersService;
 import org.example.service.InstagramService;
 import org.example.service.MediaCommentService;
+import org.example.service.MediaLikerService;
 import org.example.utils.BrightDataProxy;
 import org.example.utils.CrawlingUtil;
 import org.example.utils.StringUtils;
@@ -41,7 +44,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service("instagramService")
@@ -51,17 +53,21 @@ public class Instagram4jServiceImpl implements InstagramService {
     private final MediaServiceImpl mediaService;
     private final ConfigCache configCache;
     private final MediaCommentService mediaCommentService;
+    private final MediaLikerService mediaLikerService;
 
-    public Instagram4jServiceImpl(IgUserServiceImpl igUserService, FollowersService followersService, MediaServiceImpl mediaService, ConfigCache configCache, MediaCommentService mediaCommentService) {
+    public Instagram4jServiceImpl(IgUserServiceImpl igUserService, FollowersService followersService, MediaServiceImpl mediaService, ConfigCache configCache, MediaCommentService mediaCommentService, MediaLikerService mediaLikerService) {
         this.igUserService = igUserService;
         this.followersService = followersService;
         this.mediaService = mediaService;
         this.configCache = configCache;
         this.mediaCommentService = mediaCommentService;
+        this.mediaLikerService = mediaLikerService;
     }
 
     private IGClient client;
     public static final String CHALLENGE_REQUIRED = "challenge_required";
+    private static final String LOG_MESSAGE_PATTERN = "出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}";
+
 
     @Override
     public void login(String account, String password) {
@@ -134,8 +140,9 @@ public class Instagram4jServiceImpl implements InstagramService {
             // 保存貼文
             mediaService.batchInsertMedias(mediasList);
             task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
+        } catch (ApiException apiException) {
+            throw apiException;
         } catch (Exception e) {
-            log.error(SysCode.IG_GET_MEDIA_FAILED.getMessage(), e);
             throw new TaskExecutionException(SysCode.IG_GET_MEDIA_FAILED, e);
         }
     }
@@ -158,6 +165,23 @@ public class Instagram4jServiceImpl implements InstagramService {
         }
     }
 
+    @Override
+    public void searchMediaLikersAndSave(TaskQueue task, String maxId) {
+        try {
+            // 取得對象貼文
+            LikerProfilesAndMaxIdDTO likerProfilesAndMaxIdDTO = getLikersByMediaPk(client, task, maxId);
+            // 將 Comment 物件轉換為 Media_comment 實體
+            List<MediaLiker> likerList = convertProfileToMediaLikerEntity(task, likerProfilesAndMaxIdDTO.getLikerProfiles());
+            // 保存
+            mediaLikerService.batchInsert(likerList);
+            task.getTaskQueueMediaId().setNextMediaId(likerProfilesAndMaxIdDTO.getMaxId());
+            log.info("Task = {}", task);
+        } catch (ApiException apiException) {
+            throw apiException;
+        } catch (Exception e) {
+            throw new TaskExecutionException(SysCode.IG_GET_LIKERS_FAILED, e);
+        }
+    }
 
     // private
 
@@ -189,19 +213,18 @@ public class Instagram4jServiceImpl implements InstagramService {
      * @return Followers 實體列表
      */
     private static List<Followers> convertProfilesToFollowerEntities(IgUser igUser, List<Profile> followersObjFromIg) {
-        return followersObjFromIg.stream().map(
-                        profile -> Followers.builder()
-                                .igUser(igUser)
-                                .followerPk(profile.getPk())
-                                .followerUserName(profile.getUsername())
-                                .followerFullName(profile.getFull_name())
-                                .isPrivate(profile.is_private())
-                                .profilePicUrl(profile.getProfile_pic_url())
-                                .profilePicId(profile.getProfile_pic_id())
-                                .isVerified(profile.is_verified())
-                                .hasAnonymousProfilePicture(profile.isHas_anonymous_profile_picture())
-                                .latestReelMedia(profile.getLatest_reel_media())
-                                .build())
+        return followersObjFromIg.stream().map(profile -> Followers.builder()
+                        .igUser(igUser)
+                        .followerPk(profile.getPk())
+                        .followerUserName(profile.getUsername())
+                        .followerFullName(profile.getFull_name())
+                        .isPrivate(profile.is_private())
+                        .profilePicUrl(profile.getProfile_pic_url())
+                        .profilePicId(profile.getProfile_pic_id())
+                        .isVerified(profile.is_verified())
+                        .hasAnonymousProfilePicture(profile.isHas_anonymous_profile_picture())
+                        .latestReelMedia(profile.getLatest_reel_media())
+                        .build())
                 .toList();
     }
 
@@ -254,6 +277,27 @@ public class Instagram4jServiceImpl implements InstagramService {
                         .contentType(comment.getContent_type())
                         .status(comment.getStatus())
                         .commentLikeCount(comment.getComment_like_count())
+                        .build())
+                .toList();
+    }
+
+    /**
+     * 將 Comment 物件轉換為 MediaComment 實體
+     *
+     * @param taskQueue 任務
+     * @param profiles  IG按讚者物件
+     */
+    private static List<MediaLiker> convertProfileToMediaLikerEntity(TaskQueue taskQueue, List<Profile> profiles) {
+        return profiles.stream().map(profile -> MediaLiker.builder()
+                        .media(taskQueue.getTaskQueueMediaId().getMedia())
+                        .likerUserName(profile.getUsername())
+                        .likerFullName(profile.getFull_name())
+                        .likerPk(profile.getPk())
+                        .likerIsPrivate(profile.is_private())
+                        .likerIsVerified(profile.is_verified())
+                        .likerProfilePicId(profile.getProfile_pic_id())
+                        .likerProfilePicUrl(profile.getProfile_pic_url())
+                        .likerLatestReelMedia(profile.getLatest_reel_media())
                         .build())
                 .toList();
     }
@@ -334,14 +378,9 @@ public class Instagram4jServiceImpl implements InstagramService {
                 //請求間暫停
                 CrawlingUtil.pauseBetweenRequests();
             }
-            log.info("出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
+            log.info(LOG_MESSAGE_PATTERN, maxRequestTimes, maxIdRef.get(), count);
         } catch (CompletionException completionException) {
-            if (completionException.getCause() instanceof IGResponseException && CHALLENGE_REQUIRED.equals(completionException.getCause().getMessage())) {
-                log.error("處理 challenge_required", completionException);
-                throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, completionException);
-            } else {
-                throw completionException;
-            }
+            handleCompletionException(completionException);
         }
         return PostsAndMaxIdDTO.builder()
                 .medias(medias)
@@ -370,17 +409,44 @@ public class Instagram4jServiceImpl implements InstagramService {
                 //請求間暫停
                 CrawlingUtil.pauseBetweenRequests();
             }
-            log.info("出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}", maxRequestTimes, maxIdRef.get(), count);
+            log.info(LOG_MESSAGE_PATTERN, maxRequestTimes, maxIdRef.get(), count);
         } catch (CompletionException completionException) {
-            if (completionException.getCause() instanceof IGResponseException && CHALLENGE_REQUIRED.equals(completionException.getCause().getMessage())) {
-                log.error("處理 challenge_required", completionException);
-                throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, completionException);
-            } else {
-                throw completionException;
-            }
+            handleCompletionException(completionException);
         }
         return CommentsAndMaxIdDTO.builder()
                 .comments(comments)
+                .maxId(maxIdRef.get())
+                .build();
+    }
+
+
+    private LikerProfilesAndMaxIdDTO getLikersByMediaPk(IGClient client, TaskQueue task, String maxId) {
+        String mediaId = task.getTaskQueueMediaId().getMedia().getMediaId();
+        List<Profile> profiles = Lists.newArrayList();
+        AtomicReference<String> maxIdRef = new AtomicReference<>(maxId);
+        // 計數器，用於追蹤請求到的資料數量
+        int count = 0;
+        boolean isFirstIteration = true;
+        int maxRequestTimes = Integer.parseInt(configCache.get(ConfigEnum.MAX_COMMENTS_PER_REQUEST.name()));
+
+        try {
+            while (shouldContinueFetching(count, maxIdRef.get(), isFirstIteration, maxRequestTimes)) {
+                isFirstIteration = false;
+                // 每次循环使用最新的maxId创建请求
+                FeedUsersResponse response = fetchLikers(client, mediaId, maxIdRef.get());
+                // 處理請求結果
+                processFollowersResponse(profiles, response, maxIdRef);
+                count += response.getUsers().size();
+                log.info("目前累計數: " + count);
+                //請求間暫停
+                CrawlingUtil.pauseBetweenRequests();
+            }
+            log.info(LOG_MESSAGE_PATTERN, maxRequestTimes, maxIdRef.get(), count);
+        } catch (CompletionException completionException) {
+            handleCompletionException(completionException);
+        }
+        return LikerProfilesAndMaxIdDTO.builder()
+                .likerProfiles(profiles)
                 .maxId(maxIdRef.get())
                 .build();
     }
@@ -399,6 +465,10 @@ public class Instagram4jServiceImpl implements InstagramService {
 
     private MediaGetCommentsResponse fetchComments(IGClient client, String mediaId, String maxId) {
         return client.sendRequest(new MediaGetCommentsRequest(mediaId, maxId)).join();
+    }
+
+    private FeedUsersResponse fetchLikers(IGClient client, String mediaId, String maxId) {
+        return client.sendRequest(new MediaGetLikersRequest(mediaId, maxId)).join();
     }
 
     private void processFollowersResponse(List<Profile> followers, FeedUsersResponse response, AtomicReference<String> maxIdRef) {
@@ -424,5 +494,14 @@ public class Instagram4jServiceImpl implements InstagramService {
     private boolean shouldContinueFetching(int count, String maxId, boolean isFirstIteration, int requestLimit) {
         //條件: 計數器小於規定 && (maxId不為空或是第一次迭代)
         return count < requestLimit && (maxId != null || isFirstIteration);
+    }
+
+    private void handleCompletionException(CompletionException completionException) {
+        if (completionException.getCause() instanceof IGResponseException && CHALLENGE_REQUIRED.equals(completionException.getCause().getMessage())) {
+            log.error("處理 challenge_required", completionException);
+            throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, completionException);
+        } else {
+            throw completionException;
+        }
     }
 }
