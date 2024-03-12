@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Slf4j
+@Builder
 public class LoginAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

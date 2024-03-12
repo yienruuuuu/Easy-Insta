@@ -1,11 +1,14 @@
 package org.example.controller;
 
-import cn.afterturn.easypoi.excel.ExcelImportUtil;
-import cn.afterturn.easypoi.excel.entity.ImportParams;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.EasyExcelFactory;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.read.listener.ReadListener;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.dto.UploadAccountRequest;
+import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.entity.IgUser;
 import org.example.entity.LoginAccount;
 import org.example.entity.Media;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -52,13 +56,39 @@ public class AdminController extends BaseController {
 
     @PostMapping(value = "/uploadAccountListByExcel", consumes = "multipart/form-data")
     @Operation(summary = "上傳帳密清單", description = "上傳帳密清單")
-    public void handleFileUpload(@RequestParam("file") MultipartFile file) {
+    public List<LoginAccount> handleFileUpload(@RequestParam(value = "file") MultipartFile file) {
         try {
-            InputStream input = file.getInputStream();
-            List<UploadAccountRequest> accountList = ExcelImportUtil.importExcel(input, UploadAccountRequest.class, new ImportParams());
-            log.info("上傳帳密清單: {}", accountList);
+            List<UploadAccountRequest> accountList = upload(file.getInputStream());
+            List<LoginAccount> loginAccounts = accountList.stream().map(accountRequest -> LoginAccount.builder().account(accountRequest.getAccount()).password(accountRequest.getPassword()).status(LoginAccountStatusEnum.NORMAL).build()).toList();
+            return loginService.saveAll(loginAccounts);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("上傳帳密清單失敗", e);
+            throw new ApiException(SysCode.FILE_UPLOAD_FAILED);
         }
+    }
+
+
+    //private
+
+    /**
+     * 讀取帳密清單
+     *
+     * @param inputStream 帳密清單流
+     * @return 帳密清單
+     */
+    private List<UploadAccountRequest> upload(InputStream inputStream) {
+        List<UploadAccountRequest> cachedDataList = new ArrayList<>();
+        EasyExcelFactory.read(inputStream, UploadAccountRequest.class, new ReadListener<UploadAccountRequest>() {
+            @Override
+            public void invoke(UploadAccountRequest data, AnalysisContext context) {
+                cachedDataList.add(data);
+            }
+
+            @Override
+            public void doAfterAllAnalysed(AnalysisContext context) {
+                // do nothing
+            }
+        }).sheet().doRead();
+        return cachedDataList;
     }
 }
