@@ -36,13 +36,15 @@ public class IgUserController extends BaseController {
     private final IgUserService igUserService;
     private final TaskQueueService taskQueueService;
     private final MediaService mediaService;
+    private final FollowersService followersService;
 
-    public IgUserController(LoginService loginService, InstagramService instagramService, IgUserService igUserService, TaskQueueService taskQueueService, MediaService mediaService) {
+    public IgUserController(LoginService loginService, InstagramService instagramService, IgUserService igUserService, TaskQueueService taskQueueService, MediaService mediaService, FollowersService followersService) {
         this.loginService = loginService;
         this.instagramService = instagramService;
         this.igUserService = igUserService;
         this.taskQueueService = taskQueueService;
         this.mediaService = mediaService;
+        this.followersService = followersService;
     }
 
     @Operation(summary = "以用戶名查詢用戶，並可控是否紀錄到資料庫")
@@ -63,12 +65,12 @@ public class IgUserController extends BaseController {
 
     @Operation(summary = "提交排程，安排任務")
     @PostMapping(value = "/task/{taskEnum}/{username}")
-    public Object sendTask(@PathVariable String username, @PathVariable TaskTypeEnum taskEnum) {
-        IgUser targetUser = igUserService.findUserByIgUserName(username).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
+    public Object sendTask(@PathVariable String userName, @PathVariable TaskTypeEnum taskEnum) {
+        IgUser targetUser = igUserService.findUserByIgUserName(userName).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
         log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
         // 檢查對於查詢對象的任務是否存在
         if (taskQueueService.checkTaskQueueExistByUserAndTaskType(targetUser, taskEnum)) {
-            log.info("用戶: {} 的 {} 任務已存在", taskEnum, username);
+            log.info("用戶: {} 的 {} 任務已存在", taskEnum, userName);
             return new ApiResponse(SysCode.TASK_ALREADY_EXISTS.getCode(), SysCode.TASK_ALREADY_EXISTS.getMessage(), null);
         }
         // 保存任務並返回保存的任務
@@ -90,6 +92,14 @@ public class IgUserController extends BaseController {
         CalculateMediaParams params = getCalculateMediaParams(targetUser, mediaList);
         log.info("計算互動率，用戶: {} ，計算參數:{}", targetUser.getUserName(), params);
         return CrawlingUtil.calculateEngagementRate(params.getLikes(), params.getComments(), params.getShares(), params.getFollowers(), params.getPostAmounts());
+    }
+
+    @Operation(summary = "查詢追隨者明細", description = "請先確定已查詢過追隨者，並開啟debug chrome")
+    @PostMapping(value = "/followersDetail/{userName}")
+    public void getFollowerDetailBySelenium(@PathVariable String userName) {
+        IgUser targetUser = igUserService.findUserByIgUserName(userName).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
+        log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
+        followersService.getFollowersDetailByIgUserName(targetUser);
     }
 
 

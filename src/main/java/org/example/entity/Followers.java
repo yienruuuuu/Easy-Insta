@@ -56,4 +56,13 @@ public class Followers {
     @Column(name = "latest_reel_media")
     private Long latestReelMedia;
 
+    @Column(name = "post_count")
+    private int postCount;
+
+    @Column(name = "follower_count")
+    private int followerCount;
+
+    @Column(name = "following_count")
+    private int followingCount;
+
 }

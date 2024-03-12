@@ -3,7 +3,10 @@ package org.example.service.impl;
 import org.example.dao.FollowersDao;
 import org.example.entity.Followers;
 import org.example.entity.IgUser;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.FollowersService;
+import org.example.service.SeleniumService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,9 +19,11 @@ import java.util.Optional;
 @Service("followersService")
 public class FollowersServiceImpl implements FollowersService {
     private final FollowersDao followersDao;
+    private final SeleniumService seleniumService;
 
-    public FollowersServiceImpl(FollowersDao followersDao) {
+    public FollowersServiceImpl(FollowersDao followersDao, SeleniumService seleniumService) {
         this.followersDao = followersDao;
+        this.seleniumService = seleniumService;
     }
 
 
@@ -50,5 +55,26 @@ public class FollowersServiceImpl implements FollowersService {
     @Override
     public void deleteOldFollowersDataByIgUser(IgUser igUser) {
         followersDao.deleteByIgUser(igUser);
+    }
+
+    @Override
+    public void getFollowersDetailByIgUserName(IgUser igUser) {
+        List<Followers> followersList = followersDao.findByIgUser(igUser);
+        if (followersList.isEmpty()) {
+            throw new ApiException(SysCode.FOLLOWERS_OR_MEDIA_AMOUNT_IS_ZERO);
+        }
+        processFollowersInBatches(followersList, 10);
+    }
+
+    // private
+
+    private void processFollowersInBatches(List<Followers> followersList, int batchSize) {
+        int totalBatches = (followersList.size() + batchSize - 1) / batchSize;
+        for (int batch = 0; batch < totalBatches; batch++) {
+            int start = batch * batchSize;
+            int end = Math.min(start + batchSize, followersList.size());
+            List<Followers> batchList = followersList.subList(start, end);
+            seleniumService.crawlFollowerDetailByCssStyle(batchList);
+        }
     }
 }

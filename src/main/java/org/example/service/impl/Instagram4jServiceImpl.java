@@ -332,7 +332,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                 count += response.getUsers().size();
                 log.info("目前查詢累計用戶數: " + count);
                 //請求間暫停
-                CrawlingUtil.pauseBetweenRequests();
+                CrawlingUtil.pauseBetweenRequests(5, 15);
             }
             log.info("達到{}個追蹤者資料，跳出循環 count:{}", maxRequestTimes, count);
         } catch (CompletionException completionException) {
@@ -376,7 +376,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                 count += response.getItems().size();
                 log.info("目前累計文章數: " + count);
                 //請求間暫停
-                CrawlingUtil.pauseBetweenRequests();
+                CrawlingUtil.pauseBetweenRequests(5, 15);
             }
             log.info(LOG_MESSAGE_PATTERN, maxRequestTimes, maxIdRef.get(), count);
         } catch (CompletionException completionException) {
@@ -407,7 +407,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                 count += response.getComments().size();
                 log.info("目前累計數: " + count);
                 //請求間暫停
-                CrawlingUtil.pauseBetweenRequests();
+                CrawlingUtil.pauseBetweenRequests(5, 15);
             }
             log.info(LOG_MESSAGE_PATTERN, maxRequestTimes, maxIdRef.get(), count);
         } catch (CompletionException completionException) {
@@ -439,7 +439,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                 count += response.getUsers().size();
                 log.info("目前累計數: " + count);
                 //請求間暫停
-                CrawlingUtil.pauseBetweenRequests();
+                CrawlingUtil.pauseBetweenRequests(5, 15);
             }
             log.info(LOG_MESSAGE_PATTERN, maxRequestTimes, maxIdRef.get(), count);
         } catch (CompletionException completionException) {
