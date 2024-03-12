@@ -5,6 +5,7 @@ import org.example.bean.enumtype.LoginAccountStatusEnum;
 import org.example.entity.LoginAccount;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface LoginService extends BaseService<LoginAccount> {
@@ -31,4 +32,12 @@ public interface LoginService extends BaseService<LoginAccount> {
      * @return 登入帳號
      */
     LoginAccount getLoginAccount();
+
+    /**
+     * 保存登入帳號
+     *
+     * @param target 登入帳號群組
+     * @return 登入帳號
+     */
+    List<LoginAccount> saveAll(List<LoginAccount> target);
 }

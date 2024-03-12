@@ -76,7 +76,7 @@ public class CheckTaskQueue extends BaseQueue {
                 .map(status -> taskQueueService.findFirstTaskQueueByStatusAndNeedLogin(status, true))
                 .flatMap(Optional::stream)  // 将Optional转换为Stream
                 .findFirst()
-                .orElseThrow(() -> new ApiException(SysCode.NO_TASKS_TO_PERFORM, "沒有需要執行的任務"));
+                .orElseThrow(() -> new ApiException(SysCode.NO_TASKS_TO_PERFORM));
     }
 
     /**

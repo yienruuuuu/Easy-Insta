@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bean.enumtype.LoginAccountStatusEnum;
-import org.example.bean.enumtype.TaskStatusEnum;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -21,6 +20,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Slf4j
+@Builder
 public class LoginAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

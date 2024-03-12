@@ -50,4 +50,9 @@ public class LoginServiceImpl implements LoginService {
         return findFirstLoginAccountByStatus(LoginAccountStatusEnum.NORMAL)
                 .orElseThrow(() -> new ApiException(SysCode.NO_AVAILABLE_LOGIN_ACCOUNT, "沒有可用的登入帳號"));
     }
+
+    @Override
+    public List<LoginAccount> saveAll(List<LoginAccount> target) {
+        return loginAccountDao.saveAll(target);
+    }
 }

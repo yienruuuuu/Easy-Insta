@@ -17,8 +17,9 @@ public enum SysCode implements ErrorCode {
     //程式運行相關錯誤
     CONFIG_NOT_FOUND(2000, "配置未找到"),
     NO_AVAILABLE_LOGIN_ACCOUNT(2001, "沒有可用的登錄帳戶"),
-    NO_TASKS_TO_PERFORM(2002, "沒有任務可執行"),
+    NO_TASKS_TO_PERFORM(2002, "沒有需要執行的任務"),
     FOLLOWERS_OR_MEDIA_AMOUNT_IS_ZERO(2003, "粉絲數和貼文數必須大於0"),
+    FILE_UPLOAD_FAILED(2004, "文件上傳失敗"),
 
     //任務運行相關錯誤
     TASK_CREATION_FAILED(2100, "任務創建失敗"),
