@@ -36,15 +36,13 @@ public class IgUserController extends BaseController {
     private final IgUserService igUserService;
     private final TaskQueueService taskQueueService;
     private final MediaService mediaService;
-    private final FollowersService followersService;
 
-    public IgUserController(LoginService loginService, InstagramService instagramService, IgUserService igUserService, TaskQueueService taskQueueService, MediaService mediaService, FollowersService followersService) {
+    public IgUserController(LoginService loginService, InstagramService instagramService, IgUserService igUserService, TaskQueueService taskQueueService, MediaService mediaService) {
         this.loginService = loginService;
         this.instagramService = instagramService;
         this.igUserService = igUserService;
         this.taskQueueService = taskQueueService;
         this.mediaService = mediaService;
-        this.followersService = followersService;
     }
 
     @Operation(summary = "以用戶名查詢用戶，並可控是否紀錄到資料庫")

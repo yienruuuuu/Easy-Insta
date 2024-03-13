@@ -35,7 +35,7 @@ public class SeleniumServiceImpl implements SeleniumService {
 
 
     @Override
-    public Followers crawlFollowerDetailByCssStyle(Followers follower) {
+    public void crawlFollowerDetailByCssStyle(Followers follower) {
         WebDriver driver = getDriver();
         try {
             searchForAccount(driver, follower.getFollowerUserName());
@@ -47,7 +47,6 @@ public class SeleniumServiceImpl implements SeleniumService {
         } finally {
             driver.quit();
         }
-        return follower;
     }
 
     @Override

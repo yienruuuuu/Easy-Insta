@@ -6,7 +6,6 @@ import org.example.entity.IgUser;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.FollowersService;
-import org.example.service.SeleniumService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,11 +18,9 @@ import java.util.Optional;
 @Service("followersService")
 public class FollowersServiceImpl implements FollowersService {
     private final FollowersDao followersDao;
-    private final SeleniumService seleniumService;
 
-    public FollowersServiceImpl(FollowersDao followersDao, SeleniumService seleniumService) {
+    public FollowersServiceImpl(FollowersDao followersDao) {
         this.followersDao = followersDao;
-        this.seleniumService = seleniumService;
     }
 
 
@@ -44,7 +41,7 @@ public class FollowersServiceImpl implements FollowersService {
 
     @Override
     public Optional<Followers> findById(Integer id) {
-        return Optional.of(followersDao.findById(id).get());
+        return followersDao.findById(id);
     }
 
     @Override

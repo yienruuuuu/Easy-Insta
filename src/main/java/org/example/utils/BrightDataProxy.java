@@ -1,5 +1,6 @@
 package org.example.utils;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -12,12 +13,13 @@ import java.net.Proxy;
  * @author Eric.Lee
  * Date: 2024/2/23
  */
+@Slf4j
 public class BrightDataProxy {
 
     //取得BrightData代理
     public static OkHttpClient getBrightDataProxy(String account, String password, String sessionId) {
         String proxyUser = String.format("%s-country-%s-session-%s", account, "tw", sessionId);
-        System.out.println("proxyUser: " + proxyUser);
+        log.info("proxyUser: " + proxyUser);
         return new OkHttpClient.Builder()
                 .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("brd.superproxy.io", 22225)))
                 .proxyAuthenticator((route, response) -> {
@@ -42,7 +44,7 @@ public class BrightDataProxy {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            System.out.println(response.body().string());
+            log.info(response.body().string());
         }
     }
 

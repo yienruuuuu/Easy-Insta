@@ -22,14 +22,12 @@ import java.util.List;
 @Service("getFollowerDetailStrategy")
 public class GetFollowerDetailStrategy extends TaskStrategyBase implements TaskStrategy {
     private final TaskQueueService taskQueueService;
-    private final FollowersService followersService;
     private final SeleniumService seleniumService;
     private final TaskQueueFollowerDetailService taskQueueFollowerDetailService;
 
-    protected GetFollowerDetailStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, FollowersService followersService, TaskQueueMediaService taskQueueMediaService, SeleniumService seleniumService, TaskQueueFollowerDetailService taskQueueFollowerDetailService) {
+    protected GetFollowerDetailStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, TaskQueueMediaService taskQueueMediaService, SeleniumService seleniumService, TaskQueueFollowerDetailService taskQueueFollowerDetailService) {
         super(instagramService, loginService, taskQueueMediaService);
         this.taskQueueService = taskQueueService;
-        this.followersService = followersService;
         this.seleniumService = seleniumService;
         this.taskQueueFollowerDetailService = taskQueueFollowerDetailService;
     }

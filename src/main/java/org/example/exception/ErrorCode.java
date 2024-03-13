@@ -1,6 +1,8 @@
 package org.example.exception;
 
-public interface ErrorCode {
+import java.io.Serializable;
+
+public interface ErrorCode extends Serializable {
 
     String getMessage();
 

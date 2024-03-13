@@ -2,7 +2,6 @@ package org.example.config;
 
 import org.example.entity.Config;
 import org.example.service.ConfigService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -16,10 +15,14 @@ import java.util.List;
 @Component
 public class ConfigLoader {
 
-    @Autowired
-    private ConfigService configService;
-    @Autowired
-    private ConfigCache configCache;
+
+    private final ConfigService configService;
+    private final ConfigCache configCache;
+
+    public ConfigLoader(ConfigService configService, ConfigCache configCache) {
+        this.configService = configService;
+        this.configCache = configCache;
+    }
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadConfigDataToCache() {

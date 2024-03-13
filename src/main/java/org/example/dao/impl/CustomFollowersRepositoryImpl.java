@@ -3,7 +3,6 @@ package org.example.dao.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dao.CustomFollowersRepository;
 import org.example.entity.Followers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -19,8 +18,12 @@ import java.util.List;
 @Slf4j
 @Repository
 public class CustomFollowersRepositoryImpl implements CustomFollowersRepository {
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public CustomFollowersRepositoryImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public void batchInsertOrUpdate(List<Followers> followersList) {

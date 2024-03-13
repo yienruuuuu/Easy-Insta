@@ -10,7 +10,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum SysCode implements ErrorCode {
-
     OK(1000, "成功"),
     FAIL(1001, "Expected error"),
 

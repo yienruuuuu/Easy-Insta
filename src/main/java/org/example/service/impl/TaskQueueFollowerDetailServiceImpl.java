@@ -2,7 +2,6 @@ package org.example.service.impl;
 
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.dao.TaskQueueFollowersDetailDao;
-import org.example.entity.IgUser;
 import org.example.entity.TaskQueue;
 import org.example.entity.TaskQueueFollowersDetail;
 import org.example.service.TaskQueueFollowerDetailService;
@@ -33,7 +32,7 @@ public class TaskQueueFollowerDetailServiceImpl implements TaskQueueFollowerDeta
 
     @Override
     public Optional<TaskQueueFollowersDetail> findById(Integer id) {
-        return Optional.of(taskQueueFollowersDetailDao.findById(id).get());
+        return taskQueueFollowersDetailDao.findById(id);
     }
 
     @Override
