@@ -64,7 +64,7 @@ public class IgUserController extends BaseController {
     }
 
     @Operation(summary = "提交排程，安排任務")
-    @PostMapping(value = "/task/{taskEnum}/{username}")
+    @PostMapping(value = "/task/{taskEnum}/{userName}")
     public Object sendTask(@PathVariable String userName, @PathVariable TaskTypeEnum taskEnum) {
         IgUser targetUser = igUserService.findUserByIgUserName(userName).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
         log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
@@ -93,7 +93,6 @@ public class IgUserController extends BaseController {
         log.info("計算互動率，用戶: {} ，計算參數:{}", targetUser.getUserName(), params);
         return CrawlingUtil.calculateEngagementRate(params.getLikes(), params.getComments(), params.getShares(), params.getFollowers(), params.getPostAmounts());
     }
-
     @Operation(summary = "查詢追隨者明細", description = "請先確定已查詢過追隨者，並開啟debug chrome")
     @PostMapping(value = "/followersDetail/{userName}")
     public void getFollowerDetailBySelenium(@PathVariable String userName) {

@@ -58,6 +58,15 @@ public class FollowersServiceImpl implements FollowersService {
     }
 
     @Override
+    public List<Followers> findByIgUser(IgUser igUser) {
+        List<Followers> followersList = followersDao.findByIgUser(igUser);
+        if (followersList.isEmpty()) {
+            throw new ApiException(SysCode.FOLLOWERS_OR_MEDIA_AMOUNT_IS_ZERO);
+        }
+        return followersList;
+    }
+
+    @Override
     public void getFollowersDetailByIgUserName(IgUser igUser) {
         List<Followers> followersList = followersDao.findByIgUser(igUser);
         if (followersList.isEmpty()) {

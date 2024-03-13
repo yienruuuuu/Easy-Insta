@@ -31,12 +31,12 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
     /**
      * 檢查目前是否有某狀態及某登入需求的任務存在
      *
-     * @param status 任務狀態
+     * @param status      任務狀態
      * @param needLoginIg 是否需要登入 Instagram
      * @return 存在任務返回 true，否則返回 false
      */
-    @Query("SELECT COUNT(t) > 0 FROM TaskQueue t WHERE t.status = :status AND t.taskConfig.needLoginIg = :needLoginIg")
-    boolean existsInProgressTasks(@Param("status") TaskStatusEnum status, @Param("needLoginIg") boolean needLoginIg);
+    @Query("SELECT COUNT(t) > 0 FROM TaskQueue t WHERE t.status IN :status AND t.taskConfig.needLoginIg = :needLoginIg")
+    boolean existsInProgressTasks(@Param("status") List<TaskStatusEnum> status, @Param("needLoginIg") boolean needLoginIg);
 
     /**
      * 依據任務狀態及提交時間排序，查詢最早提交的一筆任務序列

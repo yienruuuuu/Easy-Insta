@@ -9,18 +9,18 @@ import javax.persistence.*;
 
 /**
  * @author Eric.Lee
- * Date: 2024/3/8
+ * Date: 2024/3/13
  */
 @Entity
-@Table(name = "task_queue_media", schema = "crawler_ig")
+@Table(name = "task_queue_followers_detail", schema = "crawler_ig")
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "media任務序列")
+@Schema(description = "follower detail任務序列")
 @Getter
 @Setter
-public class TaskQueueMedia {
+public class TaskQueueFollowersDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id")
@@ -29,17 +29,16 @@ public class TaskQueueMedia {
     @ManyToOne
     @JoinColumn(name = "task_queue_id")
     @JsonIgnore
-    private TaskQueue taskQueueId;
+    private TaskQueue taskQueue;
 
     @OneToOne
-    @JoinColumn(name = "media_id", unique = true)
+    @JoinColumn(name = "follower_id", unique = true)
     @JsonIgnore
-    private Media media;
-
-    @Column(name = "next_media_id")
-    private String nextMediaId;
+    private Followers follower;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private TaskStatusEnum status;
+
 }
+

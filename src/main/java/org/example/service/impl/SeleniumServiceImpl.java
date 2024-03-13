@@ -1,6 +1,8 @@
 package org.example.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.bean.enumtype.ConfigEnum;
+import org.example.config.ConfigCache;
 import org.example.entity.Followers;
 import org.example.service.SeleniumService;
 import org.example.utils.CrawlingUtil;
@@ -25,6 +27,12 @@ public class SeleniumServiceImpl implements SeleniumService {
     public static final String FOLLOWING_STRING = "粉絲";
     public static final String FOLLOWER_STRING = "人追蹤中";
 
+    public SeleniumServiceImpl(ConfigCache configCache) {
+        this.configCache = configCache;
+    }
+
+    private final ConfigCache configCache;
+
 
     @Override
     public List<Followers> crawlFollowerDetailByCssStyle(List<Followers> followersList) {
@@ -42,6 +50,13 @@ public class SeleniumServiceImpl implements SeleniumService {
             driver.quit();
         }
         return followersList;
+    }
+
+    @Override
+    public boolean isReadyForCrawl() {
+        WebDriver driver = getDriver();
+        List<WebElement> elementsWithStyle = driver.findElements(By.xpath(configCache.get(ConfigEnum.SELENIUM_IG_VIEW_FANS_SEARCH_STYLE.name())));
+        return !elementsWithStyle.isEmpty();
     }
 
     // private
@@ -68,7 +83,7 @@ public class SeleniumServiceImpl implements SeleniumService {
      * 搜尋框輸入帳號
      */
     private void searchForAccount(WebDriver driver, String account) {
-        WebElement searchInput = driver.findElement(By.xpath("//input[@aria-label='搜尋輸入']"));
+        WebElement searchInput = driver.findElement(By.xpath(configCache.get(ConfigEnum.SELENIUM_IG_INPUT_STYLE.name())));
         searchInput.clear();
         Actions actions = new Actions(driver);
         actions.moveToElement(searchInput)
@@ -89,7 +104,7 @@ public class SeleniumServiceImpl implements SeleniumService {
         // 等待個人頁面加載
         CrawlingUtil.pauseBetweenRequests(1, 3);
         // 定位粉絲數、追蹤數、貼文數的元素
-        return driver.findElements(By.xpath("//*[contains(@style, 'line-height: var(--base-line-clamp-line-height); --base-line-clamp-line-height: 18px;')]"));
+        return driver.findElements(By.xpath(configCache.get(ConfigEnum.SELENIUM_IG_FOLLOWERS_DATA_STYLE.name())));
     }
 
     /**

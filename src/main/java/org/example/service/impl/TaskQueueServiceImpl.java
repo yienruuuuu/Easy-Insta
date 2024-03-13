@@ -30,13 +30,15 @@ public class TaskQueueServiceImpl implements TaskQueueService {
     private final FollowersService followersService;
     private final MediaService mediaService;
     private final TaskQueueMediaService taskQueueMediaService;
+    private final TaskQueueFollowerDetailService taskQueueFollowerDetailService;
 
-    public TaskQueueServiceImpl(TaskQueueDao taskQueueDao, TaskConfigService taskConfigService, FollowersService followersService, MediaService mediaService, TaskQueueMediaService taskQueueMediaService) {
+    public TaskQueueServiceImpl(TaskQueueDao taskQueueDao, TaskConfigService taskConfigService, FollowersService followersService, MediaService mediaService, TaskQueueMediaService taskQueueMediaService, TaskQueueFollowerDetailService taskQueueFollowerDetailService) {
         this.taskQueueDao = taskQueueDao;
         this.taskConfigService = taskConfigService;
         this.followersService = followersService;
         this.mediaService = mediaService;
         this.taskQueueMediaService = taskQueueMediaService;
+        this.taskQueueFollowerDetailService = taskQueueFollowerDetailService;
     }
 
     @Override
@@ -53,7 +55,7 @@ public class TaskQueueServiceImpl implements TaskQueueService {
     }
 
     @Override
-    public boolean checkTasksByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg) {
+    public boolean checkTasksByStatusAndNeedLogin(List<TaskStatusEnum> status, boolean needLoginIg) {
         return taskQueueDao.existsInProgressTasks(status, needLoginIg);
     }
 
@@ -118,9 +120,8 @@ public class TaskQueueServiceImpl implements TaskQueueService {
             log.info("username: {}的 {} 任務建立失敗", igUser.getUserName(), taskType);
             throw new ApiException(SysCode.TASK_CREATION_FAILED);
         }
-        //保存media任務需要先安排所有的media到task_queue_media表
-        Integer saveSize = arrangeMediaToTaskQueueMedia(taskType, igUser, taskQueue.get());
-        log.info("username: {}的 {} 任務建立成功, 保存的task_queue_media數量: {}", igUser.getUserName(), taskType, saveSize);
+        //保存任務明細到任務明細表
+        arrangeToTaskQueueDetail(taskType, igUser, taskQueue.get());
         return taskQueue.get();
     }
 
@@ -138,10 +139,29 @@ public class TaskQueueServiceImpl implements TaskQueueService {
             case GET_MEDIA:
                 mediaService.deleteOldMediaDataByIgUserId(igUser.getId());
                 break;
-            case GET_MEDIA_COMMENT, GET_MEDIA_LIKER:
+            case GET_MEDIA_COMMENT, GET_MEDIA_LIKER, GET_FOLLOWERS_DETAIL:
                 break;
             default:
                 throw new ApiException(SysCode.TASK_TYPE_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 根據任務類型新增detail任務
+     *
+     * @param taskType 任務類型
+     * @param igUser   IG用戶
+     */
+    private void arrangeToTaskQueueDetail(TaskTypeEnum taskType, IgUser igUser, TaskQueue taskQueue) {
+        switch (taskType) {
+            case GET_MEDIA_COMMENT, GET_MEDIA_LIKER:
+                arrangeMediaToTaskQueueMedia(taskType, igUser, taskQueue);
+                break;
+            case GET_FOLLOWERS_DETAIL:
+                arrangeToTaskQueueFollowerDetail(igUser, taskQueue);
+                break;
+            default:
+                break;
         }
     }
 
@@ -151,10 +171,7 @@ public class TaskQueueServiceImpl implements TaskQueueService {
      * @param taskType 任務類型
      * @param igUser   IG用戶
      */
-    private Integer arrangeMediaToTaskQueueMedia(TaskTypeEnum taskType, IgUser igUser, TaskQueue taskQueue) {
-        if (!TaskTypeEnum.GET_MEDIA_COMMENT.equals(taskType) && !TaskTypeEnum.GET_MEDIA_LIKER.equals(taskType)) {
-            return 0;
-        }
+    private void arrangeMediaToTaskQueueMedia(TaskTypeEnum taskType, IgUser igUser, TaskQueue taskQueue) {
         int commentCount = taskType.equals(TaskTypeEnum.GET_MEDIA_COMMENT) ? 0 : -1;
         List<Media> medias = mediaService.listMediaByIgUserIdAndCommentCount(igUser, commentCount);
         List<TaskQueueMedia> taskQueueMedias = medias.stream()
@@ -164,6 +181,23 @@ public class TaskQueueServiceImpl implements TaskQueueService {
                         .status(TaskStatusEnum.PENDING)
                         .build())
                 .toList();
-        return taskQueueMediaService.saveAll(taskQueueMedias).size();
+        taskQueueMediaService.saveAll(taskQueueMedias);
+    }
+
+    /**
+     * follower_detail任務需要先安排所有的Follower到task_queue_Follower_detail表
+     *
+     * @param igUser IG用戶
+     */
+    private void arrangeToTaskQueueFollowerDetail(IgUser igUser, TaskQueue taskQueue) {
+        List<Followers> followerList = followersService.findByIgUser(igUser);
+        List<TaskQueueFollowersDetail> taskQueueFollowersDetails = followerList.stream().map(follower -> {
+            TaskQueueFollowersDetail detail = new TaskQueueFollowersDetail();
+            detail.setFollower(follower);
+            detail.setTaskQueue(taskQueue);
+            detail.setStatus(TaskStatusEnum.PENDING);
+            return detail;
+        }).toList();
+        taskQueueFollowerDetailService.saveAll(taskQueueFollowersDetails);
     }
 }

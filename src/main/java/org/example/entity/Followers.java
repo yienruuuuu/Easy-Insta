@@ -57,12 +57,12 @@ public class Followers {
     private Long latestReelMedia;
 
     @Column(name = "post_count")
-    private int postCount;
+    private Integer postCount;
 
     @Column(name = "follower_count")
-    private int followerCount;
+    private Integer followerCount;
 
     @Column(name = "following_count")
-    private int followingCount;
+    private Integer followingCount;
 
 }

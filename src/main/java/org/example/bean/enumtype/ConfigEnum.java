@@ -18,5 +18,11 @@ public enum ConfigEnum {
     //查詢貼文留言，每次請求最大數量
     MAX_COMMENTS_PER_REQUEST,
     //查詢貼文按讚，每次請求最大數量
-    MAX_LIKERS_PER_REQUEST
+    MAX_LIKERS_PER_REQUEST,
+    //selenuim 驗證畫面是否已達任務前準備
+    SELENIUM_IG_VIEW_FANS_SEARCH_STYLE,
+    //selenuim 抓取輸入框
+    SELENIUM_IG_INPUT_STYLE,
+    //selenuim 抓取追蹤者明細資料
+    SELENIUM_IG_FOLLOWERS_DATA_STYLE
 }

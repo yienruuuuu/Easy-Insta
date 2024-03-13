@@ -30,6 +30,9 @@ public class TaskExecutionStrategyFactory {
             if (strategy instanceof GetMediaLikerStrategy) {
                 strategies.put(TaskTypeEnum.GET_MEDIA_LIKER, strategy);
             }
+            if (strategy instanceof GetFollowerDetailStrategy) {
+                strategies.put(TaskTypeEnum.GET_FOLLOWERS_DETAIL, strategy);
+            }
         });
     }
 
