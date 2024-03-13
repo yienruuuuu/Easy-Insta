@@ -3,6 +3,8 @@ package org.example.service.impl;
 import org.example.dao.FollowersDao;
 import org.example.entity.Followers;
 import org.example.entity.IgUser;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.FollowersService;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +41,7 @@ public class FollowersServiceImpl implements FollowersService {
 
     @Override
     public Optional<Followers> findById(Integer id) {
-        return Optional.of(followersDao.findById(id).get());
+        return followersDao.findById(id);
     }
 
     @Override
@@ -50,5 +52,14 @@ public class FollowersServiceImpl implements FollowersService {
     @Override
     public void deleteOldFollowersDataByIgUser(IgUser igUser) {
         followersDao.deleteByIgUser(igUser);
+    }
+
+    @Override
+    public List<Followers> findByIgUser(IgUser igUser) {
+        List<Followers> followersList = followersDao.findByIgUser(igUser);
+        if (followersList.isEmpty()) {
+            throw new ApiException(SysCode.FOLLOWERS_OR_MEDIA_AMOUNT_IS_ZERO);
+        }
+        return followersList;
     }
 }

@@ -62,13 +62,13 @@ public class IgUserController extends BaseController {
     }
 
     @Operation(summary = "提交排程，安排任務")
-    @PostMapping(value = "/task/{taskEnum}/{username}")
-    public Object sendTask(@PathVariable String username, @PathVariable TaskTypeEnum taskEnum) {
-        IgUser targetUser = igUserService.findUserByIgUserName(username).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
+    @PostMapping(value = "/task/{taskEnum}/{userName}")
+    public Object sendTask(@PathVariable String userName, @PathVariable TaskTypeEnum taskEnum) {
+        IgUser targetUser = igUserService.findUserByIgUserName(userName).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
         log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
         // 檢查對於查詢對象的任務是否存在
         if (taskQueueService.checkTaskQueueExistByUserAndTaskType(targetUser, taskEnum)) {
-            log.info("用戶: {} 的 {} 任務已存在", taskEnum, username);
+            log.info("用戶: {} 的 {} 任務已存在", taskEnum, userName);
             return new ApiResponse(SysCode.TASK_ALREADY_EXISTS.getCode(), SysCode.TASK_ALREADY_EXISTS.getMessage(), null);
         }
         // 保存任務並返回保存的任務
@@ -91,7 +91,6 @@ public class IgUserController extends BaseController {
         log.info("計算互動率，用戶: {} ，計算參數:{}", targetUser.getUserName(), params);
         return CrawlingUtil.calculateEngagementRate(params.getLikes(), params.getComments(), params.getShares(), params.getFollowers(), params.getPostAmounts());
     }
-
 
     // private
 

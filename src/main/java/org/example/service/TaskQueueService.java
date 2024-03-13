@@ -18,7 +18,7 @@ public interface TaskQueueService extends BaseService<TaskQueue> {
 
     TaskQueue createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status);
 
-    boolean checkTasksByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg);
+    boolean checkTasksByStatusAndNeedLogin(List<TaskStatusEnum> status, boolean needLoginIg);
 
     Optional<TaskQueue> findFirstTaskQueueByStatusAndNeedLogin(TaskStatusEnum status, boolean needLoginIg);
 

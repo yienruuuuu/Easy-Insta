@@ -1,6 +1,5 @@
 package org.example.dao;
 
-import org.example.entity.Media;
 import org.example.entity.MediaLiker;
 
 import java.util.List;

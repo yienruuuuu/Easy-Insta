@@ -26,7 +26,7 @@ public class SwaggerConfig {
     public GroupedOpenApi adminApi() {
         return GroupedOpenApi.builder()
                 .group("manager")
-                .pathsToMatch("/admin/**", "/iguser/**")
+                .pathsToMatch("/*/**")
                 .build();
     }
 

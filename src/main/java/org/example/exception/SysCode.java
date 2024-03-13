@@ -10,7 +10,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum SysCode implements ErrorCode {
-
     OK(1000, "成功"),
     FAIL(1001, "Expected error"),
 
@@ -29,6 +28,8 @@ public enum SysCode implements ErrorCode {
     TASK_ALREADY_EXISTS(2104, "對於該查詢對象，任務已存在，請耐心等候"),
     TASK_STATUS_UPDATE_FAILED(2105, "任務狀態更新失敗，樂觀鎖阻止了任務狀態的更新"),
     TASK_QUEUE_MEDIA_NOT_FOUND(2106, "找不到任務對應的媒體任務明細"),
+    TASK_WAIT_SELENIUM_TIME_OUT(2107, "等待selenium超時"),
+    TASK_QUEUE_FOLLOWER_DETAIL_NOT_FOUNT(2108, "找不到任務對應的粉絲任務明細"),
 
     //IG行為時相關錯誤
     IG_USER_NOT_FOUND(2200, "IG user not found"),

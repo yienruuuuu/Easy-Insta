@@ -38,8 +38,4 @@ public class CheckLoginAccount {
                 LoginAccountStatusEnum.EXHAUSTED);
         log.info("已更新 {} 個登入帳號狀態為 NORMAL", updatedCount);
     }
-
-    public static void main(String[] args) {
-        System.out.println(LocalDateTime.now().minusHours(2));
-    }
 }

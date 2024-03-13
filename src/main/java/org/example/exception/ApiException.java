@@ -2,7 +2,7 @@ package org.example.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class ApiException extends RuntimeException {
+public class ApiException extends RuntimeException{
     private final ErrorCode code;
     private final Object data;
     private HttpStatus httpStatus = HttpStatus.EXPECTATION_FAILED;

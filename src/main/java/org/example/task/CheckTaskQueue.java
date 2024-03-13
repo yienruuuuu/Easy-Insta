@@ -8,12 +8,14 @@ import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.LoginService;
 import org.example.service.TaskQueueService;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Eric.Lee
@@ -33,25 +35,61 @@ public class CheckTaskQueue extends BaseQueue {
     }
 
     @Scheduled(fixedDelayString = "${taskQueue.checkDelay:10000}")
-    public void checkAndExecuteNeedLoginTasks() {
-        log.info("檢查任務序列開始");
+    public void checkTasks() {
+        log.info("開始檢查任務佇列");
         if (!checkTaskEnabled()) return;
-        if (isInProgressTaskExists()) return;
 
-        try {
-            LoginAccount loginAccount = loginService.getLoginAccount();
-            TaskQueue task = getTask(Arrays.asList(TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING));
-            updateAndExecuteTask(task, loginAccount);
-        } catch (ApiException e) {
-            log.info("檢查任務序列發生預期事件 {}", e.getMessage());
-        } catch (Exception e) {
-            log.error("檢查任務序列發生特殊錯誤事件,暫停任務排程,請人工處理錯誤", e);
-            stopBaseQueue();
-        }
-        log.info("檢查任務序列結束");
+        // 非同步執行需要登入的任務檢查
+        executeAsync(this::checkAndExecuteNeedLoginTasks);
+        // 非同步執行不需要登入的任務檢查
+        executeAsync(this::checkAndExecuteWithoutLoginTasks);
+
+        log.info("任務佇列檢查結束");
     }
 
+
     //private
+
+    /**
+     * 非同步執行任務
+     *
+     * @param task 任務
+     */
+    private void executeAsync(Runnable task) {
+        CompletableFuture.runAsync(task)
+                .exceptionally(ex -> {
+                    log.error("非同步任務執行出錯", ex);
+                    return null;
+                });
+    }
+
+    private void checkAndExecuteNeedLoginTasks() {
+        checkAndExecuteTasks(true);
+    }
+
+    private void checkAndExecuteWithoutLoginTasks() {
+        checkAndExecuteTasks(false);
+    }
+
+    /**
+     * 檢查並執行任務
+     *
+     * @param needLogin 是否需要登入
+     */
+    private void checkAndExecuteTasks(boolean needLogin) {
+        if (needLogin && isInProgressTaskExists()) return;
+
+        try {
+            LoginAccount loginAccount = needLogin ? loginService.getLoginAccount() : null;
+            TaskQueue task = getTask(Arrays.asList(TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING), needLogin);
+            updateAndExecuteTask(task, loginAccount);
+        } catch (ApiException e) {
+            log.info("任務序列發生預期事件 {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("任務序列發生特殊錯誤事件, 暫停任務排程, 請手動處理錯誤", e);
+            stopBaseQueue();
+        }
+    }
 
     /**
      * 檢查是否有正在執行中且需要登入的任務
@@ -59,7 +97,8 @@ public class CheckTaskQueue extends BaseQueue {
      * @return 是否有正在執行中的任務
      */
     private boolean isInProgressTaskExists() {
-        boolean exists = taskQueueService.checkTasksByStatusAndNeedLogin(TaskStatusEnum.IN_PROGRESS, true);
+        List<TaskStatusEnum> statuses = List.of(TaskStatusEnum.IN_PROGRESS);
+        boolean exists = taskQueueService.checkTasksByStatusAndNeedLogin(statuses, true);
         if (exists) {
             log.info("有需要登入(NEED LOGIN IG)的任務正在執行中(IN_PROGRESS)，不執行新任務");
         }
@@ -71,10 +110,10 @@ public class CheckTaskQueue extends BaseQueue {
      *
      * @param statusList 任務狀態列表
      */
-    private TaskQueue getTask(List<TaskStatusEnum> statusList) {
+    private TaskQueue getTask(List<TaskStatusEnum> statusList ,boolean needLogin) {
         return statusList.stream()
-                .map(status -> taskQueueService.findFirstTaskQueueByStatusAndNeedLogin(status, true))
-                .flatMap(Optional::stream)  // 将Optional转换为Stream
+                .map(status -> taskQueueService.findFirstTaskQueueByStatusAndNeedLogin(status, needLogin))
+                .flatMap(Optional::stream)
                 .findFirst()
                 .orElseThrow(() -> new ApiException(SysCode.NO_TASKS_TO_PERFORM));
     }

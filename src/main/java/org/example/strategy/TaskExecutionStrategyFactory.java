@@ -3,10 +3,7 @@ package org.example.strategy;
 import org.example.bean.enumtype.TaskTypeEnum;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author Eric.Lee
@@ -14,7 +11,7 @@ import java.util.Optional;
  */
 @Component
 public class TaskExecutionStrategyFactory {
-    private final Map<TaskTypeEnum, TaskStrategy> strategies = new HashMap<>();
+    private final Map<TaskTypeEnum, TaskStrategy> strategies = new EnumMap<>(TaskTypeEnum.class);
 
     public TaskExecutionStrategyFactory(List<TaskStrategy> strategyList) {
         strategyList.forEach(strategy -> {
@@ -29,6 +26,9 @@ public class TaskExecutionStrategyFactory {
             }
             if (strategy instanceof GetMediaLikerStrategy) {
                 strategies.put(TaskTypeEnum.GET_MEDIA_LIKER, strategy);
+            }
+            if (strategy instanceof GetFollowerDetailStrategy) {
+                strategies.put(TaskTypeEnum.GET_FOLLOWERS_DETAIL, strategy);
             }
         });
     }
