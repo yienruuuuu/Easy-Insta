@@ -57,6 +57,9 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
             handleChallengeRequired(task, loginAccount, apiException);
         } else if (apiException.getCode() == SysCode.SOCKET_TIMEOUT) {
             handleSocketTimeOut(task, loginAccount, apiException);
+        } else if (apiException.getCode() == SysCode.TASK_QUEUE_FOLLOWER_DETAIL_NOT_FOUNT) {
+            task.completeTask();
+            taskQueueService.save(task);
         } else {
             throw apiException;
         }

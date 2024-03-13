@@ -9,9 +9,10 @@ import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.*;
 import org.example.utils.CrawlingUtil;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * @author Eric.Lee
@@ -42,8 +43,8 @@ public class GetFollowerDetailStrategy extends TaskStrategyBase implements TaskS
         waitForSeleniumReady();
         //執行爬蟲任務
         performTask(taskQueue);
-//        //結束任務，依條件判斷更新任務狀態
-//        finalizeTask(taskQueue);
+        //結束任務，依條件判斷更新任務狀態
+        finalizeTask(taskQueue);
     }
 
 
@@ -69,12 +70,23 @@ public class GetFollowerDetailStrategy extends TaskStrategyBase implements TaskS
      * @param task 任務
      */
     private void performTask(TaskQueue task) {
-        Page<TaskQueueFollowersDetail> taskQueuePage = taskQueueFollowerDetailService.findByTaskQueueAndStatusByPage(TaskStatusEnum.PENDING, task, 0, 30);
+        List<TaskQueueFollowersDetail> taskQueuePage =
+                taskQueueFollowerDetailService.findByTaskQueueAndStatusByPage(TaskStatusEnum.PENDING, task, 0, 30).getContent();
         if (taskQueuePage.isEmpty()) {
-            log.info("任務:{} 無任務明細", task);
-            return;
+            throw new ApiException(SysCode.TASK_QUEUE_FOLLOWER_DETAIL_NOT_FOUNT);
         }
-        log.info("任務:{} 任務明細:{}", task, taskQueuePage.getContent());
+        taskQueuePage.forEach(taskQueueFollowersDetail -> {
+            try {
+                seleniumService.crawlFollowerDetailByCssStyle(taskQueueFollowersDetail.getFollower());
+                taskQueueFollowersDetail.setStatus(TaskStatusEnum.COMPLETED);
+                log.info("粉絲明細:{} ,執行完成", taskQueueFollowersDetail);
+                CrawlingUtil.pauseBetweenRequests(3, 5);
+            } catch (ApiException e) {
+                log.error("任務:{} ,執行失敗", taskQueueFollowersDetail, e);
+                taskQueueFollowersDetail.setStatus(TaskStatusEnum.FAILED);
+            }
+        });
+        taskQueueFollowerDetailService.saveAll(taskQueuePage);
     }
 
     /**
@@ -83,37 +95,15 @@ public class GetFollowerDetailStrategy extends TaskStrategyBase implements TaskS
      * @param task 任務
      */
     private void finalizeTask(TaskQueue task) {
-        updateTaskStatusBasedOnCondition(task);
+        List<TaskQueueFollowersDetail> taskQueuePage =
+                taskQueueFollowerDetailService.findByTaskQueueAndStatusByPage(TaskStatusEnum.PENDING, task, 0, 1).getContent();
+        if (!taskQueuePage.isEmpty()) {
+            task.pauseTask();
+        } else {
+            task.completeTask();
+        }
         taskQueueService.save(task);
         log.info("任務已儲存:{}", task);
     }
 
-    /**
-     * 根據條件更新任務狀態
-     *
-     * @param task 任務
-     */
-    @Override
-    protected void updateTaskStatusBasedOnCondition(TaskQueue task) {
-        if (task.getNextIdForSearch() == null && checkFollowerAmount(task)) {
-            task.completeTask();
-        } else if (task.getNextIdForSearch() != null) {
-            task.pauseTask();
-        } else {
-            task.pendingTask();
-        }
-    }
-
-    /**
-     * 檢查爬取數量是否已達到結束排成標準
-     *
-     * @param task 任務
-     * @return 是否已達到結束任務的標準
-     */
-    private boolean checkFollowerAmount(TaskQueue task) {
-        int crawlerAmount = followersService.countFollowersByIgUserName(task.getIgUser());
-        int dbAmount = task.getIgUser().getFollowerCount();
-        log.info("任務:{} ,取追蹤者數量:{},資料庫追蹤者數量:{}", task, dbAmount, crawlerAmount);
-        return CrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount, 0.9);
-    }
 }

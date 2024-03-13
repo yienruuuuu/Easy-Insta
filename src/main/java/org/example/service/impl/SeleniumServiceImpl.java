@@ -35,21 +35,19 @@ public class SeleniumServiceImpl implements SeleniumService {
 
 
     @Override
-    public List<Followers> crawlFollowerDetailByCssStyle(List<Followers> followersList) {
+    public Followers crawlFollowerDetailByCssStyle(Followers follower) {
         WebDriver driver = getDriver();
         try {
-            for (Followers follower : followersList) {
-                searchForAccount(driver, follower.getFollowerUserName());
-                List<WebElement> elementsSearchByStyle = captureDataByStyle(driver, follower);
-                convertData(elementsSearchByStyle, follower);
-                log.info("follower = {}", follower);
-            }
+            searchForAccount(driver, follower.getFollowerUserName());
+            List<WebElement> elementsSearchByStyle = captureDataByStyle(driver, follower);
+            convertData(elementsSearchByStyle, follower);
+            log.info("follower = {}", follower);
         } catch (Exception e) {
             log.error("Selenium操作異常", e);
         } finally {
             driver.quit();
         }
-        return followersList;
+        return follower;
     }
 
     @Override
@@ -91,7 +89,7 @@ public class SeleniumServiceImpl implements SeleniumService {
                 .sendKeys(account)
                 .build()
                 .perform();
-        CrawlingUtil.pauseBetweenRequests(1, 3);
+        CrawlingUtil.pauseBetweenRequests(3, 5);
     }
 
 

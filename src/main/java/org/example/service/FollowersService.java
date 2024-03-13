@@ -34,13 +34,6 @@ public interface FollowersService extends BaseService<Followers> {
     void deleteOldFollowersDataByIgUser(IgUser igUser);
 
     /**
-     * 透過用戶名稱查詢追蹤者明細
-     *
-     * @param iguser 用戶
-     */
-    void getFollowersDetailByIgUserName(IgUser iguser);
-
-    /**
      * 透過用戶查詢追蹤者列表
      *
      * @param igUser 用戶
