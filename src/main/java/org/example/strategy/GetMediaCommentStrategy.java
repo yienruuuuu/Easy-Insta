@@ -13,6 +13,7 @@ import org.example.utils.CrawlingUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -84,7 +85,7 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
      * @param task 任務
      */
     private void performTaskWithAccount(TaskQueue task) {
-        instagramService.searchMediaCommentsAndSave(task, task.getNextIdForSearch());
+        instagramService.searchMediaCommentsAndSave(task, task.getTaskQueueMediaId().getNextMediaId());
     }
 
     /**

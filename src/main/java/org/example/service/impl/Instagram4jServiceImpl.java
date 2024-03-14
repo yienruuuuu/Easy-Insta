@@ -88,7 +88,7 @@ public class Instagram4jServiceImpl implements InstagramService {
                     throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, cause);
                 }
                 // 檢查是否因為網路逾時而失敗
-                if (cause instanceof java.net.SocketTimeoutException) {
+                if (cause instanceof java.util.concurrent.CompletionException && cause.getCause() instanceof java.net.SocketTimeoutException) {
                     throw new ApiException(SysCode.SOCKET_TIMEOUT, cause);
                 }
                 cause = cause.getCause();

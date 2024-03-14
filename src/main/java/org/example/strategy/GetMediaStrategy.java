@@ -91,7 +91,14 @@ public class GetMediaStrategy extends TaskStrategyBase implements TaskStrategy {
         LocalDateTime cutoffDate = LocalDateTime.now().minusYears(1);
         // 檢查是否存在最早的貼文日期大於當前日期-1年
         boolean existsEarlyMedia = mediaService.existsEarlyMediaBeforeCutoff(task.getIgUser(), cutoffDate);
+        boolean isCrawlingCloseToRealFollowerCount = CrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount, 1.0);
         log.info("任務:{} ,是否已爬到最早的貼文日期，大於當前日期-1年 existsEarlyMedia:{}", task, existsEarlyMedia);
-        return CrawlingUtil.isCrawlingCloseToRealFollowerCount(crawlerAmount, dbAmount, 0.9) || existsEarlyMedia;
+        log.info("是否已達到設定貼文比例 = {}", isCrawlingCloseToRealFollowerCount);
+        return isCrawlingCloseToRealFollowerCount || existsEarlyMedia;
+    }
+
+    public static void main(String[] args) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusYears(1);
+        System.out.println(cutoffDate);
     }
 }

@@ -53,9 +53,11 @@ public class TaskExecutionServiceImpl extends BaseQueue implements TaskExecution
      * 處理ApiException
      */
     private void handleApiException(ApiException apiException, TaskQueue task, LoginAccount loginAccount) {
-        if (apiException.getCode() == SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED) {
+        if (apiException.getCode().equals(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED)) {
+            log.error("IG_ACCOUNT_CHALLENGE_REQUIRED，任務:{},帳號:{} ,更新帳號為DEVIANT 錯誤詳情: {}", task, loginAccount, apiException.getMessage(), apiException);
             handleChallengeRequired(task, loginAccount, apiException);
-        } else if (apiException.getCode() == SysCode.SOCKET_TIMEOUT) {
+        } else if (apiException.getCode().equals(SysCode.SOCKET_TIMEOUT)) {
+            log.error("SOCKET_TIMEOUT，任務:{},帳號:{} ,更新帳號為EXHAUSTED 錯誤詳情: {}", task, loginAccount, apiException.getMessage(), apiException);
             handleSocketTimeOut(task, loginAccount, apiException);
         } else if (apiException.getCode() == SysCode.TASK_QUEUE_FOLLOWER_DETAIL_NOT_FOUNT) {
             task.completeTask();
