@@ -29,7 +29,7 @@ public class TaskQueueMedia {
     @ManyToOne
     @JoinColumn(name = "task_queue_id")
     @JsonIgnore
-    private TaskQueue taskQueueId;
+    private TaskQueue taskQueue;
 
     @OneToOne
     @JoinColumn(name = "media_id", unique = true)

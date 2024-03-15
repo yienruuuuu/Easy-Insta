@@ -8,5 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface TaskQueueMediaDao extends JpaRepository<TaskQueueMedia, Integer> {
-    Optional<TaskQueueMedia> findFirstByTaskQueueIdAndStatus(TaskQueue taskQueue, TaskStatusEnum status);
+    Optional<TaskQueueMedia> findFirstByTaskQueueAndStatus(TaskQueue taskQueue, TaskStatusEnum status);
+
+    /**
+     * 刪除任務
+     *
+     * @param taskQueue 任務
+     */
+    void deleteByTaskQueue(TaskQueue taskQueue);
 }

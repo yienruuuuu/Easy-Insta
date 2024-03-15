@@ -177,7 +177,7 @@ public class TaskQueueServiceImpl implements TaskQueueService {
         List<TaskQueueMedia> taskQueueMedias = medias.stream()
                 .map(media -> TaskQueueMedia.builder()
                         .media(media)
-                        .taskQueueId(taskQueue)
+                        .taskQueue(taskQueue)
                         .status(TaskStatusEnum.PENDING)
                         .build())
                 .toList();

@@ -44,6 +44,11 @@ public class TaskQueueMediaServiceImpl implements TaskQueueMediaService {
 
     @Override
     public Optional<TaskQueueMedia> findByTaskQueueAndStatus(TaskQueue taskQueue, TaskStatusEnum status) {
-        return taskQueueMediaDao.findFirstByTaskQueueIdAndStatus(taskQueue, status);
+        return taskQueueMediaDao.findFirstByTaskQueueAndStatus(taskQueue, status);
+    }
+
+    @Override
+    public void deleteByTaskQueue(TaskQueue taskQueue) {
+        taskQueueMediaDao.deleteByTaskQueue(taskQueue);
     }
 }

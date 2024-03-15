@@ -28,4 +28,11 @@ public interface TaskQueueMediaService extends BaseService<TaskQueueMedia> {
      * @return 任務列表
      */
     Optional<TaskQueueMedia> findByTaskQueueAndStatus(TaskQueue taskQueue, TaskStatusEnum status);
+
+    /**
+     * 刪除任務
+     *
+     * @param taskQueue 任務
+     */
+    void deleteByTaskQueue(TaskQueue taskQueue);
 }

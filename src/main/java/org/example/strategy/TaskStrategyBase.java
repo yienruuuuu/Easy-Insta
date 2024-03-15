@@ -67,6 +67,7 @@ public abstract class TaskStrategyBase implements TaskStrategy {
      *
      * @param task 任務
      */
+
     protected void updateTaskStatusBasedOnCondition(TaskQueue task) {
         //若TaskQueueMedia.nextMediaId不為null，代表仍需繼續查詢，僅暫停任務
         if (task.getTaskQueueMediaId().getNextMediaId() != null) {
@@ -79,6 +80,10 @@ public abstract class TaskStrategyBase implements TaskStrategy {
         getTaskQueueMediaWhichIsPausedOrPending(task).ifPresentOrElse(taskQueueMedia -> {
             task.updateTaskQueueMedia(taskQueueMedia);
             task.pauseTask();
-        }, task::completeTask);
+        }, () -> {
+            //若無下一筆子任務，代表已查詢完畢，更新任務狀態為已完成，並刪除所有子任務
+            taskQueueMediaService.deleteByTaskQueue(task);
+            task.completeTask();
+        });
     }
 }
