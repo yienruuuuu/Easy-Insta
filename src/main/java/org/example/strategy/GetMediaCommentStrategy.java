@@ -98,4 +98,25 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
         taskQueueService.save(task);
         log.info("任務已儲存:{}", task);
     }
+
+    @Override
+    protected void updateTaskStatusBasedOnCondition(TaskQueue task) {
+        //若TaskQueueMedia.nextMediaId不為null，代表仍需繼續查詢，僅暫停任務
+        if (task.getTaskQueueMediaId().getNextMediaId() != null) {
+            task.pauseTask();
+            return;
+        }
+        //若TaskQueueMedia.nextMediaId為null，代表該貼文已查詢完畢，更新子任務狀態為已完成
+        task.getTaskQueueMediaId().setStatus(TaskStatusEnum.COMPLETED);
+        //若TaskQueueMedia.nextMediaId為null，代表已查詢完畢，更新下一筆子任務指針，並暫停任務等待繼續
+        getTaskQueueMediaWhichIsPausedOrPending(task).ifPresentOrElse(taskQueueMedia -> {
+            task.updateTaskQueueMedia(taskQueueMedia);
+            task.pauseTask();
+        }, () -> {
+            //若無下一筆子任務，代表已查詢完畢，更新任務狀態為已完成，並刪除所有子任務
+            taskQueueMediaService.deleteByTaskQueue(task);
+            task.setTaskQueueMediaId(null);
+            task.completeTask();
+        });
+    }
 }
