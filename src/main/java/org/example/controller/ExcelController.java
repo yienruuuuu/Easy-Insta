@@ -11,6 +11,7 @@ import org.example.entity.IgUser;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.IgUserService;
+import org.example.utils.ExcelUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,12 +41,8 @@ public class ExcelController extends BaseController {
                 .orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND));
         // 創建Excel工作簿和工作表
         Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("目錄");
-        // 填充數據到工作表
-        fillUserData(sheet, igUser);
-
-        // 設置合併單元格和樣式
-        setCellStylesAndMergeCells(sheet);
+        // 設置第一個工作表
+        setSheetFirst(workbook, igUser);
 
         // 設置響應頭部，告訴瀏覽器這是一個需要下載的檔案
         String fileName = URLEncoder.encode(igUser.getUserName(), StandardCharsets.UTF_8) + ".xlsx";
@@ -62,9 +59,17 @@ public class ExcelController extends BaseController {
         }
     }
 
-    private void fillUserData(Sheet sheet, IgUser igUser) {
-        // 假設IgUser有getUserName(), getFollowingCount(), getFollowerCount(), 和 getCreationDate()方法
 
+    //private
+    private void setSheetFirst(Workbook workbook, IgUser igUser) {
+        Sheet sheet = workbook.createSheet("目錄");
+        // 填充數據到工作表
+        fillUserData(sheet, igUser);
+        // 設置合併單元格和樣式
+        setCellStylesAndMergeCells(sheet);
+    }
+
+    private void fillUserData(Sheet sheet, IgUser igUser) {
         // 創建表頭行
         Row headerRow = sheet.createRow(0);
 
@@ -97,16 +102,10 @@ public class ExcelController extends BaseController {
         }
     }
 
+
     private void setCellStylesAndMergeCells(Sheet sheet) {
         // 創建工作簿
         Workbook workbook = sheet.getWorkbook();
-
-        // 設定框線樣式
-        CellStyle borderStyle = workbook.createCellStyle();
-        borderStyle.setBorderBottom(BorderStyle.THIN);
-        borderStyle.setBorderTop(BorderStyle.THIN);
-        borderStyle.setBorderRight(BorderStyle.THIN);
-        borderStyle.setBorderLeft(BorderStyle.THIN);
 
         // 設定表頭樣式
         Font headerFont = workbook.createFont();
@@ -120,6 +119,8 @@ public class ExcelController extends BaseController {
         headerStyle.setFillForegroundColor(getCustomColor());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         headerStyle.setFont(headerFont);
+        ExcelUtils.setBorder(headerStyle);
+
 
         // 設定普通單元格樣式
         Font cellFont = workbook.createFont();
@@ -131,25 +132,19 @@ public class ExcelController extends BaseController {
         cellStyle.setFont(cellFont);
         cellStyle.setAlignment(HorizontalAlignment.RIGHT);
         cellStyle.setFillForegroundColor(getCustomColor());
-        cellStyle.setWrapText(true); // 自動換行
-        cellStyle.cloneStyleFrom(borderStyle); // 使用相同的框線樣式
+        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        ExcelUtils.setBorder(cellStyle);
 
         // 設定樣式到單元格
-        for (Row row : sheet) {
-            for (Cell cell : row) {
-                if (row.getRowNum() == 0) { // 表頭行
-                    cell.setCellStyle(headerStyle);
-                } else {
-                    cell.setCellStyle(cellStyle);
-                }
-            }
-        }
+        ExcelUtils.setStyle(sheet, headerStyle, cellStyle);
 
-        // 根據內容調整列寬
-        for (int i = 0; i < sheet.getRow(0).getLastCellNum(); i++) {
-            sheet.autoSizeColumn(i);
-        }
+        // 設定自動調整列寬
+        ExcelUtils.setAutoColumnWidth(sheet);
+
+        // 如果auto Size Column對中文支援不佳，請嘗試手動調整
+        ExcelUtils.setAutoColumnWidthForChinese(sheet);
     }
+
 
     private XSSFColor getCustomColor() {
         byte[] rgb = new byte[3];
