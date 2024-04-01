@@ -8,9 +8,13 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.entity.IgUser;
+import org.example.entity.Media;
+import org.example.entity.MediaComment;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.IgUserService;
+import org.example.service.MediaCommentService;
+import org.example.service.MediaService;
 import org.example.utils.ExcelUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +26,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Slf4j
 @Tag(name = "Excel controller", description = "開發導出Excel用API")
@@ -29,9 +34,13 @@ import java.time.format.DateTimeFormatter;
 @RequestMapping("excel")
 public class ExcelController extends BaseController {
     private final IgUserService igUserService;
+    private final MediaCommentService mediaCommentService;
+    private final MediaService mediaService;
 
-    public ExcelController(IgUserService igUserService) {
+    public ExcelController(IgUserService igUserService, MediaCommentService mediaCommentService, MediaService mediaService) {
         this.igUserService = igUserService;
+        this.mediaCommentService = mediaCommentService;
+        this.mediaService = mediaService;
     }
 
     @GetMapping(value = "/exportComment/{igUserName}")
@@ -62,14 +71,58 @@ public class ExcelController extends BaseController {
 
     //private
     private void setSheetFirst(Workbook workbook, IgUser igUser) {
-        Sheet sheet = workbook.createSheet("目錄");
+        Sheet sheet = workbook.createSheet("目錄Index");
         // 填充數據到工作表
         fillUserData(sheet, igUser);
         // 設置合併單元格和樣式
         setCellStylesAndMergeCells(sheet);
     }
 
+    private void setSheetSecond(Workbook workbook, IgUser igUser) {
+        Sheet sheet = workbook.createSheet("資料Data");
+        List<Media> mediaList = mediaService.listMediaByIgUserIdAndCommentCount(igUser, 0);
+        List<MediaComment> mediaComments = mediaCommentService.findByMediaForCommentReport(mediaList);
+        // 填充數據到工作表
+        fillUserData(sheet, igUser);
+        // 設置合併單元格和樣式
+        setCellStylesAndMergeCells(sheet);
+    }
+
+
     private void fillUserData(Sheet sheet, IgUser igUser) {
+        // 創建表頭行
+        Row headerRow = sheet.createRow(0);
+
+        // 創建表頭單元格
+        Cell headerCell = headerRow.createCell(0);
+        headerCell.setCellValue("Easy Insta"); // 設定你的表頭內容
+
+        // 合併A0和B0
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 1));
+
+        // 設定行資料
+        int rowNum = 1; // 從第二行開始，因為第一行是表頭
+        // 範例的用戶資料，依您的IgUser實體的屬性進行調整
+        String[] headers = {"目標帳號", "用戶全名", "貼文數量", "粉絲數", "生產日期"};
+        String[] data = {
+                igUser.getUserName(),
+                igUser.getFullName(),
+                String.valueOf(igUser.getMediaCount()),
+                String.valueOf(igUser.getFollowerCount()),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        };
+
+        // 創建並填充資料行
+        for (int i = 0; i < data.length; i++) {
+            Row row = sheet.createRow(rowNum++);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(headers[i]);
+            cell = row.createCell(1);
+            cell.setCellValue(data[i]);
+        }
+    }
+
+    private void fillUserData(Sheet sheet, IgUser igUser, List<MediaComment> mediaComments) {
         // 創建表頭行
         Row headerRow = sheet.createRow(0);
 

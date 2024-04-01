@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import org.example.dao.MediaCommentDao;
+import org.example.entity.Media;
 import org.example.entity.MediaComment;
 import org.example.service.MediaCommentService;
 import org.springframework.stereotype.Service;
@@ -43,5 +44,10 @@ public class MediaCommentServiceImpl implements MediaCommentService {
     @Override
     public void batchInsertMedias(List<MediaComment> commentList) {
         mediaCommentDao.batchInsertOrUpdate(commentList);
+    }
+
+    @Override
+    public List<MediaComment> findByMediaForCommentReport(List<Media> mediaList) {
+        return mediaCommentDao.findAllByMediaIn(mediaList);
     }
 }
