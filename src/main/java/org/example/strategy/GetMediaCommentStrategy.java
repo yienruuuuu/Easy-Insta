@@ -13,7 +13,6 @@ import org.example.utils.CrawlingUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -114,7 +113,7 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
             task.pauseTask();
         }, () -> {
             //若無下一筆子任務，代表已查詢完畢，更新任務狀態為已完成，並刪除所有子任務
-            taskQueueMediaService.deleteByTaskQueue(task);
+//            taskQueueMediaService.deleteByTaskQueue(task);
             task.setTaskQueueMediaId(null);
             task.completeTask();
         });
