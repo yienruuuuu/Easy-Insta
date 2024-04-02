@@ -1,6 +1,8 @@
 package org.example.service.impl;
 
+import org.example.bean.dto.CommentReportDto;
 import org.example.dao.MediaCommentDao;
+import org.example.entity.IgUser;
 import org.example.entity.Media;
 import org.example.entity.MediaComment;
 import org.example.service.MediaCommentService;
@@ -49,5 +51,10 @@ public class MediaCommentServiceImpl implements MediaCommentService {
     @Override
     public List<MediaComment> findByMediaForCommentReport(List<Media> mediaList) {
         return mediaCommentDao.findAllByMediaIn(mediaList);
+    }
+
+    @Override
+    public List<CommentReportDto> findCommentSummary(IgUser igUser) {
+        return mediaCommentDao.findCommentSummaryByIgUserId(igUser);
     }
 }

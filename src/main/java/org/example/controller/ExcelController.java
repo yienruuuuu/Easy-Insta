@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.example.bean.dto.CommentReportDto;
 import org.example.entity.IgUser;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
@@ -24,6 +25,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -51,6 +53,8 @@ public class ExcelController extends BaseController {
         Workbook workbook = new XSSFWorkbook();
         // 設置第一個工作表
         setSheetFirst(workbook, igUser, hashTagMap);
+        // 設置第二個工作表
+        setSheetSecond(workbook, igUser);
 
         // 設置響應頭部，告訴瀏覽器這是一個需要下載的檔案
         String fileName = URLEncoder.encode(igUser.getUserName(), StandardCharsets.UTF_8) + ".xlsx";
@@ -74,19 +78,17 @@ public class ExcelController extends BaseController {
         // 填充數據到工作表
         fillUserData(sheet, igUser, hashTagMap);
         // 設置合併單元格和樣式
-        setCellStylesAndMergeCells(sheet);
+        setCellStylesAndMergeCellsForCommentIndex(sheet);
     }
 
-//    private void setSheetSecond(Workbook workbook, IgUser igUser) {
-//        Sheet sheet = workbook.createSheet("資料Data");
-//        List<Media> mediaList = mediaService.listMediaByIgUserIdAndCommentCount(igUser, 0);
-//        List<MediaComment> mediaComments = mediaCommentService.findByMediaForCommentReport(mediaList);
-//        // 填充數據到工作表
-//        fillUserData(sheet, igUser);
-//        // 設置合併單元格和樣式
-//        setCellStylesAndMergeCells(sheet);
-//    }
-
+    private void setSheetSecond(Workbook workbook, IgUser igUser) {
+        Sheet sheet = workbook.createSheet("統計資料CountData");
+        List<CommentReportDto> commentIntegration = mediaCommentService.findCommentSummary(igUser);
+        // 填充數據到工作表
+        fillUserData(sheet, commentIntegration);
+        // 設單元格樣式
+        setCellStylesAndMergeCellsForCommentIntegration(sheet);
+    }
 
     private void fillUserData(Sheet sheet, IgUser igUser, Map<String, Long> hashTagMap) {
         // 創建表頭行
@@ -122,76 +124,66 @@ public class ExcelController extends BaseController {
         }
     }
 
-//    private void fillUserData(Sheet sheet, IgUser igUser, List<MediaComment> mediaComments) {
-//        // 創建表頭行
-//        Row headerRow = sheet.createRow(0);
-//
-//        // 創建表頭單元格
-//        Cell headerCell = headerRow.createCell(0);
-//        headerCell.setCellValue("Easy Insta"); // 設定你的表頭內容
-//
-//        // 設定行資料
-//        int rowNum = 1; // 從第二行開始，因為第一行是表頭
-//        // 範例的用戶資料，依您的IgUser實體的屬性進行調整
-//        String[] headers = {"目標帳號", "用戶全名", "貼文數量", "粉絲數", "生產日期"};
-//        String[] data = {
-//                igUser.getUserName(),
-//                igUser.getFullName(),
-//                String.valueOf(igUser.getMediaCount()),
-//                String.valueOf(igUser.getFollowerCount()),
-//                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-//        };
-//    }
+    private void fillUserData(Sheet sheet, List<CommentReportDto> commentIntegration) {
+        Row commentHeaderRow = sheet.createRow(0); // 評論報告從第四行開始
+        String[] commentHeaders = {"帳號", "留言次數", "留言被按讚數"};
+        for (int i = 0; i < commentHeaders.length; i++) {
+            Cell headerCell = commentHeaderRow.createCell(i);
+            headerCell.setCellValue(commentHeaders[i]);
+        }
 
+        // 填充評論整合數據
+        int rowNum = 1;
+        for (CommentReportDto comment : commentIntegration) {
+            log.info("comment: {}", comment);
+            Row row = sheet.createRow(rowNum++);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(comment.getUserName());
 
-    private void setCellStylesAndMergeCells(Sheet sheet) {
-        // 創建工作簿
-        Workbook workbook = sheet.getWorkbook();
+            cell = row.createCell(1);
+            cell.setCellValue(comment.getCommentCount());
 
-        // 設定表頭樣式
-        Font headerFont = workbook.createFont();
-        headerFont.setFontName("Malgun Gothic Semilight");
-        headerFont.setFontHeightInPoints((short) 24);
-        headerFont.setBold(true);
-
-        CellStyle headerStyle = workbook.createCellStyle();
-        headerStyle.setFont(headerFont);
-        headerStyle.setAlignment(HorizontalAlignment.CENTER);
-        headerStyle.setFillForegroundColor(getCustomColor());
-        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        headerStyle.setFont(headerFont);
-        ExcelUtils.setBorder(headerStyle);
-
-
-        // 設定普通單元格樣式
-        Font cellFont = workbook.createFont();
-        cellFont.setFontName("Malgun Gothic Semilight");
-        cellFont.setFontHeightInPoints((short) 15);
-        cellFont.setBold(true);
-
-        CellStyle cellStyle = workbook.createCellStyle();
-        cellStyle.setFont(cellFont);
-        cellStyle.setAlignment(HorizontalAlignment.RIGHT);
-        cellStyle.setFillForegroundColor(getCustomColor());
-        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        ExcelUtils.setBorder(cellStyle);
-
-        // 設定樣式到單元格
-        ExcelUtils.setStyle(sheet, headerStyle, cellStyle);
-
-        // 設定自動調整列寬
-        ExcelUtils.setAutoColumnWidth(sheet);
-
-        // 如果auto Size Column對中文支援不佳，請嘗試手動調整
-        ExcelUtils.setAutoColumnWidthForChinese(sheet);
+            cell = row.createCell(2);
+            cell.setCellValue(comment.getLikeCount());
+        }
     }
 
 
-    private XSSFColor getCustomColor() {
-        byte[] rgb = new byte[3];
-        rgb[0] = (byte) 133; // R - 紅色分量
-        rgb[1] = (byte) 223; // G - 綠色分量
-        rgb[2] = (byte) 255; // B - 藍色分量
-        return new XSSFColor(rgb, null);
+    private void setCellStylesAndMergeCellsForCommentIndex(Sheet sheet) {
+        // 取得工作簿
+        Workbook workbook = sheet.getWorkbook();
+        // 取得自訂顏色
+        XSSFColor customColor = ExcelUtils.getCustomColor((byte) 133, (byte) 223, (byte) 255);
+
+        // 建立表頭樣式和儲存格樣式
+        CellStyle headerStyle = ExcelUtils.createHeaderCellStyle(workbook, customColor, (short) 24);
+        CellStyle cellStyle = ExcelUtils.createCellStyle(workbook, customColor, (short) 15, HorizontalAlignment.RIGHT);
+        // 應用程式樣式到工作表
+        ExcelUtils.applyStylesToSheet(sheet, headerStyle, cellStyle);
+        // 調整列寬
+        ExcelUtils.setAutoColumnWidth(sheet);
+        ExcelUtils.setAutoColumnWidthForChinese(sheet);
+    }
+
+    private void setCellStylesAndMergeCellsForCommentIntegration(Sheet sheet) {
+        // 取得工作簿
+        Workbook workbook = sheet.getWorkbook();
+        // 取得自訂顏色
+        XSSFColor customColor = ExcelUtils.getCustomColor((byte) 241, (byte) 169, (byte) 131);
+        XSSFColor whiteColor = ExcelUtils.getCustomColor((byte) 255, (byte) 255, (byte) 255);
+
+        // 建立表頭樣式和儲存格樣式
+        CellStyle headerStyle = ExcelUtils.createHeaderCellStyle(workbook, customColor, (short) 15);
+        CellStyle cellStyle = ExcelUtils.createCellStyle(workbook, whiteColor, (short) 13, HorizontalAlignment.LEFT);
+        // 應用程式樣式到工作表
+        ExcelUtils.applyStylesToSheet(sheet, headerStyle, cellStyle);
+
+        // 調整列寬
+        Map<Integer, Integer> columnWidths = Map.of(
+                0, 40,
+                1, 60,
+                2, 60
+        );
+        ExcelUtils.setCustomColumnWidth(sheet, columnWidths);
     }
 }

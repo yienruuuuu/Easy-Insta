@@ -1,5 +1,7 @@
 package org.example.service;
 
+import org.example.bean.dto.CommentReportDto;
+import org.example.entity.IgUser;
 import org.example.entity.Media;
 import org.example.entity.MediaComment;
 
@@ -31,4 +33,11 @@ public interface MediaCommentService extends BaseService<MediaComment> {
      * @return 留言列表
      */
     List<MediaComment> findByMediaForCommentReport(List<Media> mediaList);
+
+    /**
+     * 查詢留言統計資料
+     *
+     * @return 統計列表
+     */
+    List<CommentReportDto> findCommentSummary(IgUser igUser);
 }
