@@ -9,8 +9,10 @@ import org.example.service.MediaService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author Eric.Lee
@@ -19,6 +21,7 @@ import java.util.Optional;
 @Service
 public class MediaServiceImpl implements MediaService {
     private final MediaDao mediaDao;
+    private static final Pattern HASHTAG_PATTERN = Pattern.compile("#(\\w+)");
 
     public MediaServiceImpl(MediaDao mediaDao) {
         this.mediaDao = mediaDao;
@@ -76,5 +79,33 @@ public class MediaServiceImpl implements MediaService {
         return Optional.ofNullable(mediaList)
                 .filter(list -> !list.isEmpty())
                 .orElseThrow(() -> new ApiException(SysCode.MEDIA_NOT_FOUND));
+    }
+
+    @Override
+    public LinkedHashMap<String, Long> analyzeHashtagsAndSort(IgUser igUser) {
+        List<Media> medias = listMediaByIgUserIdAndCommentCount(igUser, 0);
+
+        Map<String, Long> hashtagFrequencyMap = medias.stream()
+                .map(Media::getText)
+                .filter(Objects::nonNull)
+                .flatMap(text -> {
+                    Matcher matcher = HASHTAG_PATTERN.matcher(text);
+                    List<String> hashtags = new ArrayList<>();
+                    while (matcher.find()) {
+                        hashtags.add("#" + matcher.group(1));
+                    }
+                    return hashtags.stream();
+                })
+                .collect(Collectors.groupingBy(hashtag -> hashtag, Collectors.counting()));
+
+        return hashtagFrequencyMap.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(5)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
     }
 }

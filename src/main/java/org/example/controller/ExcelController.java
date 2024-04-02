@@ -8,8 +8,6 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.entity.IgUser;
-import org.example.entity.Media;
-import org.example.entity.MediaComment;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.IgUserService;
@@ -26,7 +24,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Tag(name = "Excel controller", description = "開發導出Excel用API")
@@ -48,10 +46,11 @@ public class ExcelController extends BaseController {
     public void export(HttpServletResponse response, @PathVariable String igUserName) {
         IgUser igUser = igUserService.findUserByIgUserName(igUserName)
                 .orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND));
+        Map<String, Long> hashTagMap = mediaService.analyzeHashtagsAndSort(igUser);
         // 創建Excel工作簿和工作表
         Workbook workbook = new XSSFWorkbook();
         // 設置第一個工作表
-        setSheetFirst(workbook, igUser);
+        setSheetFirst(workbook, igUser, hashTagMap);
 
         // 設置響應頭部，告訴瀏覽器這是一個需要下載的檔案
         String fileName = URLEncoder.encode(igUser.getUserName(), StandardCharsets.UTF_8) + ".xlsx";
@@ -70,26 +69,26 @@ public class ExcelController extends BaseController {
 
 
     //private
-    private void setSheetFirst(Workbook workbook, IgUser igUser) {
+    private void setSheetFirst(Workbook workbook, IgUser igUser, Map<String, Long> hashTagMap) {
         Sheet sheet = workbook.createSheet("目錄Index");
         // 填充數據到工作表
-        fillUserData(sheet, igUser);
+        fillUserData(sheet, igUser, hashTagMap);
         // 設置合併單元格和樣式
         setCellStylesAndMergeCells(sheet);
     }
 
-    private void setSheetSecond(Workbook workbook, IgUser igUser) {
-        Sheet sheet = workbook.createSheet("資料Data");
-        List<Media> mediaList = mediaService.listMediaByIgUserIdAndCommentCount(igUser, 0);
-        List<MediaComment> mediaComments = mediaCommentService.findByMediaForCommentReport(mediaList);
-        // 填充數據到工作表
-        fillUserData(sheet, igUser);
-        // 設置合併單元格和樣式
-        setCellStylesAndMergeCells(sheet);
-    }
+//    private void setSheetSecond(Workbook workbook, IgUser igUser) {
+//        Sheet sheet = workbook.createSheet("資料Data");
+//        List<Media> mediaList = mediaService.listMediaByIgUserIdAndCommentCount(igUser, 0);
+//        List<MediaComment> mediaComments = mediaCommentService.findByMediaForCommentReport(mediaList);
+//        // 填充數據到工作表
+//        fillUserData(sheet, igUser);
+//        // 設置合併單元格和樣式
+//        setCellStylesAndMergeCells(sheet);
+//    }
 
 
-    private void fillUserData(Sheet sheet, IgUser igUser) {
+    private void fillUserData(Sheet sheet, IgUser igUser, Map<String, Long> hashTagMap) {
         // 創建表頭行
         Row headerRow = sheet.createRow(0);
 
@@ -103,13 +102,14 @@ public class ExcelController extends BaseController {
         // 設定行資料
         int rowNum = 1; // 從第二行開始，因為第一行是表頭
         // 範例的用戶資料，依您的IgUser實體的屬性進行調整
-        String[] headers = {"目標帳號", "用戶全名", "貼文數量", "粉絲數", "生產日期"};
+        String[] headers = {"目標帳號", "用戶全名", "貼文數量", "粉絲數", "生產日期", "常用HashTag"};
         String[] data = {
                 igUser.getUserName(),
                 igUser.getFullName(),
                 String.valueOf(igUser.getMediaCount()),
                 String.valueOf(igUser.getFollowerCount()),
-                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                hashTagMap.toString()
         };
 
         // 創建並填充資料行
@@ -122,38 +122,26 @@ public class ExcelController extends BaseController {
         }
     }
 
-    private void fillUserData(Sheet sheet, IgUser igUser, List<MediaComment> mediaComments) {
-        // 創建表頭行
-        Row headerRow = sheet.createRow(0);
-
-        // 創建表頭單元格
-        Cell headerCell = headerRow.createCell(0);
-        headerCell.setCellValue("Easy Insta"); // 設定你的表頭內容
-
-        // 合併A0和B0
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 1));
-
-        // 設定行資料
-        int rowNum = 1; // 從第二行開始，因為第一行是表頭
-        // 範例的用戶資料，依您的IgUser實體的屬性進行調整
-        String[] headers = {"目標帳號", "用戶全名", "貼文數量", "粉絲數", "生產日期"};
-        String[] data = {
-                igUser.getUserName(),
-                igUser.getFullName(),
-                String.valueOf(igUser.getMediaCount()),
-                String.valueOf(igUser.getFollowerCount()),
-                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        };
-
-        // 創建並填充資料行
-        for (int i = 0; i < data.length; i++) {
-            Row row = sheet.createRow(rowNum++);
-            Cell cell = row.createCell(0);
-            cell.setCellValue(headers[i]);
-            cell = row.createCell(1);
-            cell.setCellValue(data[i]);
-        }
-    }
+//    private void fillUserData(Sheet sheet, IgUser igUser, List<MediaComment> mediaComments) {
+//        // 創建表頭行
+//        Row headerRow = sheet.createRow(0);
+//
+//        // 創建表頭單元格
+//        Cell headerCell = headerRow.createCell(0);
+//        headerCell.setCellValue("Easy Insta"); // 設定你的表頭內容
+//
+//        // 設定行資料
+//        int rowNum = 1; // 從第二行開始，因為第一行是表頭
+//        // 範例的用戶資料，依您的IgUser實體的屬性進行調整
+//        String[] headers = {"目標帳號", "用戶全名", "貼文數量", "粉絲數", "生產日期"};
+//        String[] data = {
+//                igUser.getUserName(),
+//                igUser.getFullName(),
+//                String.valueOf(igUser.getMediaCount()),
+//                String.valueOf(igUser.getFollowerCount()),
+//                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+//        };
+//    }
 
 
     private void setCellStylesAndMergeCells(Sheet sheet) {

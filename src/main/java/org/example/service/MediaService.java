@@ -5,6 +5,7 @@ import org.example.entity.IgUser;
 import org.example.entity.Media;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -60,4 +61,12 @@ public interface MediaService extends BaseService<Media> {
      * @return 貼文列表
      */
     List<Media> listMediaByIgUserIdAndCommentCount(IgUser igUser,int commentCount);
+
+    /**
+     * 透過用戶來查詢貼文hashtag map
+     *
+     * @param igUser 用戶
+     * @return 貼文列表
+     */
+    LinkedHashMap<String, Long> analyzeHashtagsAndSort(IgUser igUser);
 }
