@@ -3,7 +3,6 @@ package org.example.service;
 import org.example.bean.dto.CommentReportDto;
 import org.example.bean.dto.MediaCommentDetailDto;
 import org.example.entity.IgUser;
-import org.example.entity.Media;
 import org.example.entity.MediaComment;
 
 import java.util.List;
@@ -26,14 +25,6 @@ public interface MediaCommentService extends BaseService<MediaComment> {
      * @param commentList 留言列表
      */
     void batchInsertMedias(List<MediaComment> commentList);
-
-    /**
-     * 透過貼文ID查詢貼文留言
-     *
-     * @param mediaList 貼文列表
-     * @return 留言列表
-     */
-    List<MediaComment> findByMediaForCommentReport(List<Media> mediaList);
 
     /**
      * 查詢留言統計資料

@@ -3,7 +3,6 @@ package org.example.utils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -153,17 +152,6 @@ public final class ExcelUtils {
         for (int i = 0; i < values.size(); i++) {
             setValueInCell(row.createCell(i), values.get(i));
         }
-    }
-
-    /**
-     * 建立並填充表頭行。
-     *
-     * @param sheet  工作表
-     * @param titles 表頭標題列表
-     */
-    public static void createAndFillHeaderRow(Sheet sheet, List<String> titles) {
-        List<Object> titleObjects = new ArrayList<>(titles);
-        createRowAndFillData(sheet, 0, titleObjects);
     }
 
     //private
