@@ -148,7 +148,6 @@ public class ExcelController extends BaseController {
         // 填充評論整合數據
         int rowNum = 1;
         for (CommentReportDto comment : commentIntegration) {
-            log.info("comment: {}", comment);
             Row row = sheet.createRow(rowNum++);
             Cell cell = row.createCell(0);
             cell.setCellValue(comment.getUserName());
@@ -172,17 +171,7 @@ public class ExcelController extends BaseController {
         // 填充評論數據
         int rowNum = 1;
         for (MediaCommentDetailDto comment : commentDetail) {
-            List<Object> values = List.of(
-                    comment.getMessage() != null ? comment.getMessage() : "N/A",
-                    comment.getMediaPk().toString(),
-                    comment.getCommenterUserName(),
-                    comment.getCommenterFullName() != null ? comment.getCommenterFullName() : "N/A",
-                    comment.getCommentText() != null ? comment.getCommentText() : "N/A",
-                    Boolean.TRUE.equals(comment.getIsPrivateAccount()) ? "是" : "否",
-                    Boolean.TRUE.equals(comment.getIsVerifiedAccount()) ? "是" : "否",
-                    comment.getLatestReelMedia() != null ? "是" : "否",
-                    comment.getLikeCount().toString()
-            );
+            List<Object> values = comment.toList();
             ExcelUtils.createRowAndFillData(sheet, rowNum++, values);
         }
     }
