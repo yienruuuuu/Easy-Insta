@@ -8,6 +8,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.bean.dto.CommentReportDto;
+import org.example.bean.dto.MediaCommentDetailDto;
 import org.example.entity.IgUser;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
@@ -55,6 +56,8 @@ public class ExcelController extends BaseController {
         setSheetFirst(workbook, igUser, hashTagMap);
         // 設置第二個工作表
         setSheetSecond(workbook, igUser);
+        // 設置第三個工作表
+        setSheetThird(workbook, igUser);
 
         // 設置響應頭部，告訴瀏覽器這是一個需要下載的檔案
         String fileName = URLEncoder.encode(igUser.getUserName(), StandardCharsets.UTF_8) + ".xlsx";
@@ -73,6 +76,7 @@ public class ExcelController extends BaseController {
 
 
     //private
+
     private void setSheetFirst(Workbook workbook, IgUser igUser, Map<String, Long> hashTagMap) {
         Sheet sheet = workbook.createSheet("目錄Index");
         // 填充數據到工作表
@@ -88,6 +92,15 @@ public class ExcelController extends BaseController {
         fillUserData(sheet, commentIntegration);
         // 設單元格樣式
         setCellStylesAndMergeCellsForCommentIntegration(sheet);
+    }
+
+    private void setSheetThird(Workbook workbook, IgUser igUser) {
+        Sheet sheet = workbook.createSheet("明細資料DetailData");
+        List<MediaCommentDetailDto> commentDetail = mediaCommentService.findCommentDetail(igUser);
+        // 填充數據到工作表
+        fillDetailData(sheet, commentDetail);
+        // 設單元格樣式
+        setCellStylesForCommentDetail(sheet);
     }
 
     private void fillUserData(Sheet sheet, IgUser igUser, Map<String, Long> hashTagMap) {
@@ -148,6 +161,32 @@ public class ExcelController extends BaseController {
         }
     }
 
+    private void fillDetailData(Sheet sheet, List<MediaCommentDetailDto> commentDetail) {
+        Row commentHeaderRow = sheet.createRow(0);
+        String[] commentHeaders = {"留言貼文", "留言文章id", "留言帳號", "帳號全名", "留言內容", "公開帳號", "Meta驗證", "當下是否有發限動", "留言被按讚數"};
+        for (int i = 0; i < commentHeaders.length; i++) {
+            Cell headerCell = commentHeaderRow.createCell(i);
+            headerCell.setCellValue(commentHeaders[i]);
+        }
+
+        // 填充評論數據
+        int rowNum = 1;
+        for (MediaCommentDetailDto comment : commentDetail) {
+            List<Object> values = List.of(
+                    comment.getMessage() != null ? comment.getMessage() : "N/A",
+                    comment.getMediaPk().toString(),
+                    comment.getCommenterUserName(),
+                    comment.getCommenterFullName() != null ? comment.getCommenterFullName() : "N/A",
+                    comment.getCommentText() != null ? comment.getCommentText() : "N/A",
+                    Boolean.TRUE.equals(comment.getIsPrivateAccount()) ? "是" : "否",
+                    Boolean.TRUE.equals(comment.getIsVerifiedAccount()) ? "是" : "否",
+                    comment.getLatestReelMedia() != null ? "是" : "否",
+                    comment.getLikeCount().toString()
+            );
+            ExcelUtils.createRowAndFillData(sheet, rowNum++, values);
+        }
+    }
+
 
     private void setCellStylesAndMergeCellsForCommentIndex(Sheet sheet) {
         // 取得工作簿
@@ -183,6 +222,34 @@ public class ExcelController extends BaseController {
                 0, 40,
                 1, 60,
                 2, 60
+        );
+        ExcelUtils.setCustomColumnWidth(sheet, columnWidths);
+    }
+
+    private void setCellStylesForCommentDetail(Sheet sheet) {
+        // 取得工作簿
+        Workbook workbook = sheet.getWorkbook();
+        // 取得自訂顏色
+        XSSFColor customColor = ExcelUtils.getCustomColor((byte) 241, (byte) 169, (byte) 131);
+        XSSFColor whiteColor = ExcelUtils.getCustomColor((byte) 255, (byte) 255, (byte) 255);
+
+        // 建立表頭樣式和儲存格樣式
+        CellStyle headerStyle = ExcelUtils.createHeaderCellStyle(workbook, customColor, (short) 15);
+        CellStyle cellStyle = ExcelUtils.createCellStyle(workbook, whiteColor, (short) 13, HorizontalAlignment.LEFT);
+        // 應用程式樣式到工作表
+        ExcelUtils.applyStylesToSheet(sheet, headerStyle, cellStyle);
+
+        // 調整列寬
+        Map<Integer, Integer> columnWidths = Map.of(
+                0, 40,
+                1, 30,
+                2, 40,
+                3, 40,
+                4, 30,
+                5, 16,
+                6, 16,
+                7, 30,
+                8, 20
         );
         ExcelUtils.setCustomColumnWidth(sheet, columnWidths);
     }

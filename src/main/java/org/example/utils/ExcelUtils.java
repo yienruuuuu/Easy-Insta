@@ -3,6 +3,8 @@ package org.example.utils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -137,5 +139,52 @@ public final class ExcelUtils {
         rgb[1] = g; // G - 绿色分量
         rgb[2] = b; // B - 蓝色分量
         return new XSSFColor(rgb, null);
+    }
+
+    /**
+     * 建立行並填充數據。
+     *
+     * @param sheet    工作表
+     * @param rowIndex 行索引（從0 開始）
+     * @param values   要填入的值的列表
+     */
+    public static void createRowAndFillData(Sheet sheet, int rowIndex, List<Object> values) {
+        Row row = sheet.createRow(rowIndex);
+        for (int i = 0; i < values.size(); i++) {
+            setValueInCell(row.createCell(i), values.get(i));
+        }
+    }
+
+    /**
+     * 建立並填充表頭行。
+     *
+     * @param sheet  工作表
+     * @param titles 表頭標題列表
+     */
+    public static void createAndFillHeaderRow(Sheet sheet, List<String> titles) {
+        List<Object> titleObjects = new ArrayList<>(titles);
+        createRowAndFillData(sheet, 0, titleObjects);
+    }
+
+    //private
+
+    /**
+     * 根據值的類型設定單元格的值。
+     *
+     * @param cell  單元格
+     * @param value 值
+     */
+    private static void setValueInCell(Cell cell, Object value) {
+        if (value instanceof String string) {
+            cell.setCellValue(string);
+        } else if (value instanceof Boolean bool) {
+            cell.setCellValue(Boolean.TRUE.equals(bool) ? "是" : "否");
+        } else if (value instanceof Number number) {
+            cell.setCellValue(number.doubleValue());
+        } else if (value == null) {
+            cell.setCellValue("N/A");
+        } else {
+            cell.setCellValue(value.toString());
+        }
     }
 }

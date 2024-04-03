@@ -1,6 +1,7 @@
 package org.example.dao;
 
 import org.example.bean.dto.CommentReportDto;
+import org.example.bean.dto.MediaCommentDetailDto;
 import org.example.entity.IgUser;
 import org.example.entity.Media;
 import org.example.entity.MediaComment;
@@ -34,5 +35,16 @@ public interface MediaCommentDao extends JpaRepository<MediaComment, Integer>, C
             "ORDER BY COUNT(mc) DESC")
     List<CommentReportDto> findCommentSummaryByIgUserId(@Param("igUserId") IgUser igUser);
 
-
+    /**
+     * 查詢留言詳細資料
+     *
+     * @return 統計列表
+     */
+    @Query("SELECT new org.example.bean.dto.MediaCommentDetailDto(" +
+            "m.text, m.mediaPk, mc.commenterUserName, mc.commenterFullName, mc.text, " +
+            "mc.commenterIsPrivate, mc.commenterIsVerified, mc.commenterLatestReelMedia, " +
+            "mc.commentLikeCount) " +
+            "FROM MediaComment mc JOIN mc.media m " +
+            "WHERE m.igUserId = :igUserId")
+    List<MediaCommentDetailDto> findMediaCommentDetailsByIgUserId(@Param("igUserId") IgUser igUser);
 }
