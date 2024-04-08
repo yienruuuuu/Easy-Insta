@@ -20,6 +20,7 @@ public enum SysCode implements ErrorCode {
     FOLLOWERS_OR_MEDIA_AMOUNT_IS_ZERO(2003, "粉絲數和貼文數必須大於0"),
     FILE_UPLOAD_FAILED(2004, "文件上傳失敗"),
     EXCEL_OUTPUT_FAILED(2005, "文件傳送失敗"),
+    FILE_NOT_FOUND(2006, "文件未找到"),
 
     //任務運行相關錯誤
     TASK_CREATION_FAILED(2100, "任務創建失敗"),
@@ -31,6 +32,7 @@ public enum SysCode implements ErrorCode {
     TASK_QUEUE_MEDIA_NOT_FOUND(2106, "找不到任務對應的媒體任務明細"),
     TASK_WAIT_SELENIUM_TIME_OUT(2107, "等待selenium超時"),
     TASK_QUEUE_FOLLOWER_DETAIL_NOT_FOUNT(2108, "找不到任務對應的粉絲任務明細"),
+    TASK_SEND_PROMOTE_MESSAGE_NOT_FOUNT(2109, "找不到任務對應的發送推廣訊息任務明細"),
 
     //IG行為時相關錯誤
     IG_USER_NOT_FOUND(2200, "IG user not found"),

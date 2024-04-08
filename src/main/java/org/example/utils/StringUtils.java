@@ -1,5 +1,7 @@
 package org.example.utils;
 
+import org.example.bean.enumtype.LanguageEnum;
+
 import java.util.Random;
 
 /**
@@ -21,5 +23,34 @@ public final class StringUtils {
             sb.append(CHARACTER_SET.charAt(RANDOM.nextInt(CHARACTER_SET.length())));
         }
         return sb.toString();
+    }
+
+    public static LanguageEnum detectLanguage(String input) {
+        if (input == null || input.isEmpty()) {
+            return LanguageEnum.OTHER;
+        }
+        // 檢查是否包含日文字符
+        if (input.matches(".*[\u3040-\u309F\u30A0-\u30FF].*")) {
+            return LanguageEnum.JA;
+        }
+        // 檢查是否包含中文字符
+        if (input.matches(".*[\u4E00-\u9FA5].*")) {
+            return LanguageEnum.ZH_TW;
+        }
+        // 檢查是否包含英文字符
+        if (input.matches(".*[a-zA-Z].*")) {
+            return LanguageEnum.EN;
+        }
+        // 檢查是否包含俄文字符
+        if (input.matches(".*[\u0400-\u04FF].*")) {
+            return LanguageEnum.RU;
+        }
+        // 預設為其他
+        return LanguageEnum.OTHER;
+    }
+
+    public static void main(String[] args) {
+        String randomString = "張嘉勝";
+        System.out.println(detectLanguage(randomString));
     }
 }

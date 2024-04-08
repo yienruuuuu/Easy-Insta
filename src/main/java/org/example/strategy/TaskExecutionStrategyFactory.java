@@ -3,7 +3,10 @@ package org.example.strategy;
 import org.example.bean.enumtype.TaskTypeEnum;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Eric.Lee
@@ -29,6 +32,9 @@ public class TaskExecutionStrategyFactory {
             }
             if (strategy instanceof GetFollowerDetailStrategy) {
                 strategies.put(TaskTypeEnum.GET_FOLLOWERS_DETAIL, strategy);
+            }
+            if (strategy instanceof SendPromotionMessageStrategy) {
+                strategies.put(TaskTypeEnum.SEND_PROMOTE_MESSAGE, strategy);
             }
         });
     }

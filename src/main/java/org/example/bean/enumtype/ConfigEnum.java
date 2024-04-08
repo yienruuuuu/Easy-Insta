@@ -24,5 +24,9 @@ public enum ConfigEnum {
     //selenuim 抓取輸入框
     SELENIUM_IG_INPUT_STYLE,
     //selenuim 抓取追蹤者明細資料
-    SELENIUM_IG_FOLLOWERS_DATA_STYLE
+    SELENIUM_IG_FOLLOWERS_DATA_STYLE,
+    //selenuim 準備發送訊息
+    SELENIUM_IG_READY_FOR_SEND_MESSAGE,
+    //selenuim 以js找尋新訊息svg下的title標籤
+    SELENIUM_IG_SEND_MESSAGE_GET_TITLE_BY_JS
 }

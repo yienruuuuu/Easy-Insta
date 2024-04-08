@@ -21,9 +21,11 @@ import java.util.Optional;
 @Slf4j
 @Service("taskStrategyBase")
 public abstract class TaskStrategyBase implements TaskStrategy {
+
     protected final InstagramService instagramService;
     protected final LoginService loginService;
     protected final TaskQueueMediaService taskQueueMediaService;
+
 
     protected TaskStrategyBase(InstagramService instagramService, LoginService loginService, TaskQueueMediaService taskQueueMediaService) {
         this.instagramService = instagramService;
