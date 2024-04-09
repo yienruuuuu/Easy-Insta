@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CommentReportDto {
     private String userName;
+    private String userFullName;
     private Long commentCount;
     private Long likeCount;
 }

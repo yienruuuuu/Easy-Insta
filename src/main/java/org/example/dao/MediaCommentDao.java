@@ -19,10 +19,10 @@ public interface MediaCommentDao extends JpaRepository<MediaComment, Integer>, C
      * @return 統計列表
      */
     @Query("SELECT new org.example.bean.dto.CommentReportDto(" +
-            "mc.commenterUserName, COUNT(mc), SUM(mc.commentLikeCount)) " +
+            "mc.commenterUserName,mc.commenterFullName, COUNT(mc), SUM(mc.commentLikeCount)) " +
             "FROM MediaComment mc " +
             "WHERE mc.media.igUserId = :igUserId " +
-            "GROUP BY mc.commenterUserName " +
+            "GROUP BY mc.commenterUserName,mc.commenterFullName " +
             "ORDER BY COUNT(mc) DESC")
     List<CommentReportDto> findCommentSummaryByIgUserId(@Param("igUserId") IgUser igUser);
 

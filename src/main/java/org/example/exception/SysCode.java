@@ -21,6 +21,7 @@ public enum SysCode implements ErrorCode {
     FILE_UPLOAD_FAILED(2004, "文件上傳失敗"),
     EXCEL_OUTPUT_FAILED(2005, "文件傳送失敗"),
     FILE_NOT_FOUND(2006, "文件未找到"),
+    CLOSING_ELEMENT_NOT_FOUND(2007, "關閉元素未找到"),
 
     //任務運行相關錯誤
     TASK_CREATION_FAILED(2100, "任務創建失敗"),

@@ -58,6 +58,8 @@ public class ExcelController extends BaseController {
         setSheetSecond(workbook, igUser);
         // 設置第三個工作表
         setSheetThird(workbook, igUser);
+        // 設置第四個工作表
+        setSheetFourth(workbook);
 
         // 設置響應頭部，告訴瀏覽器這是一個需要下載的檔案
         String fileName = URLEncoder.encode(igUser.getUserName(), StandardCharsets.UTF_8) + ".xlsx";
@@ -103,6 +105,14 @@ public class ExcelController extends BaseController {
         setCellStylesForCommentDetail(sheet);
     }
 
+    private void setSheetFourth(Workbook workbook) {
+        Sheet sheet = workbook.createSheet("私訊列表");
+        // 填充數據到工作表
+        fillPromoteTitle(sheet);
+        // 設單元格樣式
+        setCellStylesForPromoteTitle(sheet);
+    }
+
     private void fillUserData(Sheet sheet, IgUser igUser, Map<String, Long> hashTagMap) {
         // 創建表頭行
         Row headerRow = sheet.createRow(0);
@@ -138,8 +148,8 @@ public class ExcelController extends BaseController {
     }
 
     private void fillUserData(Sheet sheet, List<CommentReportDto> commentIntegration) {
-        Row commentHeaderRow = sheet.createRow(0); // 評論報告從第四行開始
-        String[] commentHeaders = {"帳號", "留言次數", "留言被按讚數"};
+        Row commentHeaderRow = sheet.createRow(0);
+        String[] commentHeaders = {"帳號", "帳號全名", "留言次數", "留言被按讚數"};
         for (int i = 0; i < commentHeaders.length; i++) {
             Cell headerCell = commentHeaderRow.createCell(i);
             headerCell.setCellValue(commentHeaders[i]);
@@ -153,9 +163,12 @@ public class ExcelController extends BaseController {
             cell.setCellValue(comment.getUserName());
 
             cell = row.createCell(1);
-            cell.setCellValue(comment.getCommentCount());
+            cell.setCellValue(comment.getUserFullName());
 
             cell = row.createCell(2);
+            cell.setCellValue(comment.getCommentCount());
+
+            cell = row.createCell(3);
             cell.setCellValue(comment.getLikeCount());
         }
     }
@@ -173,6 +186,15 @@ public class ExcelController extends BaseController {
         for (MediaCommentDetailDto comment : commentDetail) {
             List<Object> values = comment.toList();
             ExcelUtils.createRowAndFillData(sheet, rowNum++, values);
+        }
+    }
+
+    private void fillPromoteTitle(Sheet sheet) {
+        Row commentHeaderRow = sheet.createRow(0);
+        String[] commentHeaders = {"帳號", "帳號全名", "英文訊息", "中文訊息", "日文訊息", "俄文訊息", "影片網址"};
+        for (int i = 0; i < commentHeaders.length; i++) {
+            Cell headerCell = commentHeaderRow.createCell(i);
+            headerCell.setCellValue(commentHeaders[i]);
         }
     }
 
@@ -210,7 +232,8 @@ public class ExcelController extends BaseController {
         Map<Integer, Integer> columnWidths = Map.of(
                 0, 40,
                 1, 60,
-                2, 60
+                2, 60,
+                3, 60
         );
         ExcelUtils.setCustomColumnWidth(sheet, columnWidths);
     }
@@ -239,6 +262,29 @@ public class ExcelController extends BaseController {
                 6, 16,
                 7, 30,
                 8, 20
+        );
+        ExcelUtils.setCustomColumnWidth(sheet, columnWidths);
+    }
+
+    private void setCellStylesForPromoteTitle(Sheet sheet) {
+        // 取得工作簿
+        Workbook workbook = sheet.getWorkbook();
+        // 取得自訂顏色
+        XSSFColor customColor = ExcelUtils.getCustomColor((byte) 241, (byte) 169, (byte) 131);
+        // 建立表頭樣式和儲存格樣式
+        CellStyle headerStyle = ExcelUtils.createHeaderCellStyle(workbook, customColor, (short) 15);
+        // 應用程式樣式到工作表
+        ExcelUtils.applyStylesToSheet(sheet, headerStyle, null);
+
+        // 調整列寬
+        Map<Integer, Integer> columnWidths = Map.of(
+                0, 40,
+                1, 30,
+                2, 40,
+                3, 40,
+                4, 30,
+                5, 16,
+                6, 16
         );
         ExcelUtils.setCustomColumnWidth(sheet, columnWidths);
     }

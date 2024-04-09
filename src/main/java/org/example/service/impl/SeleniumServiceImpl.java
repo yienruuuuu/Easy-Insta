@@ -6,6 +6,8 @@ import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.entity.Followers;
 import org.example.entity.TaskQueue;
 import org.example.entity.TaskSendPromoteMessage;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 import org.example.service.SeleniumService;
 import org.example.utils.CrawlingUtil;
 import org.example.utils.StringUtils;
@@ -28,6 +30,8 @@ public class SeleniumServiceImpl implements SeleniumService {
     public static final String POST_STRING = "則貼文";
     public static final String FOLLOWING_STRING = "粉絲";
     public static final String FOLLOWER_STRING = "人追蹤中";
+    private static final String SVG_ELEMENT = "svg.x1lliihq.x1n2onr6.x5n08af";
+    private static final String JS_FUNCTIONT = "return arguments[0].getElementsByTagName('title')[0].textContent;";
     @Value("${webdriver.chrome.path}")
     private String chromeDriverPath;
 
@@ -69,6 +73,9 @@ public class SeleniumServiceImpl implements SeleniumService {
             //輸入訊息並發送
             textMessageAndSend(driver, message, taskSendPromoteMessage);
             CrawlingUtil.pauseBetweenRequests(3, 5);
+        } catch (ApiException e) {
+            log.warn("SeleniumServiceImpl 發送推廣訊息時發生預期錯誤", e);
+            throw e;
         } catch (Exception e) {
             log.error("SeleniumServiceImpl 發送推廣訊息時發生例外錯誤", e);
         }
@@ -84,11 +91,11 @@ public class SeleniumServiceImpl implements SeleniumService {
                 isReadyOrNot = elementsWithStyle.isEmpty();
 
             } else if (taskQueue.getTaskConfig().getTaskType().equals(TaskTypeEnum.SEND_PROMOTE_MESSAGE)) {
-                List<WebElement> svgElements = driver.findElements(By.cssSelector("svg.x1lliihq.x1n2onr6.x5n08af"));
+                List<WebElement> svgElements = driver.findElements(By.cssSelector(SVG_ELEMENT));
                 for (WebElement svgElement : svgElements) {
                     JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
                     // 取得title
-                    String titleText = (String) jsExecutor.executeScript("return arguments[0].getElementsByTagName('title')[0].textContent;", svgElement);
+                    String titleText = (String) jsExecutor.executeScript(JS_FUNCTIONT, svgElement);
                     if ("新訊息".equals(titleText)) {
                         isReadyOrNot = false;
                     }
@@ -134,7 +141,6 @@ public class SeleniumServiceImpl implements SeleniumService {
      */
     private void clickTargetUser(WebDriver driver, String account) {
         List<WebElement> elementsWithStyle = driver.findElements(By.xpath("//*[contains(@style, 'line-height: var(--base-line-clamp-line-height); --base-line-clamp-line-height: 18px;')]"));
-        log.info("找到元素s：{}", elementsWithStyle);
         for (WebElement element : elementsWithStyle) {
             List<WebElement> spanElements = element.findElements(By.tagName("span"));
             for (WebElement span : spanElements) {
@@ -144,9 +150,10 @@ public class SeleniumServiceImpl implements SeleniumService {
                     return;
                 }
             }
-            log.error("未找到匹配的span元素");
+            log.warn("未找到匹配的span元素");
         }
-        log.error("未找到匹配的style元素");
+        log.warn("未找到匹配的style元素");
+        clickClose(driver);
     }
 
 
@@ -154,18 +161,38 @@ public class SeleniumServiceImpl implements SeleniumService {
      * 點擊新訊息
      */
     private void clickNewMessage(WebDriver driver) {
-        List<WebElement> svgElements = driver.findElements(By.cssSelector("svg.x1lliihq.x1n2onr6.x5n08af")
+        List<WebElement> svgElements = driver.findElements(By.cssSelector(SVG_ELEMENT)
         );
         JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
         for (WebElement svgElement : svgElements) {
             // 取得title
-            String titleText = (String) jsExecutor.executeScript("return arguments[0].getElementsByTagName('title')[0].textContent;", svgElement);
+            String titleText = (String) jsExecutor.executeScript(JS_FUNCTIONT, svgElement);
             if ("新訊息".equals(titleText)) {
                 svgElement.click();
                 return;
             }
         }
         log.info("未找到新訊息元素");
+    }
+
+    /**
+     * 關閉浮窗
+     */
+    private void clickClose(WebDriver driver) {
+        List<WebElement> svgElements = driver.findElements(By.cssSelector(SVG_ELEMENT)
+        );
+        JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
+        for (WebElement svgElement : svgElements) {
+            // 取得title
+            String titleText = (String) jsExecutor.executeScript(JS_FUNCTIONT, svgElement);
+            if ("關閉".equals(titleText)) {
+                log.info("找到關閉元素");
+                svgElement.click();
+                return;
+            }
+        }
+        log.warn("未找到關閉元素");
+        throw new ApiException(SysCode.CLOSING_ELEMENT_NOT_FOUND);
     }
 
 

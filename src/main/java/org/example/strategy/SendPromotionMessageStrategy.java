@@ -65,10 +65,10 @@ public class SendPromotionMessageStrategy extends TaskStrategyBase implements Ta
             try {
                 seleniumService.sendPromoteMessage(taskSendPromoteMessage, driver);
                 taskSendPromoteMessage.completeTask();
-                log.info("粉絲帳號:{} ,執行完成", taskSendPromoteMessage.getAccount());
+                log.info("帳號:{} ,執行完成", taskSendPromoteMessage.getAccount());
                 CrawlingUtil.pauseBetweenRequests(3, 5);
             } catch (ApiException e) {
-                log.error("任務:{} ,執行失敗", taskSendPromoteMessage, e);
+                log.error("帳號:{} ,執行失敗", taskSendPromoteMessage.getAccount(), e);
                 taskSendPromoteMessage.failTask();
             }
         });
