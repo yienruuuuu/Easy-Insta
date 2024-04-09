@@ -17,10 +17,16 @@ import lombok.NoArgsConstructor;
 public class PromotionRequest {
     @ExcelProperty("帳號")
     private String account;
+    @ExcelProperty("帳號全名")
+    private String accountFullName;
     @ExcelProperty("英文訊息")
     private String textEn;
     @ExcelProperty("中文訊息")
     private String textZhTw;
+    @ExcelProperty("日文訊息")
+    private String textJa;
+    @ExcelProperty("俄文訊息")
+    private String textRu;
     @ExcelProperty("影片網址")
     private String postUrl;
 }

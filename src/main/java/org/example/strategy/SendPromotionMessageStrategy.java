@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
+ * 任務策略-發送推廣訊息
+ *
  * @author Eric.Lee
  * Date: 2024/2/27
  */
@@ -62,12 +64,12 @@ public class SendPromotionMessageStrategy extends TaskStrategyBase implements Ta
         promoteList.forEach(taskSendPromoteMessage -> {
             try {
                 seleniumService.sendPromoteMessage(taskSendPromoteMessage, driver);
-                taskSendPromoteMessage.setStatus(TaskStatusEnum.COMPLETED);
+                taskSendPromoteMessage.completeTask();
                 log.info("粉絲帳號:{} ,執行完成", taskSendPromoteMessage.getAccount());
                 CrawlingUtil.pauseBetweenRequests(3, 5);
             } catch (ApiException e) {
                 log.error("任務:{} ,執行失敗", taskSendPromoteMessage, e);
-                taskSendPromoteMessage.setStatus(TaskStatusEnum.FAILED);
+                taskSendPromoteMessage.failTask();
             }
         });
         taskSendPromoteMessageService.saveAll(promoteList);
@@ -88,6 +90,4 @@ public class SendPromotionMessageStrategy extends TaskStrategyBase implements Ta
         taskQueueService.save(task);
         log.info("任務已儲存:{}", task);
     }
-
-
 }

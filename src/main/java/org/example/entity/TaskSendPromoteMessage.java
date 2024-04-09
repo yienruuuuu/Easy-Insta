@@ -58,4 +58,21 @@ public class TaskSendPromoteMessage {
 
     @Column(name = "modify_time")
     private LocalDateTime modifyTime;
+
+    /**
+     * 標記任務為已完成。
+     */
+    public void completeTask() {
+        this.status = TaskStatusEnum.COMPLETED;
+        this.modifyTime = LocalDateTime.now();
+    }
+
+    /**
+     * 標記任務為失敗。
+     *
+     */
+    public void failTask() {
+        this.status = TaskStatusEnum.FAILED;
+        this.modifyTime = LocalDateTime.now(); // 設定任務結束時間為目前時間
+    }
 }

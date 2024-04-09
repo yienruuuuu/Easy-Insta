@@ -80,19 +80,20 @@ public class IgUserController extends BaseController {
             throw new ApiException(SysCode.TASK_ALREADY_EXISTS);
         }
         TaskQueue taskQueue = taskQueueService.createTaskQueueAndDeleteOldData(targetUser, taskEnum, TaskStatusEnum.PENDING);
-        // 檢查是否為發送推廣訊息任務
+        // 不是發送推廣訊息任務
         if (!TaskTypeEnum.SEND_PROMOTE_MESSAGE.equals(taskQueue.getTaskConfig().getTaskType())) {
             return taskQueue;
         }
+        // 發送推廣訊息任務(讀取附件)
         try {
             checkAndSaveTaskPromotionDetail(upload(file), taskQueue);
+            return taskQueue;
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
             log.error("文件上傳失敗", e);
             throw new ApiException(SysCode.FILE_UPLOAD_FAILED);
         }
-        return taskQueue;
     }
 
 
@@ -120,8 +121,11 @@ public class IgUserController extends BaseController {
             TaskSendPromoteMessage taskSendPromoteMessage = TaskSendPromoteMessage.builder()
                     .taskQueue(taskQueue)
                     .account(promotionRequest.getAccount())
+                    .accountFullName(promotionRequest.getAccountFullName())
                     .textEn(promotionRequest.getTextEn())
                     .textZhTw(promotionRequest.getTextZhTw())
+                    .textJa(promotionRequest.getTextJa())
+                    .textRu(promotionRequest.getTextRu())
                     .postUrl(promotionRequest.getPostUrl())
                     .status(TaskStatusEnum.PENDING)
                     .createTime(taskQueue.getSubmitTime())
