@@ -69,7 +69,7 @@ public class SeleniumServiceImpl implements SeleniumService {
             //點擊聊天泡泡
             WebElement chatElement = driver.findElement(By.xpath("//div[@tabindex='0' and text()='聊天']"));
             chatElement.click();
-            CrawlingUtil.pauseBetweenRequests(1, 2);
+            CrawlingUtil.pauseBetweenRequests(3, 5);
             //輸入訊息並發送
             textMessageAndSend(driver, message, taskSendPromoteMessage);
             CrawlingUtil.pauseBetweenRequests(3, 5);
