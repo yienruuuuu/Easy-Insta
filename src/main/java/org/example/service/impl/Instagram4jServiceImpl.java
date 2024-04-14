@@ -3,6 +3,7 @@ package org.example.service.impl;
 
 import com.github.instagram4j.instagram4j.IGClient;
 import com.github.instagram4j.instagram4j.actions.users.UserAction;
+import com.github.instagram4j.instagram4j.exceptions.IGLoginException;
 import com.github.instagram4j.instagram4j.exceptions.IGResponseException;
 import com.github.instagram4j.instagram4j.models.media.timeline.Comment;
 import com.github.instagram4j.instagram4j.models.media.timeline.TimelineMedia;
@@ -37,6 +38,7 @@ import org.example.utils.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import java.net.SocketTimeoutException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -89,6 +91,11 @@ public class Instagram4jServiceImpl implements InstagramService {
                 }
                 // 檢查是否因為網路逾時而失敗
                 if (cause instanceof java.util.concurrent.CompletionException && cause.getCause() instanceof java.net.SocketTimeoutException) {
+                    log.info("CompletionException SocketTimeoutException occurred: {}", cause.getMessage());
+                    throw new ApiException(SysCode.SOCKET_TIMEOUT, cause);
+                }
+                if (cause instanceof IGLoginException && cause.getCause() instanceof java.net.SocketTimeoutException) {
+                    log.info("IGLoginException SocketTimeoutException occurred: {}", cause.getMessage());
                     throw new ApiException(SysCode.SOCKET_TIMEOUT, cause);
                 }
                 cause = cause.getCause();
@@ -142,6 +149,14 @@ public class Instagram4jServiceImpl implements InstagramService {
             task.setNextIdForSearch(postsAndMaxIdDTO.getMaxId());
         } catch (ApiException apiException) {
             throw apiException;
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof SocketTimeoutException) {
+                log.warn("SocketTimeoutException occurred: {}", e.getMessage());
+                throw new ApiException(SysCode.SOCKET_TIMEOUT);
+            } else {
+                log.error("CompletionException occurred: {}", e.getMessage());
+                throw new TaskExecutionException(SysCode.IG_GET_MEDIA_FAILED, e);
+            }
         } catch (Exception e) {
             throw new TaskExecutionException(SysCode.IG_GET_MEDIA_FAILED, e);
         }
@@ -160,6 +175,14 @@ public class Instagram4jServiceImpl implements InstagramService {
             log.info("Task = {}", task);
         } catch (ApiException apiException) {
             throw apiException;
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof SocketTimeoutException) {
+                log.warn("SocketTimeoutException occurred: {}", e.getMessage());
+                throw new ApiException(SysCode.SOCKET_TIMEOUT);
+            } else {
+                log.error("CompletionException occurred: {}", e.getMessage());
+                throw new TaskExecutionException(SysCode.IG_GET_COMMENTS_FAILED, e);
+            }
         } catch (Exception e) {
             throw new TaskExecutionException(SysCode.IG_GET_COMMENTS_FAILED, e);
         }
