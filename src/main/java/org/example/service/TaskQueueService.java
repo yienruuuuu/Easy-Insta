@@ -16,6 +16,14 @@ import java.util.Optional;
 public interface TaskQueueService extends BaseService<TaskQueue> {
     boolean checkTaskQueueExistByUserAndTaskType(IgUser targetUser, TaskTypeEnum taskType);
 
+    /**
+     * 創建任務佇列並刪除舊數據(依任務類型)
+     *
+     * @param igUser   用戶
+     * @param taskType 任務類型
+     * @param status   任務狀態
+     * @return TaskQueue
+     */
     TaskQueue createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status);
 
     boolean checkTasksByStatusAndNeedLogin(List<TaskStatusEnum> status, boolean needLoginIg);

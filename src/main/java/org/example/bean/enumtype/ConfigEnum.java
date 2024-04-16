@@ -28,5 +28,7 @@ public enum ConfigEnum {
     //selenuim 準備發送訊息
     SELENIUM_IG_READY_FOR_SEND_MESSAGE,
     //selenuim 以js找尋新訊息svg下的title標籤
-    SELENIUM_IG_SEND_MESSAGE_GET_TITLE_BY_JS
+    SELENIUM_IG_SEND_MESSAGE_GET_TITLE_BY_JS,
+    //selenuim 以影片分享鍵進行推廣的每日上限
+    MAX_PROMOTION_BY_POST_SHARE_PER_DAY
 }

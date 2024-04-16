@@ -139,7 +139,8 @@ public class TaskQueueServiceImpl implements TaskQueueService {
             case GET_MEDIA:
                 mediaService.deleteOldMediaDataByIgUserId(igUser.getId());
                 break;
-            case GET_MEDIA_COMMENT, GET_MEDIA_LIKER, GET_FOLLOWERS_DETAIL, SEND_PROMOTE_MESSAGE:
+            case GET_MEDIA_COMMENT, GET_MEDIA_LIKER, GET_FOLLOWERS_DETAIL, SEND_PROMOTE_MESSAGE,
+                 SEND_PROMOTE_MESSAGE_BY_POST_SHARE:
                 break;
             default:
                 throw new ApiException(SysCode.TASK_TYPE_NOT_FOUND);

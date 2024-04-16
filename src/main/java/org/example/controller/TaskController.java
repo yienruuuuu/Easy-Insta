@@ -31,10 +31,10 @@ import java.util.List;
  * @author Eric.Lee
  */
 @Slf4j
-@Tag(name = "USER controller", description = "IG 用戶相關API")
+@Tag(name = "MAIN controller", description = "主要功能 API")
 @RestController
-@RequestMapping("iguser")
-public class IgUserController extends BaseController {
+@RequestMapping("main")
+public class TaskController extends BaseController {
 
     private final LoginService loginService;
     private final InstagramService instagramService;
@@ -43,7 +43,7 @@ public class IgUserController extends BaseController {
     private final MediaService mediaService;
     private final TaskSendPromoteMessageService taskSendPromoteMessageService;
 
-    public IgUserController(LoginService loginService, InstagramService instagramService, IgUserService igUserService, TaskQueueService taskQueueService, MediaService mediaService, TaskSendPromoteMessageService taskSendPromoteMessageService) {
+    public TaskController(LoginService loginService, InstagramService instagramService, IgUserService igUserService, TaskQueueService taskQueueService, MediaService mediaService, TaskSendPromoteMessageService taskSendPromoteMessageService) {
         this.loginService = loginService;
         this.instagramService = instagramService;
         this.igUserService = igUserService;

@@ -8,7 +8,6 @@ import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 import org.example.service.LoginService;
 import org.example.service.TaskQueueService;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -77,7 +76,7 @@ public class CheckTaskQueue extends BaseQueue {
      * @param needLogin 是否需要登入
      */
     private void checkAndExecuteTasks(boolean needLogin) {
-        if (needLogin && isInProgressTaskExists()) return;
+        if (needLogin && isInProgressTaskExists(needLogin)) return;
 
         try {
             LoginAccount loginAccount = needLogin ? loginService.getLoginAccount() : null;
@@ -96,9 +95,9 @@ public class CheckTaskQueue extends BaseQueue {
      *
      * @return 是否有正在執行中的任務
      */
-    private boolean isInProgressTaskExists() {
+    private boolean isInProgressTaskExists(boolean needLogin) {
         List<TaskStatusEnum> statuses = List.of(TaskStatusEnum.IN_PROGRESS);
-        boolean exists = taskQueueService.checkTasksByStatusAndNeedLogin(statuses, true);
+        boolean exists = taskQueueService.checkTasksByStatusAndNeedLogin(statuses, needLogin);
         if (exists) {
             log.info("有需要登入(NEED LOGIN IG)的任務正在執行中(IN_PROGRESS)，不執行新任務");
         }
@@ -110,7 +109,7 @@ public class CheckTaskQueue extends BaseQueue {
      *
      * @param statusList 任務狀態列表
      */
-    private TaskQueue getTask(List<TaskStatusEnum> statusList ,boolean needLogin) {
+    private TaskQueue getTask(List<TaskStatusEnum> statusList, boolean needLogin) {
         return statusList.stream()
                 .map(status -> taskQueueService.findFirstTaskQueueByStatusAndNeedLogin(status, needLogin))
                 .flatMap(Optional::stream)
