@@ -38,4 +38,13 @@ public interface MediaCommentDao extends JpaRepository<MediaComment, Integer>, C
             "FROM MediaComment mc JOIN mc.media m " +
             "WHERE m.igUserId = :igUserId")
     List<MediaCommentDetailDto> findMediaCommentDetailsByIgUserId(@Param("igUserId") IgUser igUser);
+
+    /**
+     * 查詢所有留言資料對應的igUser
+     *
+     * @return igUserId列表
+     */
+    @Query("SELECT iu.userName FROM MediaComment mc JOIN mc.media m JOIN m.igUserId iu GROUP BY m.igUserId, iu.userName")
+    List<String> findDistinctUserNames();
+
 }

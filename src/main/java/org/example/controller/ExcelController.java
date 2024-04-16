@@ -44,6 +44,12 @@ public class ExcelController extends BaseController {
         this.mediaService = mediaService;
     }
 
+    @GetMapping(value = "/getUserCanExport")
+    @Operation(summary = "查詢目前可導出用戶", description = "查詢目前可導出用戶")
+    public List<String> getUserCanExport() {
+        return mediaCommentService.findDistinctUserNames();
+    }
+
     @GetMapping(value = "/exportComment/{igUserName}")
     @Operation(summary = "倒出user comment excel", description = "倒出user comment excel")
     public void export(HttpServletResponse response, @PathVariable String igUserName) {

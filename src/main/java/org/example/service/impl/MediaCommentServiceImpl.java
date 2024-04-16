@@ -57,4 +57,9 @@ public class MediaCommentServiceImpl implements MediaCommentService {
     public List<MediaCommentDetailDto> findCommentDetail(IgUser igUser) {
         return mediaCommentDao.findMediaCommentDetailsByIgUserId(igUser);
     }
+
+    @Override
+    public List<String> findDistinctUserNames() {
+        return mediaCommentDao.findDistinctUserNames();
+    }
 }

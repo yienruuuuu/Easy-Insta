@@ -39,4 +39,11 @@ public interface MediaCommentService extends BaseService<MediaComment> {
      * @return 列表
      */
     List<MediaCommentDetailDto> findCommentDetail(IgUser igUser);
+
+    /**
+     * 查詢所有留言資料對應的igUser
+     *
+     * @return igUserId列表
+     */
+    List<String> findDistinctUserNames();
 }
