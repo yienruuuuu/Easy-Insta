@@ -516,13 +516,11 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     private void handleSocketTimeOut(Exception e, SysCode sysCode) {
-        log.info("SocketTimeoutException occurred in handleSocketTimeOut");
         Throwable cause = e;
         while (cause != null) {
             if (cause.getMessage() != null && cause.getMessage().contains("SocketTimeoutException")) {
                 throw new ApiException(SysCode.SOCKET_TIMEOUT, cause);
             }
-            log.info("cause:{} ,getCause = {}", cause.getMessage(), cause.getCause());
             cause = cause.getCause();
         }
         throw new TaskExecutionException(sysCode, e);

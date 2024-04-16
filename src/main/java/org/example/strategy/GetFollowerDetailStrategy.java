@@ -42,7 +42,7 @@ public class GetFollowerDetailStrategy extends TaskStrategyBase implements TaskS
         WebDriver driver = seleniumService.getDriver();
         seleniumHelperService.waitForSeleniumReady(taskQueue, driver);
         //執行爬蟲任務
-        performTask(taskQueue);
+        performTask(taskQueue, driver);
         //結束任務，依條件判斷更新任務狀態
         finalizeTask(taskQueue);
     }
@@ -56,7 +56,7 @@ public class GetFollowerDetailStrategy extends TaskStrategyBase implements TaskS
      *
      * @param task 任務
      */
-    private void performTask(TaskQueue task) {
+    private void performTask(TaskQueue task, WebDriver driver) {
         List<TaskQueueFollowersDetail> taskQueuePage =
                 taskQueueFollowerDetailService.findByTaskQueueAndStatusByPage(TaskStatusEnum.PENDING, task, 0, 30).getContent();
         if (taskQueuePage.isEmpty()) {
@@ -64,7 +64,7 @@ public class GetFollowerDetailStrategy extends TaskStrategyBase implements TaskS
         }
         taskQueuePage.forEach(taskQueueFollowersDetail -> {
             try {
-                seleniumService.crawlFollowerDetailByCssStyle(taskQueueFollowersDetail.getFollower());
+                seleniumService.crawlFollowerDetailByCssStyle(taskQueueFollowersDetail.getFollower(), driver);
                 taskQueueFollowersDetail.setStatus(TaskStatusEnum.COMPLETED);
                 log.info("粉絲明細:{} ,執行完成", taskQueueFollowersDetail);
                 CrawlingUtil.pauseBetweenRequests(3, 5);

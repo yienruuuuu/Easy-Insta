@@ -14,9 +14,8 @@ public interface SeleniumService {
      * 透過css選擇器找尋style以爬取追蹤者詳細資訊
      *
      * @param follower 追蹤者
-     * @return 追蹤者詳細資訊
      */
-    void crawlFollowerDetailByCssStyle(Followers follower);
+    void crawlFollowerDetailByCssStyle(Followers follower,WebDriver driver);
 
     /**
      * 透過css選擇器找尋style以爬取追蹤者詳細資訊

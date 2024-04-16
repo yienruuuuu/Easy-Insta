@@ -36,8 +36,7 @@ public class SeleniumServiceImpl implements SeleniumService {
     private String chromeDriverPath;
 
     @Override
-    public void crawlFollowerDetailByCssStyle(Followers follower) {
-        WebDriver driver = getDriver();
+    public void crawlFollowerDetailByCssStyle(Followers follower,WebDriver driver) {
         try {
             searchForAccount(driver, follower.getFollowerUserName());
             List<WebElement> elementsSearchByStyle = captureDataByStyle(driver, follower);
