@@ -86,11 +86,28 @@ public class TaskQueue {
     }
 
     /**
+     * 標記每日任務為已完成。
+     */
+    public void completeDailyTask() {
+        this.status = TaskStatusEnum.DAILY_COMPLETED;
+        this.endTime = LocalDateTime.now(); // 設定任務結束時間為目前時間
+    }
+
+    /**
      * 標記任務為暫停。
      * 暫停狀態可以用來表示任務需要在將來某個時間點被重新啟動繼續執行。
      */
     public void pauseTask() {
         this.status = TaskStatusEnum.PAUSED;
+        this.modifyTime = LocalDateTime.now(); // 設定任務修改時間為目前時間
+    }
+
+    /**
+     * 標記每日任務為暫停。
+     * 暫停狀態可以用來表示任務需要在將來某個時間點被重新啟動繼續執行。
+     */
+    public void pauseDailyTask() {
+        this.status = TaskStatusEnum.DAILY_PAUSED;
         this.modifyTime = LocalDateTime.now(); // 設定任務修改時間為目前時間
     }
 

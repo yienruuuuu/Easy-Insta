@@ -15,7 +15,7 @@ public interface SeleniumService {
      *
      * @param follower 追蹤者
      */
-    void crawlFollowerDetailByCssStyle(Followers follower,WebDriver driver);
+    void crawlFollowerDetailByCssStyle(Followers follower, WebDriver driver);
 
     /**
      * 透過css選擇器找尋style以爬取追蹤者詳細資訊
@@ -23,6 +23,20 @@ public interface SeleniumService {
      * @param taskSendPromoteMessage 任務發送推廣訊息
      */
     void sendPromoteMessage(TaskSendPromoteMessage taskSendPromoteMessage, WebDriver driver);
+
+    /**
+     * 透過分享影片來發布推廣訊息
+     *
+     * @param taskSendPromoteMessage 任務發送推廣訊息
+     */
+    void sendPromoteMessageByPostShare(TaskSendPromoteMessage taskSendPromoteMessage, WebDriver driver);
+
+    /**
+     * 移動到影片畫面已準備分享推廣訊息
+     *
+     * @param taskSendPromoteMessage 任務發送推廣訊息
+     */
+    String readyForPromoteMessageByPostShare(TaskSendPromoteMessage taskSendPromoteMessage, WebDriver driver);
 
     /**
      * 是否準備好爬取

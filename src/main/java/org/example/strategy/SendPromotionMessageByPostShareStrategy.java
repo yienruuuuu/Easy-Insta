@@ -10,6 +10,7 @@ import org.example.exception.SysCode;
 import org.example.service.*;
 import org.example.utils.CrawlingUtil;
 import org.openqa.selenium.WebDriver;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,17 +25,15 @@ import java.util.List;
  */
 @Slf4j
 @Service("sendPromotionMessageStrategy")
-public class SendPromotionMessageStrategy extends TaskStrategyBase implements TaskStrategy {
+public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase implements TaskStrategy {
     private final TaskQueueService taskQueueService;
     private final TaskSendPromoteMessageService taskSendPromoteMessageService;
-    private final SeleniumHelperService seleniumHelperService;
     private final SeleniumService seleniumService;
 
-    protected SendPromotionMessageStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, TaskQueueMediaService taskQueueMediaService, SeleniumService seleniumService, TaskSendPromoteMessageService taskSendPromoteMessageService, SeleniumHelperService seleniumHelperService) {
+    protected SendPromotionMessageByPostShareStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, TaskQueueMediaService taskQueueMediaService, SeleniumService seleniumService, TaskSendPromoteMessageService taskSendPromoteMessageService) {
         super(instagramService, loginService, taskQueueMediaService);
         this.taskQueueService = taskQueueService;
         this.taskSendPromoteMessageService = taskSendPromoteMessageService;
-        this.seleniumHelperService = seleniumHelperService;
         this.seleniumService = seleniumService;
     }
 
@@ -42,7 +41,7 @@ public class SendPromotionMessageStrategy extends TaskStrategyBase implements Ta
     @Transactional
     public void executeTask(TaskQueue taskQueue, LoginAccount loginAccount) {
         WebDriver driver = seleniumService.getDriver();
-        seleniumHelperService.waitForSeleniumReady(taskQueue, driver);
+
         //執行任務
         performTask(taskQueue, driver);
         //結束任務，依條件判斷更新任務狀態
@@ -58,19 +57,24 @@ public class SendPromotionMessageStrategy extends TaskStrategyBase implements Ta
      * @param task 任務
      */
     private void performTask(TaskQueue task, WebDriver driver) {
-        List<TaskSendPromoteMessage> promoteList = taskSendPromoteMessageService.findByTaskQueueAndStatus(task, TaskStatusEnum.PENDING, Pageable.unpaged());
+        List<TaskSendPromoteMessage> promoteList = taskSendPromoteMessageService.findByTaskQueueAndStatus(task, TaskStatusEnum.PENDING, PageRequest.of(0, 50));
         if (promoteList.isEmpty()) {
-            throw new ApiException(SysCode.TASK_SEND_PROMOTE_MESSAGE_NOT_FOUNT);
+            throw new ApiException(SysCode.TASK_SEND_PROMOTE_MESSAGE_BY_POST_SHARE_NOT_FOUNT);
         }
+        //移動到準備畫面上
+        String postUrl = seleniumService.readyForPromoteMessageByPostShare(promoteList.get(0), driver);
+
         promoteList.forEach(taskSendPromoteMessage -> {
             try {
-                seleniumService.sendPromoteMessage(taskSendPromoteMessage, driver);
+                seleniumService.sendPromoteMessageByPostShare(taskSendPromoteMessage, driver);
                 taskSendPromoteMessage.completeTask();
                 log.info("帳號:{} ,執行完成", taskSendPromoteMessage.getAccount());
                 CrawlingUtil.pauseBetweenRequests(3, 5);
             } catch (ApiException e) {
                 log.error("帳號:{} ,執行失敗", taskSendPromoteMessage.getAccount(), e);
                 taskSendPromoteMessage.failTask();
+                //重新移動到準備畫面上
+                driver.get(postUrl);
             }
         });
         taskSendPromoteMessageService.saveAll(promoteList);
@@ -84,9 +88,9 @@ public class SendPromotionMessageStrategy extends TaskStrategyBase implements Ta
     private void finalizeTask(TaskQueue task) {
         List<TaskSendPromoteMessage> promoteList = taskSendPromoteMessageService.findByTaskQueueAndStatus(task, TaskStatusEnum.PENDING, Pageable.unpaged());
         if (!promoteList.isEmpty()) {
-            task.pauseTask();
+            task.pauseDailyTask();
         } else {
-            task.completeTask();
+            task.completeDailyTask();
         }
         taskQueueService.save(task);
         log.info("任務已儲存:{}", task);

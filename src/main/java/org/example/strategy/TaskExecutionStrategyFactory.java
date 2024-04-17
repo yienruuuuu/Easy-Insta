@@ -36,6 +36,9 @@ public class TaskExecutionStrategyFactory {
             if (strategy instanceof SendPromotionMessageStrategy) {
                 strategies.put(TaskTypeEnum.SEND_PROMOTE_MESSAGE, strategy);
             }
+            if (strategy instanceof SendPromotionMessageByPostShareStrategy) {
+                strategies.put(TaskTypeEnum.SEND_PROMOTE_MESSAGE_BY_POST_SHARE, strategy);
+            }
         });
     }
 

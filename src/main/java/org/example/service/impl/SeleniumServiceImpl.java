@@ -31,12 +31,14 @@ public class SeleniumServiceImpl implements SeleniumService {
     public static final String FOLLOWING_STRING = "粉絲";
     public static final String FOLLOWER_STRING = "人追蹤中";
     private static final String SVG_ELEMENT = "svg.x1lliihq.x1n2onr6.x5n08af";
-    private static final String JS_FUNCTIONT = "return arguments[0].getElementsByTagName('title')[0].textContent;";
+    private static final String JS_FUNCTION = "return arguments[0].getElementsByTagName('title')[0].textContent;";
+    private static final String FIRST_POST_DIV = "//div[contains(@style, 'display: flex; flex-direction: column; padding-bottom: 0px; padding-top: 0px; position: relative;')]";
+    private static final String SVG_SHARE_ELEMENT = "svg.x1lliihq.x1n2onr6.x5n08af";
     @Value("${webdriver.chrome.path}")
     private String chromeDriverPath;
 
     @Override
-    public void crawlFollowerDetailByCssStyle(Followers follower,WebDriver driver) {
+    public void crawlFollowerDetailByCssStyle(Followers follower, WebDriver driver) {
         try {
             searchForAccount(driver, follower.getFollowerUserName());
             List<WebElement> elementsSearchByStyle = captureDataByStyle(driver, follower);
@@ -59,8 +61,7 @@ public class SeleniumServiceImpl implements SeleniumService {
             clickNewMessage(driver);
             CrawlingUtil.pauseBetweenRequests(3, 5);
             //搜尋框輸入帳號
-            WebElement searchBox = driver.findElement(By.name("queryBox"));
-            searchBox.sendKeys(taskSendPromoteMessage.getAccount());
+            searchUserInQueryBox(driver, taskSendPromoteMessage);
             CrawlingUtil.pauseBetweenRequests(5, 8);
             //比對並點擊目標使用者
             clickTargetUser(driver, taskSendPromoteMessage.getAccount());
@@ -81,6 +82,42 @@ public class SeleniumServiceImpl implements SeleniumService {
     }
 
     @Override
+    public void sendPromoteMessageByPostShare(TaskSendPromoteMessage taskSendPromoteMessage, WebDriver driver) {
+        LanguageEnum la = StringUtils.detectLanguage(taskSendPromoteMessage.getAccountFullName().trim());
+        log.info("檢測到的姓名語言為：{}", la);
+        String message = getLanguageText(la, taskSendPromoteMessage);
+        //點擊分享按鈕
+        clickShareButton(driver);
+        //搜尋
+        searchUserInQueryBox(driver, taskSendPromoteMessage);
+        CrawlingUtil.pauseBetweenRequests(5, 8);
+        //點擊目標使用者
+        clickTargetUser(driver, taskSendPromoteMessage.getAccount());
+        CrawlingUtil.pauseBetweenRequests(5, 8);
+        //輸入訊息
+        textMessageAndSend(driver, message);
+        CrawlingUtil.pauseBetweenRequests(2, 2);
+        //點擊傳送
+        WebElement sendButton = driver.findElement(By.xpath("//div[text()='傳送']"));
+        sendButton.click();
+        CrawlingUtil.pauseBetweenRequests(2, 2);
+    }
+
+    @Override
+    public String readyForPromoteMessageByPostShare(TaskSendPromoteMessage taskSendPromoteMessage, WebDriver driver) {
+        String url = taskSendPromoteMessage.getPostUrl();
+        driver.get(url);
+        CrawlingUtil.pauseBetweenRequests(3, 5);
+        WebElement elementsWithStyle = driver.findElements(By.xpath(FIRST_POST_DIV)).get(0);
+        WebElement firstLink = elementsWithStyle.findElement(By.cssSelector("a"));
+        log.info("Link: {}", firstLink.getAttribute("href"));
+        //移動到最新影片
+        driver.get(firstLink.getAttribute("href"));
+        CrawlingUtil.pauseBetweenRequests(3, 5);
+        return firstLink.getAttribute("href");
+    }
+
+    @Override
     public boolean isReadyForCrawl(TaskQueue taskQueue, WebDriver driver) {
         log.info("檢查Selenium是否準備好爬取");
         boolean isReadyOrNot = true;
@@ -94,7 +131,7 @@ public class SeleniumServiceImpl implements SeleniumService {
                 for (WebElement svgElement : svgElements) {
                     JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
                     // 取得title
-                    String titleText = (String) jsExecutor.executeScript(JS_FUNCTIONT, svgElement);
+                    String titleText = (String) jsExecutor.executeScript(JS_FUNCTION, svgElement);
                     if ("新訊息".equals(titleText)) {
                         isReadyOrNot = false;
                     }
@@ -118,6 +155,15 @@ public class SeleniumServiceImpl implements SeleniumService {
 
 
     // private
+
+    private void textMessageAndSend(WebDriver driver, String message) {
+        //點擊訊息框
+        WebElement elementsWithStyle = driver.findElement(By.xpath("//input[@placeholder='留個話……']"));
+        elementsWithStyle.click();
+        CrawlingUtil.pauseBetweenRequests(1, 2);
+        //輸入訊息
+        elementsWithStyle.sendKeys(message);
+    }
 
     private void textMessageAndSend(WebDriver driver, String message, TaskSendPromoteMessage taskSendPromoteMessage) {
         //點擊訊息框
@@ -165,7 +211,7 @@ public class SeleniumServiceImpl implements SeleniumService {
         JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
         for (WebElement svgElement : svgElements) {
             // 取得title
-            String titleText = (String) jsExecutor.executeScript(JS_FUNCTIONT, svgElement);
+            String titleText = (String) jsExecutor.executeScript(JS_FUNCTION, svgElement);
             if ("新訊息".equals(titleText)) {
                 svgElement.click();
                 return;
@@ -183,7 +229,7 @@ public class SeleniumServiceImpl implements SeleniumService {
         JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
         for (WebElement svgElement : svgElements) {
             // 取得title
-            String titleText = (String) jsExecutor.executeScript(JS_FUNCTIONT, svgElement);
+            String titleText = (String) jsExecutor.executeScript(JS_FUNCTION, svgElement);
             if ("關閉".equals(titleText)) {
                 log.info("找到關閉元素");
                 svgElement.click();
@@ -249,5 +295,28 @@ public class SeleniumServiceImpl implements SeleniumService {
             case RU -> taskSendPromoteMessage.getTextRu();
             default -> taskSendPromoteMessage.getTextEn();
         };
+    }
+
+    /**
+     * 點擊分享貼文
+     *
+     * @param driver WebDriver
+     */
+    private void clickShareButton(WebDriver driver) {
+        List<WebElement> svgElements = driver.findElements(By.cssSelector(SVG_SHARE_ELEMENT));
+        for (WebElement svgElement : svgElements) {
+            JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
+            // 取得title
+            String titleText = (String) jsExecutor.executeScript(JS_FUNCTION, svgElement);
+            if ("分享貼文".equals(titleText)) {
+                svgElement.click();
+                return;
+            }
+        }
+    }
+
+    private void searchUserInQueryBox(WebDriver driver, TaskSendPromoteMessage taskSendPromoteMessage) {
+        WebElement searchBox = driver.findElement(By.name("queryBox"));
+        searchBox.sendKeys(taskSendPromoteMessage.getAccount());
     }
 }

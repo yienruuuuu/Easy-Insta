@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Eric.Lee
@@ -44,53 +43,36 @@ public class CheckTaskQueue extends BaseQueue {
     }
 
     @Scheduled(fixedDelayString = "${taskQueue.checkDelay:10000}")
-    public void checkTasks() {
+    public void checkLoginTasks() {
         log.info("開始檢查任務佇列");
         if (!checkTaskEnabled()) return;
+        checkAndExecuteTasks(true, Arrays.asList(TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING));
+        log.info("登入需求任務佇列檢查結束");
+    }
 
-        // 非同步執行需要登入的任務檢查
-        executeAsync(this::checkAndExecuteNeedLoginTasks);
-        // 非同步執行不需要登入的任務檢查
-        executeAsync(this::checkAndExecuteWithoutLoginTasks);
+    @Scheduled(fixedDelayString = "${taskQueue.checkDelay:10000}")
+    public void checkNonLoginTasks() {
+        log.info("開始檢查任務佇列");
+        if (!checkTaskEnabled()) return;
+        checkAndExecuteTasks(false, Arrays.asList(TaskStatusEnum.DAILY_PENDING, TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING));
+        log.info("非登入需求任務佇列檢查結束");
 
-        log.info("任務佇列檢查結束");
     }
 
 
     //private
 
     /**
-     * 非同步執行任務
-     *
-     * @param task 任務
-     */
-    private void executeAsync(Runnable task) {
-        CompletableFuture.runAsync(task)
-                .exceptionally(ex -> {
-                    log.error("非同步任務執行出錯", ex);
-                    return null;
-                });
-    }
-
-    private void checkAndExecuteNeedLoginTasks() {
-        checkAndExecuteTasks(true);
-    }
-
-    private void checkAndExecuteWithoutLoginTasks() {
-        checkAndExecuteTasks(false);
-    }
-
-    /**
      * 檢查並執行任務
      *
      * @param needLogin 是否需要登入
      */
-    private void checkAndExecuteTasks(boolean needLogin) {
+    private void checkAndExecuteTasks(boolean needLogin, List<TaskStatusEnum> statusList) {
         if (needLogin && isInProgressTaskExists(needLogin)) return;
 
         try {
             LoginAccount loginAccount = needLogin ? loginService.getLoginAccount() : null;
-            TaskQueue task = getTask(Arrays.asList(TaskStatusEnum.PAUSED, TaskStatusEnum.PENDING), needLogin);
+            TaskQueue task = getTask(statusList, needLogin);
             updateAndExecuteTask(task, loginAccount);
         } catch (ApiException e) {
             log.info("任務序列發生預期事件 {}", e.getMessage());

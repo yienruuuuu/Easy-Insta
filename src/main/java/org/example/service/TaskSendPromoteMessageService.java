@@ -3,6 +3,7 @@ package org.example.service;
 import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.entity.TaskQueue;
 import org.example.entity.TaskSendPromoteMessage;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -18,5 +19,5 @@ public interface TaskSendPromoteMessageService {
      */
     void saveAll(List<TaskSendPromoteMessage> taskSendPromoteMessageList);
 
-    List<TaskSendPromoteMessage> findByTaskQueueAndStatus(TaskQueue taskQueue, TaskStatusEnum status);
+    List<TaskSendPromoteMessage> findByTaskQueueAndStatus(TaskQueue taskQueue, TaskStatusEnum status, Pageable pageable);
 }

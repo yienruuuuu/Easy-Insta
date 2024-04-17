@@ -5,6 +5,7 @@ import org.example.dao.TaskSendPromoteMessageDao;
 import org.example.entity.TaskQueue;
 import org.example.entity.TaskSendPromoteMessage;
 import org.example.service.TaskSendPromoteMessageService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public class TaskSendPromoteMessageServiceImpl implements TaskSendPromoteMessage
     }
 
     @Override
-    public List<TaskSendPromoteMessage> findByTaskQueueAndStatus(TaskQueue taskQueue, TaskStatusEnum status) {
-        return taskSendPromoteMessageDao.findByTaskQueueAndStatus(taskQueue, status);
+    public List<TaskSendPromoteMessage> findByTaskQueueAndStatus(TaskQueue taskQueue, TaskStatusEnum status, Pageable pageable) {
+        return taskSendPromoteMessageDao.findByTaskQueueAndStatus(taskQueue, status, pageable);
     }
 }
