@@ -116,7 +116,7 @@ public class TaskQueueServiceImpl implements TaskQueueService {
         TaskQueue newTask = TaskQueue.builder()
                 .igUser(igUser)
                 .taskConfig(taskConfig)
-                .status(TaskStatusEnum.valueOf(taskConfig.getInitStatus().name()))
+                .status(taskConfig.mapInitStatusToTaskStatus(taskConfig.getInitStatus()))
                 .submitTime(LocalDateTime.now())
                 .build();
         Optional<TaskQueue> taskQueue = save(newTask);

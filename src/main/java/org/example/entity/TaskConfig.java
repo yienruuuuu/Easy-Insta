@@ -2,7 +2,10 @@ package org.example.entity;
 
 import lombok.*;
 import org.example.bean.enumtype.InitStatusEnum;
+import org.example.bean.enumtype.TaskStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
+import org.example.exception.ApiException;
+import org.example.exception.SysCode;
 
 import javax.persistence.*;
 
@@ -33,4 +36,12 @@ public class TaskConfig {
     @Column(name = "init_status")
     @Enumerated(EnumType.STRING)
     private InitStatusEnum initStatus;
+
+    public TaskStatusEnum mapInitStatusToTaskStatus(InitStatusEnum initStatus) {
+        return switch (initStatus) {
+            case PENDING -> TaskStatusEnum.PENDING;
+            case DAILY_PENDING -> TaskStatusEnum.DAILY_PENDING;
+            default -> throw new ApiException(SysCode.ERROR);
+        };
+    }
 }

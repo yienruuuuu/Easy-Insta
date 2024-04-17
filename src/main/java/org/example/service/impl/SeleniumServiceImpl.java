@@ -110,11 +110,12 @@ public class SeleniumServiceImpl implements SeleniumService {
         CrawlingUtil.pauseBetweenRequests(3, 5);
         WebElement elementsWithStyle = driver.findElements(By.xpath(FIRST_POST_DIV)).get(0);
         WebElement firstLink = elementsWithStyle.findElement(By.cssSelector("a"));
-        log.info("Link: {}", firstLink.getAttribute("href"));
+        String link = firstLink.getAttribute("href");
+        log.info("Link: {}", link);
         //移動到最新影片
-        driver.get(firstLink.getAttribute("href"));
+        driver.get(link);
         CrawlingUtil.pauseBetweenRequests(3, 5);
-        return firstLink.getAttribute("href");
+        return link;
     }
 
     @Override
