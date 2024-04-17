@@ -24,7 +24,7 @@ import java.util.List;
  * Date: 2024/2/27
  */
 @Slf4j
-@Service("sendPromotionMessageStrategy")
+@Service("sendPromotionMessageByPostShareStrategy")
 public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase implements TaskStrategy {
     private final TaskQueueService taskQueueService;
     private final TaskSendPromoteMessageService taskSendPromoteMessageService;
