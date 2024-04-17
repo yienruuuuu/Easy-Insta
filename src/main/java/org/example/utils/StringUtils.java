@@ -48,9 +48,4 @@ public final class StringUtils {
         // 預設為其他
         return LanguageEnum.OTHER;
     }
-
-    public static void main(String[] args) {
-        String randomString = "張嘉勝";
-        System.out.println(detectLanguage(randomString));
-    }
 }

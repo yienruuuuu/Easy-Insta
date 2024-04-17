@@ -96,9 +96,4 @@ public class GetMediaStrategy extends TaskStrategyBase implements TaskStrategy {
         log.info("是否已達到設定貼文比例 = {}", isCrawlingCloseToRealFollowerCount);
         return isCrawlingCloseToRealFollowerCount || existsEarlyMedia;
     }
-
-    public static void main(String[] args) {
-        LocalDateTime cutoffDate = LocalDateTime.now().minusYears(1);
-        System.out.println(cutoffDate);
-    }
 }
