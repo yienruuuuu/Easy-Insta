@@ -1,7 +1,9 @@
 package org.example.strategy;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.bean.enumtype.ConfigEnum;
 import org.example.bean.enumtype.TaskStatusEnum;
+import org.example.config.ConfigCache;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
 import org.example.entity.TaskSendPromoteMessage;
@@ -29,12 +31,14 @@ public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase im
     private final TaskQueueService taskQueueService;
     private final TaskSendPromoteMessageService taskSendPromoteMessageService;
     private final SeleniumService seleniumService;
+    private final ConfigCache configCache;
 
-    protected SendPromotionMessageByPostShareStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, TaskQueueMediaService taskQueueMediaService, SeleniumService seleniumService, TaskSendPromoteMessageService taskSendPromoteMessageService) {
+    protected SendPromotionMessageByPostShareStrategy(InstagramService instagramService, LoginService loginService, TaskQueueService taskQueueService, TaskQueueMediaService taskQueueMediaService, SeleniumService seleniumService, TaskSendPromoteMessageService taskSendPromoteMessageService, ConfigCache configCache) {
         super(instagramService, loginService, taskQueueMediaService);
         this.taskQueueService = taskQueueService;
         this.taskSendPromoteMessageService = taskSendPromoteMessageService;
         this.seleniumService = seleniumService;
+        this.configCache = configCache;
     }
 
     @Override
@@ -57,7 +61,8 @@ public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase im
      * @param task 任務
      */
     private void performTask(TaskQueue task, WebDriver driver) {
-        List<TaskSendPromoteMessage> promoteList = taskSendPromoteMessageService.findByTaskQueueAndStatus(task, TaskStatusEnum.PENDING, PageRequest.of(0, 50));
+        int maxPromotionByPostSharePerDay = Integer.parseInt(configCache.get(ConfigEnum.MAX_PROMOTION_BY_POST_SHARE_PER_DAY.name()));
+        List<TaskSendPromoteMessage> promoteList = taskSendPromoteMessageService.findByTaskQueueAndStatus(task, TaskStatusEnum.PENDING, PageRequest.of(0, maxPromotionByPostSharePerDay));
         if (promoteList.isEmpty()) {
             throw new ApiException(SysCode.TASK_SEND_PROMOTE_MESSAGE_BY_POST_SHARE_NOT_FOUNT);
         }
