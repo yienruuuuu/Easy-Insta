@@ -39,7 +39,7 @@ public interface TaskQueueDao extends JpaRepository<TaskQueue, Integer> {
     boolean existsInProgressTasks(@Param("status") List<TaskStatusEnum> status, @Param("needLoginIg") boolean needLoginIg);
 
     /**
-     * 依據任務狀態及提交時間排序，查詢最早提交的一筆任務序列
+     * 依據任務狀態及提交時間排序，查詢最早提交的任務序列1條
      *
      * @param status 任務狀態
      * @return 任務序列

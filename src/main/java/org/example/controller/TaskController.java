@@ -72,28 +72,12 @@ public class TaskController extends BaseController {
     @PostMapping(value = "/task/{taskEnum}/{userName}", consumes = "multipart/form-data")
     @Transactional
     public TaskQueue sendTask(@PathVariable String userName, @PathVariable TaskTypeEnum taskEnum, @RequestParam(value = "file", required = false) MultipartFile file) {
-        IgUser targetUser = igUserService.findUserByIgUserName(userName).orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
-        log.info("確認任務對象，用戶: {}存在", targetUser.getUserName());
-        // 檢查對於查詢對象的任務是否存在
-        if (taskQueueService.checkTaskQueueExistByUserAndTaskType(targetUser, taskEnum)) {
-            log.warn("用戶: {} 的 {} 任務已存在", taskEnum, userName);
-            throw new ApiException(SysCode.TASK_ALREADY_EXISTS);
-        }
-        TaskQueue taskQueue = taskQueueService.createTaskQueueAndDeleteOldData(targetUser, taskEnum, TaskStatusEnum.PENDING);
-        // 不是發送推廣訊息任務
-        if (!TaskTypeEnum.SEND_PROMOTE_MESSAGE.equals(taskQueue.getTaskConfig().getTaskType())) {
-            return taskQueue;
-        }
-        // 發送推廣訊息任務(讀取附件)
-        try {
-            checkAndSaveTaskPromotionDetail(upload(file), taskQueue);
-            return taskQueue;
-        } catch (ApiException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("文件上傳失敗", e);
-            throw new ApiException(SysCode.FILE_UPLOAD_FAILED);
-        }
+        //確認用戶存在
+        IgUser targetUser = getUser(userName);
+        //準備任務佇列
+        TaskQueue taskQueue = prepareTaskQueue(targetUser, taskEnum);
+        //處理任務細項
+        return processTask(taskQueue, file);
     }
 
 
@@ -113,52 +97,8 @@ public class TaskController extends BaseController {
         return CrawlingUtil.calculateEngagementRate(params.getLikes(), params.getComments(), params.getShares(), params.getFollowers(), params.getPostAmounts());
     }
 
+
     // private
-
-    private void checkAndSaveTaskPromotionDetail(List<PromotionRequest> promotionRequestList, TaskQueue taskQueue) {
-        List<TaskSendPromoteMessage> taskSendPromoteMessageList = Lists.newArrayList();
-        for (PromotionRequest promotionRequest : promotionRequestList) {
-            TaskSendPromoteMessage taskSendPromoteMessage = TaskSendPromoteMessage.builder()
-                    .taskQueue(taskQueue)
-                    .account(promotionRequest.getAccount())
-                    .accountFullName(promotionRequest.getAccountFullName())
-                    .textEn(promotionRequest.getTextEn())
-                    .textZhTw(promotionRequest.getTextZhTw())
-                    .textJa(promotionRequest.getTextJa())
-                    .textRu(promotionRequest.getTextRu())
-                    .postUrl(promotionRequest.getPostUrl())
-                    .status(TaskStatusEnum.PENDING)
-                    .createTime(taskQueue.getSubmitTime())
-                    .build();
-            taskSendPromoteMessageList.add(taskSendPromoteMessage);
-        }
-        taskSendPromoteMessageService.saveAll(taskSendPromoteMessageList);
-    }
-
-    /**
-     * 讀取推廣清單
-     *
-     * @return 帳密清單
-     */
-    private List<PromotionRequest> upload(MultipartFile file) throws IOException {
-        if (file == null) {
-            throw new ApiException(SysCode.FILE_NOT_FOUND);
-        }
-        List<PromotionRequest> dataList = Lists.newArrayList();
-        EasyExcelFactory.read(file.getInputStream(), PromotionRequest.class, new ReadListener<PromotionRequest>() {
-            @Override
-            public void invoke(PromotionRequest data, AnalysisContext context) {
-                dataList.add(data);
-            }
-
-            @Override
-            public void doAfterAllAnalysed(AnalysisContext context) {
-                // do nothing
-            }
-        }).sheet("私訊列表").doRead();
-        return dataList;
-    }
-
 
     /**
      * 取得計算互動率的參數
@@ -184,5 +124,122 @@ public class TaskController extends BaseController {
                 .followers(targetUser.getFollowerCount())
                 .postAmounts(targetUser.getMediaCount())
                 .build();
+    }
+
+    /**
+     * 取得用戶
+     *
+     * @param userName 用戶名
+     * @return IgUser
+     */
+    private IgUser getUser(String userName) {
+        return igUserService.findUserByIgUserName(userName)
+                .orElseThrow(() -> new ApiException(SysCode.IG_USER_NOT_FOUND_IN_DB));
+    }
+
+    /**
+     * 準備任務佇列
+     *
+     * @param user     用戶
+     * @param taskType 任務類型
+     * @return TaskQueue
+     */
+    private TaskQueue prepareTaskQueue(IgUser user, TaskTypeEnum taskType) {
+        if (taskQueueService.checkTaskQueueExistByUserAndTaskType(user, taskType)) {
+            throw new ApiException(SysCode.TASK_ALREADY_EXISTS);
+        }
+        return taskQueueService.createTaskQueueAndDeleteOldData(user, taskType);
+    }
+
+    /**
+     * 處理任務
+     *
+     * @param taskQueue 任務
+     * @param file      檔案
+     * @return TaskQueue
+     */
+    private TaskQueue processTask(TaskQueue taskQueue, MultipartFile file) {
+        //是否為推廣訊息任務
+        if (isPromotionMessageTask(taskQueue.getTaskConfig().getTaskType())) {
+            return handlePromotionMessageTask(taskQueue, file);
+        }
+        return taskQueue;
+    }
+
+    /**
+     * 判斷是否為推廣訊息任務
+     *
+     * @param taskType 任務類型
+     */
+    private boolean isPromotionMessageTask(TaskTypeEnum taskType) {
+        return TaskTypeEnum.SEND_PROMOTE_MESSAGE.equals(taskType) ||
+                TaskTypeEnum.SEND_PROMOTE_MESSAGE_BY_POST_SHARE.equals(taskType);
+    }
+
+    /**
+     * 處理推廣訊息任務
+     *
+     * @param taskQueue 任務
+     * @param file      檔案
+     * @return TaskQueue
+     */
+    private TaskQueue handlePromotionMessageTask(TaskQueue taskQueue, MultipartFile file) {
+        try {
+            checkAndSaveTaskPromotionDetail(upload(file), taskQueue);
+        } catch (Exception e) {
+            log.error("文件上傳失敗", e);
+            throw new ApiException(SysCode.FILE_UPLOAD_FAILED);
+        }
+        return taskQueue;
+    }
+
+    /**
+     * 讀取推廣清單Excel
+     *
+     * @return 帳密清單
+     */
+    private List<PromotionRequest> upload(MultipartFile file) throws IOException {
+        if (file == null) {
+            throw new ApiException(SysCode.FILE_NOT_FOUND);
+        }
+        List<PromotionRequest> dataList = Lists.newArrayList();
+        EasyExcelFactory.read(file.getInputStream(), PromotionRequest.class, new ReadListener<PromotionRequest>() {
+            @Override
+            public void invoke(PromotionRequest data, AnalysisContext context) {
+                dataList.add(data);
+            }
+
+            @Override
+            public void doAfterAllAnalysed(AnalysisContext context) {
+                // do nothing
+            }
+        }).sheet("私訊列表").doRead();
+        return dataList;
+    }
+
+    /**
+     * 檢查並保存任務推廣明細
+     *
+     * @param promotionRequestList 推廣請求列表
+     * @param taskQueue            任務
+     */
+    private void checkAndSaveTaskPromotionDetail(List<PromotionRequest> promotionRequestList, TaskQueue taskQueue) {
+        List<TaskSendPromoteMessage> taskSendPromoteMessageList = Lists.newArrayList();
+        for (PromotionRequest promotionRequest : promotionRequestList) {
+            TaskSendPromoteMessage taskSendPromoteMessage = TaskSendPromoteMessage.builder()
+                    .taskQueue(taskQueue)
+                    .account(promotionRequest.getAccount())
+                    .accountFullName(promotionRequest.getAccountFullName())
+                    .textEn(promotionRequest.getTextEn())
+                    .textZhTw(promotionRequest.getTextZhTw())
+                    .textJa(promotionRequest.getTextJa())
+                    .textRu(promotionRequest.getTextRu())
+                    .postUrl(promotionRequest.getPostUrl())
+                    .status(TaskStatusEnum.PENDING)
+                    .createTime(taskQueue.getSubmitTime())
+                    .build();
+            taskSendPromoteMessageList.add(taskSendPromoteMessage);
+        }
+        taskSendPromoteMessageService.saveAll(taskSendPromoteMessageList);
     }
 }

@@ -33,6 +33,16 @@ public class CheckTaskQueue extends BaseQueue {
         this.taskExecutionService = taskExecutionService;
     }
 
+    /**
+     * 每日早上8點將所有DAILY_PAUSED的任務狀態修改為DAILY_PENDING
+     */
+    @Scheduled(cron = "0 0 8 * * ?", zone = "Asia/Taipei")
+    public void modifyDailyTaskStatus() {
+        List<TaskQueue> tasks = taskQueueService.findTasksByStatus(TaskStatusEnum.DAILY_PAUSED);
+        tasks.forEach(task -> task.setStatus(TaskStatusEnum.DAILY_PENDING));
+        taskQueueService.saveAll(tasks);
+    }
+
     @Scheduled(fixedDelayString = "${taskQueue.checkDelay:10000}")
     public void checkTasks() {
         log.info("開始檢查任務佇列");

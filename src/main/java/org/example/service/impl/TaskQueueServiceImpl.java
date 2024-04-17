@@ -49,9 +49,9 @@ public class TaskQueueServiceImpl implements TaskQueueService {
 
     @Override
     @Transactional
-    public TaskQueue createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status) {
+    public TaskQueue createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType) {
         deleteOldDataByTaskTypeAndIgUser(taskType, igUser);
-        return saveTaskQueueAndTaskQueueDetail(igUser, taskType, status);
+        return saveTaskQueueAndTaskQueueDetail(igUser, taskType);
     }
 
     @Override
@@ -97,6 +97,11 @@ public class TaskQueueServiceImpl implements TaskQueueService {
     }
 
 
+    @Override
+    public List<TaskQueue> saveAll(List<TaskQueue> tasks) {
+        return taskQueueDao.saveAll(tasks);
+    }
+
     //private
 
     /**
@@ -104,15 +109,14 @@ public class TaskQueueServiceImpl implements TaskQueueService {
      *
      * @param igUser   IG用戶
      * @param taskType 任務類型
-     * @param status   任務狀態
      * @return 任務
      */
-    private TaskQueue saveTaskQueueAndTaskQueueDetail(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status) {
+    private TaskQueue saveTaskQueueAndTaskQueueDetail(IgUser igUser, TaskTypeEnum taskType) {
         TaskConfig taskConfig = taskConfigService.findByTaskType(taskType);
         TaskQueue newTask = TaskQueue.builder()
                 .igUser(igUser)
                 .taskConfig(taskConfig)
-                .status(status)
+                .status(TaskStatusEnum.valueOf(taskConfig.getInitStatus().name()))
                 .submitTime(LocalDateTime.now())
                 .build();
         Optional<TaskQueue> taskQueue = save(newTask);

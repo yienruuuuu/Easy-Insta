@@ -21,10 +21,9 @@ public interface TaskQueueService extends BaseService<TaskQueue> {
      *
      * @param igUser   用戶
      * @param taskType 任務類型
-     * @param status   任務狀態
      * @return TaskQueue
      */
-    TaskQueue createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType, TaskStatusEnum status);
+    TaskQueue createTaskQueueAndDeleteOldData(IgUser igUser, TaskTypeEnum taskType);
 
     boolean checkTasksByStatusAndNeedLogin(List<TaskStatusEnum> status, boolean needLoginIg);
 
@@ -40,4 +39,6 @@ public interface TaskQueueService extends BaseService<TaskQueue> {
      * @return boolean
      */
     TaskQueue updateTaskStatus(BigInteger taskId, TaskStatusEnum newStatus);
+
+    List<TaskQueue> saveAll(List<TaskQueue> tasks);
 }

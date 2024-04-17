@@ -1,6 +1,7 @@
 package org.example.entity;
 
 import lombok.*;
+import org.example.bean.enumtype.InitStatusEnum;
 import org.example.bean.enumtype.TaskTypeEnum;
 
 import javax.persistence.*;
@@ -28,4 +29,8 @@ public class TaskConfig {
 
     @Column(name = "need_login_ig")
     private boolean needLoginIg;
+
+    @Column(name = "init_status")
+    @Enumerated(EnumType.STRING)
+    private InitStatusEnum initStatus;
 }
