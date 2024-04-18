@@ -35,6 +35,8 @@ public enum SysCode implements ErrorCode {
     TASK_QUEUE_FOLLOWER_DETAIL_NOT_FOUNT(2108, "找不到任務對應的粉絲任務明細"),
     TASK_SEND_PROMOTE_MESSAGE_NOT_FOUNT(2109, "找不到任務對應的發送推廣訊息任務明細"),
     TASK_SEND_PROMOTE_MESSAGE_BY_POST_SHARE_NOT_FOUNT(2110, "找不到每日推廣任務對應的發送推廣訊息任務明細"),
+    SELENIUM_IG_USER_NOT_FOUND(2111, "用戶未找到"),
+
 
     //IG行為時相關錯誤
     IG_USER_NOT_FOUND(2200, "IG user not found"),

@@ -234,7 +234,7 @@ public class SeleniumServiceImpl implements SeleniumService {
             if ("關閉".equals(titleText)) {
                 log.info("找到關閉元素");
                 svgElement.click();
-                return;
+                throw new ApiException(SysCode.SELENIUM_IG_USER_NOT_FOUND);
             }
         }
         log.warn("未找到關閉元素");

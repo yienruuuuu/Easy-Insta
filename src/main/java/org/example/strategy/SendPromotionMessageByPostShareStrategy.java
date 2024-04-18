@@ -80,6 +80,7 @@ public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase im
                 taskSendPromoteMessage.failTask();
                 //重新移動到準備畫面上
                 driver.get(postUrl);
+                CrawlingUtil.pauseBetweenRequests(3, 5);
             }
         });
         taskSendPromoteMessageService.saveAll(promoteList);
