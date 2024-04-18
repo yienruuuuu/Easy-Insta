@@ -17,6 +17,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 /**
@@ -44,8 +47,9 @@ public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase im
     @Override
     @Transactional
     public void executeTask(TaskQueue taskQueue, LoginAccount loginAccount) {
+        bringToFrontChrome();
+        CrawlingUtil.pauseBetweenRequests(3, 5);
         WebDriver driver = seleniumService.getDriver();
-
         //執行任務
         performTask(taskQueue, driver);
         //結束任務，依條件判斷更新任務狀態
@@ -76,7 +80,13 @@ public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase im
                 log.info("帳號:{} ,執行完成", taskSendPromoteMessage.getAccount());
                 CrawlingUtil.pauseBetweenRequests(3, 5);
             } catch (ApiException e) {
-                log.error("帳號:{} ,執行失敗", taskSendPromoteMessage.getAccount(), e);
+                log.error("帳號:{} ,執行失敗 ApiException", taskSendPromoteMessage.getAccount(), e);
+                taskSendPromoteMessage.failTask();
+                //重新移動到準備畫面上
+                driver.get(postUrl);
+                CrawlingUtil.pauseBetweenRequests(3, 5);
+            } catch (Exception e) {
+                log.error("帳號:{} ,執行失敗 Exception", taskSendPromoteMessage.getAccount(), e);
                 taskSendPromoteMessage.failTask();
                 //重新移動到準備畫面上
                 driver.get(postUrl);
@@ -100,5 +110,20 @@ public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase im
         }
         taskQueueService.save(task);
         log.info("任務已儲存:{}", task);
+    }
+
+    public void bringToFrontChrome() {
+        try {
+            ProcessBuilder builder = new ProcessBuilder(
+                    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+                    "--remote-debugging-port=9222",
+                    "--user-data-dir=C:\\selenium\\ChromeProfile",
+                    "--start-maximized"
+            );
+            builder.redirectErrorStream(true);
+            builder.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
