@@ -37,6 +37,7 @@ public class CheckTaskQueue extends BaseQueue {
      */
     @Scheduled(cron = "0 0 8 * * ?", zone = "Asia/Taipei")
     public void modifyDailyTaskStatus() {
+        log.info("將所有DAILY_PAUSED的任務狀態修改為DAILY_PENDING");
         List<TaskQueue> tasks = taskQueueService.findTasksByStatus(TaskStatusEnum.DAILY_PAUSED);
         tasks.forEach(task -> task.setStatus(TaskStatusEnum.DAILY_PENDING));
         taskQueueService.saveAll(tasks);
