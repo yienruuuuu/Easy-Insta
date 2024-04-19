@@ -7,7 +7,7 @@ import org.example.bean.enumtype.TaskTypeEnum;
 import org.example.exception.ApiException;
 import org.example.exception.SysCode;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Eric.Lee

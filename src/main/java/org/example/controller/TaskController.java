@@ -34,7 +34,7 @@ import java.util.List;
 @Tag(name = "MAIN controller", description = "主要功能 API")
 @RestController
 @RequestMapping("main")
-public class TaskController extends BaseController {
+public class TaskController {
 
     private final LoginService loginService;
     private final InstagramService instagramService;

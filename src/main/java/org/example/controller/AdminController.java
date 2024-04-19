@@ -27,7 +27,7 @@ import java.util.List;
 @Tag(name = "TEST controller", description = "開發測試用API")
 @RestController
 @RequestMapping("admin")
-public class AdminController extends BaseController {
+public class AdminController {
 
     private final LoginService loginService;
     private final MediaService mediaService;

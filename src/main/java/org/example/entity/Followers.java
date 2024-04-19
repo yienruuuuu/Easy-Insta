@@ -2,8 +2,7 @@ package org.example.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Eric.Lee

@@ -2,6 +2,7 @@ package org.example.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.entity.IgUser;
 import org.example.exception.ApiException;
@@ -14,14 +15,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Slf4j
 @Tag(name = "Excel controller", description = "開發導出Excel用API")
 @RestController
 @RequestMapping("excel")
-public class ExcelController extends BaseController {
+public class ExcelController {
     private final IgUserService igUserService;
     private final ExcelService excelService;
     private final MediaCommentService mediaCommentService;
