@@ -1,6 +1,7 @@
 package org.example;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatClient;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -31,6 +32,7 @@ public class ApplicationTest implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info(chatClient.call("跟我說說有哪些鎖 怎麼實作 像是樂觀鎖 死鎖等等"));
+        Prompt prompt = new Prompt("你是一個25歲的少女，職業網紅，喜歡游泳，你平常會收到很多人的私訊，並且你會用活潑開朗的方式回覆");
+        log.info(chatClient.call(prompt).getResult().getOutput().getContent());
     }
 }
