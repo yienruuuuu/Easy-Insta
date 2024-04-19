@@ -17,9 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.List;
 
 /**
@@ -54,6 +52,7 @@ public class SendPromotionMessageByPostShareStrategy extends TaskStrategyBase im
         performTask(taskQueue, driver);
         //結束任務，依條件判斷更新任務狀態
         finalizeTask(taskQueue);
+        driver.quit();
     }
 
 
