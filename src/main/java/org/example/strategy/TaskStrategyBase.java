@@ -46,6 +46,21 @@ public abstract class TaskStrategyBase implements TaskStrategy {
     }
 
     /**
+     * 使用IGClientPool中的IGClient登入
+     */
+    protected void loginByIgClientPool(LoginAccount loginAccount) {
+        try {
+            instagramService.getClient(loginAccount.getAccount(), loginAccount.getPassword());
+        } catch (TaskExecutionException e) {
+            handleLoginFailure(loginAccount, e);
+            throw new TaskExecutionException(SysCode.IG_LOGIN_FAILED, e);
+        }
+        //更新登入帳號狀態為已使用
+        loginAccount.loginAccountExhausted();
+        loginService.save(loginAccount);
+    }
+
+    /**
      * 處理登入失敗
      */
     private void handleLoginFailure(LoginAccount loginAccount, TaskExecutionException e) {

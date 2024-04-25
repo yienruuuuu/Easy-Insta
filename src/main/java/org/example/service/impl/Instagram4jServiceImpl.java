@@ -43,8 +43,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -56,6 +58,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     private final ConfigCache configCache;
     private final MediaCommentService mediaCommentService;
     private final MediaLikerService mediaLikerService;
+    private final Map<String, IGClient> clients = new ConcurrentHashMap<>();
 
     public Instagram4jServiceImpl(IgUserServiceImpl igUserService, FollowersService followersService, MediaServiceImpl mediaService, ConfigCache configCache, MediaCommentService mediaCommentService, MediaLikerService mediaLikerService) {
         this.igUserService = igUserService;
@@ -66,15 +69,24 @@ public class Instagram4jServiceImpl implements InstagramService {
         this.mediaLikerService = mediaLikerService;
     }
 
-    private IGClient client;
+    private IGClient igClient;
     public static final String CHALLENGE_REQUIRED = "challenge_required";
     private static final String LOG_MESSAGE_PATTERN = "出循環 ，目標請求數: {}, maxId: {}, 已取得資料count={}";
 
+    @Override
+    public IGClient getClient(String account, String password) {
+        IGClient client = clients.get(account);
+        if (client == null || !testClient(client, account)) {
+            client = loginIg(account, password);
+            clients.put(account, client);
+        }
+        return client;
+    }
 
     @Override
     public void login(String account, String password) {
         try {
-            client = IGClient.builder()
+            igClient = IGClient.builder()
                     .username(account)
                     .password(password)
                     .client(BrightDataProxy.getBrightDataProxy(
@@ -100,10 +112,9 @@ public class Instagram4jServiceImpl implements InstagramService {
 
     @Override
     public IgUser searchUser(String username, LoginAccount loginAccount) {
-        login(loginAccount.getAccount(), loginAccount.getPassword());
         UserAction searchResult;
         try {
-            searchResult = client.actions().users().findByUsername(username).join();
+            searchResult = igClient.actions().users().findByUsername(username).join();
         } catch (CompletionException e) {
             log.error("IG查詢用戶異常", e);
             throw new ApiException(SysCode.IG_USER_NOT_FOUND);
@@ -120,7 +131,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     public void searchFollowersAndSave(TaskQueue task, String maxId) {
         try {
             // 取得追蹤者
-            FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(client, task.getIgUser().getUserName(), maxId);
+            FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(igClient, task.getIgUser().getUserName(), maxId);
             // 將 Profile 物件轉換為 Followers 實體
             List<Followers> followersList = convertProfilesToFollowerEntities(task.getIgUser(), followersObjFromIg.getFollowers());
             // 保存追蹤者
@@ -135,7 +146,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     public void searchUserMediasAndSave(TaskQueue task, String maxId) {
         try {
             // 取得對象貼文
-            PostsAndMaxIdDTO postsAndMaxIdDTO = getPostsByUserName(client, task.getIgUser().getUserName(), maxId);
+            PostsAndMaxIdDTO postsAndMaxIdDTO = getPostsByUserName(igClient, task.getIgUser().getUserName(), maxId);
             // 將 TimelineMedia 物件轉換為 Media 實體
             List<Media> mediasList = convertTimeLineMediaToMediaEntities(task.getIgUser(), postsAndMaxIdDTO.getMedias());
             // 保存貼文
@@ -160,7 +171,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     public void searchMediaCommentsAndSave(TaskQueue task, String maxId) {
         try {
             // 取得對象貼文
-            CommentsAndMaxIdDTO commentsAndMaxIdDTO = getCommentsByMediaPk(client, task, maxId);
+            CommentsAndMaxIdDTO commentsAndMaxIdDTO = getCommentsByMediaPk(igClient, task, maxId);
             // 將 Comment 物件轉換為 Media_comment 實體
             List<MediaComment> mediasList = convertCommentToMediaCommentEntity(task, commentsAndMaxIdDTO.getComments());
             // 保存
@@ -179,7 +190,7 @@ public class Instagram4jServiceImpl implements InstagramService {
     public void searchMediaLikersAndSave(TaskQueue task, String maxId) {
         try {
             // 取得對象貼文
-            LikerProfilesAndMaxIdDTO likerProfilesAndMaxIdDTO = getLikersByMediaPk(client, task, maxId);
+            LikerProfilesAndMaxIdDTO likerProfilesAndMaxIdDTO = getLikersByMediaPk(igClient, task, maxId);
             // 將 Comment 物件轉換為 Media_comment 實體
             List<MediaLiker> likerList = convertProfileToMediaLikerEntity(task, likerProfilesAndMaxIdDTO.getLikerProfiles());
             // 保存
@@ -194,6 +205,41 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     // private
+
+    /**
+     * 登入
+     *
+     * @param account  IG用戶名
+     * @param password IG用戶密碼
+     * @return IGClient物件
+     */
+    private IGClient loginIg(String account, String password) {
+        try {
+            IGClient client = IGClient.builder()
+                    .username(account)
+                    .password(password)
+                    .client(BrightDataProxy.getBrightDataProxy(
+                            configCache.get(ConfigEnum.BRIGHT_DATA_ACCOUNT.name()),
+                            configCache.get(ConfigEnum.BRIGHT_DATA_PASSWORD.name()),
+                            StringUtils.generateRandomString(8)))
+                    .login();
+            log.info("登入成功, 帳號:{}", account);
+            return client;
+        } catch (IGLoginException | CompletionException e) {
+            handleSocketTimeOut(e, SysCode.IG_LOGIN_FAILED);
+        } catch (Exception e) {
+            log.info("IG登入異常 Exception");
+            Throwable cause = e;
+            while (cause != null) {
+                if (cause instanceof IGResponseException && CHALLENGE_REQUIRED.equals(cause.getMessage())) {
+                    throw new ApiException(SysCode.IG_ACCOUNT_CHALLENGE_REQUIRED, cause);
+                }
+                cause = cause.getCause();
+            }
+            throw new TaskExecutionException(SysCode.IG_LOGIN_FAILED, e);
+        }
+        return null;
+    }
 
     /**
      * 建立新的User實體，或是從資料庫中獲取已存在的實體，並以ig響應設置或更新用戶信息
@@ -524,5 +570,16 @@ public class Instagram4jServiceImpl implements InstagramService {
             cause = cause.getCause();
         }
         throw new TaskExecutionException(sysCode, e);
+    }
+
+    private boolean testClient(IGClient client, String username) {
+        try {
+            // 實施一個小的API動作來測試client是否正常
+            getUserIdByUsername(client, username);
+            return true;
+        } catch (Exception e) {
+            log.info("客戶端失效，需要重新登入");
+            return false;
+        }
     }
 }
