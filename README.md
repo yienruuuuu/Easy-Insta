@@ -1,6 +1,18 @@
+<p align="center"><img alt="Easy-Insta" height="300" src="pic/header.png"></p>
+<p align="center">
+  <img src="https://img.shields.io/github/license/yienruuuuu/Easy-Insta?style=for-the-badge">
+  <img src="https://img.shields.io/github/stars/yienruuuuu/Easy-Insta?style=for-the-badge">
+  <img src="https://img.shields.io/github/issues/yienruuuuu/Easy-Insta?style=for-the-badge">
+  <img src="https://img.shields.io/github/forks/yienruuuuu/Easy-Insta?style=for-the-badge">
+</p>
 
-# README : Easy-Insta
+<p align="center">
+  <img src="https://img.shields.io/badge/Author-Yienruuuuu-cyan?style=flat-square">
+  <img src="https://img.shields.io/badge/Open%20Source-Yes-cyan?style=flat-square">
+  <img src="https://img.shields.io/badge/Written%20In-Java-cyan?style=flat-square">
+</p>
 
+# Easy-Insta
 **一個自動化的IG爬蟲Web後端服務**
 
 ## 需求
