@@ -94,3 +94,17 @@ http://127.0.0.1:8080/swagger-ui/index.html
 This project includes software from third-party libraries which are licensed under their own respective open-source licenses. Please see the `LICENSES` folder in the project directory for the license copies.
 
 - `instagram4j`: Licensed under the Apache License, Version 2.0. See `licenses/instagram4j-lib-Apache-2.0.txt` for more details.
+
+## Terms and Conditions
+
+This project is intended for personal use and for educational experiences due to limitations of Instagram's public API.
+
+- Please use Instagram's public API if possible
+- Do not use this library to spam (botting, spam messaging, etc...)
+- There will be no support for those with malicious intent
+- Use reasonable (human) delay in between sending requests
+- Don't be evil.
+
+This library is in no way affiliated with, authorized, maintained, sponsored or endorsed by Instagram or any of its affiliates or subsidiaries. This is an independent and unofficial API. Use at your own risk.
+
+Contributors are not responsible for usage and maintainability. Due to the nature of this project, some features of the library are not guaranteed as they make change and break in the future. 
