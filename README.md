@@ -1,128 +1,84 @@
 
-# README : how to use web-crawler-ins?
+# README : web-crawler-ins
 
-![專案封面圖](https://fakeimg.pl/500/)
+**一個自動化的IG爬蟲Web後端服務**
 
-> 施工中，請稍後再來(以下都是TODOOOOOO 看到的是別人的模板~~~)
+## 需求
+此專案使用以下技術
+* JDK 17
+* SpringBoot 2.7
+* Gradle 8.6
+* Lombok 1.18.20
+* MySql 8.0.36
+* EasyExcel 3.1.1
+* Apache POI 5.2.3
+* Selenium 4.19.1
+* instagram4j
+(forked and modified from https://github.com/instagram4j/instagram4j)
 
 ## 功能
 
-測試帳號密碼 **（請斟酌提供，建議只提供僅能觀看不能操作的帳號密碼）**
-
-```bash
-帳號： example@example.com
-密碼： example
-```
-
+### 透過BrightDataProxy + Instagram4j API
 - [x] 登入
 - [x] 登出
-- [x] 產品列表
-  ...
+- [x] 爬取帳號追蹤者(API call)
+- [x] 爬取特定帳號貼文(API call)
+- [x] 爬取特定貼文留言(API call)
+- [x] 爬取特定貼文按讚者(API call)
 
-## 畫面
+### 透過Selenium
+- [x] 根據API call取得的追蹤者資訊，進一步取得追蹤者的發文數/追蹤者數量/追蹤人數
+- [x] 傳送推廣訊息(自訊習功能內>新增訊息進行傳送)
+- [x] 分享影片及傳送訊息(自貼文內進行分享)
 
-> 可提供 1~3 張圖片，讓觀看者透過 README 了解整體畫面
+### 透過EasyExcel
+- [x] 批量匯入登入用帳密
 
-![範例圖片 1](https://fakeimg.pl/500/)
-![範例圖片 2](https://fakeimg.pl/500/)
-![範例圖片 3](https://fakeimg.pl/500/)
+### 透過Apache POI
+- [x] 批量匯出API call取得的貼文留言/留言者
+
+**以上功能皆可藉由swagger觸發，無前端畫面**
+
+## 取得留言報告
+
+![留言報告1](pic/excel.png)
+![留言報告2](pic/excel1.png)
+![留言報告3](pic/excel2.png)
 
 ## 安裝
 
-> 請務必依據你的專案來調整內容。
-
 以下將會引導你如何安裝此專案到你的電腦上。
 
-Node.js 版本建議為：`16.15.0` 以上...
+1. 自官網文檔安裝mysql 8
+   https://dev.mysql.com/downloads/mysql/
+2. 執行專案內crawler.sql文件
+   (路徑:src/main/resources/sql/crawler_ig.sql)
+3. 確認是否已成功新增
+   ![留言報告3](pic/mysql.png)
+4. 將資料庫連線資訊填入application.properties的
+   (spring.datasource.url/username/password)
+   (路徑:src/main/resources/application.properties)
+5. 以IDE啟動服務，或以gradle打包後使用java -jar 啟動皆可
 
-### 取得專案
-
-```bash
-git clone git@github.com:hsiangfeng/README-Example-Template.git
-```
-
-### 移動到專案內
-
-```bash
-cd README-Example-Template
-```
-
-### 安裝套件
-
-```bash
-npm install
-```
-
-### 環境變數設定
-
-請在終端機輸入 `cp .env.example .env` 來複製 .env.example 檔案，並依據 `.env` 內容調整相關欄位。
-
-### 運行專案
-
-```bash
-npm run serve
-```
 
 ### 開啟專案
 
 在瀏覽器網址列輸入以下即可看到畫面
 
 ```bash
-http://localhost:8080/
+http://127.0.0.1:8080/swagger-ui/index.html
 ```
-
-## 環境變數說明
-
-```env
-APIPATH= # API 位置
-COUSTOMPATH= # 自訂變數
-...
-```
-
-## 資料夾說明
-
-- views - 畫面放置處
-- controllers - 控制器放置處
-- modules - 模組放置處
-- assets - 靜態資源放置處
-    - scss - scss 檔案放置處
-    - images - 圖片放置處
-      ...
-
-## 專案技術
-
-- Node.js v16.15.0
-- Vue v3.2.20
-- Vite v4.0.4
-- Vue Router v4.0.11
-- Axios v0.24.0
-- Bootstrap v5.1.3
-  ...
-
-## 第三方服務
-
-- Algolia
-- Google Analytics
-  ...
+![swagger](pic/swagger.png)
 
 
-當專案 merge 到 main 時會自動執行以下動作：
+## 致謝
 
-- 建立 Node.js 環境
-- 安裝相依套件
-- 編譯程式碼
-- 執行 ESLint 掃描
-- 執行測試
-- 部署到 Github Pages
-  ...
+-   [Instagram 上限參考](https://www.linkedin.com/pulse/stay-within-boundaries-complete-breakdown-instagrams-cmscc/)
+- [Instagram 上限參考2](https://socialpros.co/instagram-daily-limits/#:~:text=Instagram's%20Daily%20Limits%20%E2%80%93%20Like,than%2030%20likes%20per%20hour)
+-   [Meta API Policies](https://developers.facebook.com/devpolicy/)
 
-## 聯絡作者
+## 第三方 Licenses
 
-> ps. 這邊絕對不是業配，而是要適當提供一些方式讓觀看者知道你的聯絡方式，讓他們可以更方便的找到你。
+This project includes software from third-party libraries which are licensed under their own respective open-source licenses. Please see the `LICENSES` folder in the project directory for the license copies.
 
-你可以透過以下方式與我聯絡
-
-- [部落格](https://israynotarray.com/)
-- [Facebook](https://www.facebook.com/israynotarray)
-- [Instagram](https://www.instagram.com/isray_notarray/)
-  ...
+- `instagram4j`: Licensed under the Apache License, Version 2.0. See `licenses/instagram4j-lib-Apache-2.0.txt` for more details.
