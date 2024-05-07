@@ -1,15 +1,15 @@
 <p align="center"><img alt="Easy-Insta" height="300" src="pic/header.png"></p>
 <p align="center">
-  <img src="https://img.shields.io/github/license/yienruuuuu/Easy-Insta?style=for-the-badge">
-  <img src="https://img.shields.io/github/stars/yienruuuuu/Easy-Insta?style=for-the-badge">
-  <img src="https://img.shields.io/github/issues/yienruuuuu/Easy-Insta?style=for-the-badge">
-  <img src="https://img.shields.io/github/forks/yienruuuuu/Easy-Insta?style=for-the-badge">
+  <img src="https://img.shields.io/github/license/yienruuuuu/Easy-Insta?style=for-the-badge" alt="">
+  <img src="https://img.shields.io/github/stars/yienruuuuu/Easy-Insta?style=for-the-badge" alt="">
+  <img src="https://img.shields.io/github/issues/yienruuuuu/Easy-Insta?style=for-the-badge" alt="">
+  <img src="https://img.shields.io/github/forks/yienruuuuu/Easy-Insta?style=for-the-badge" alt="">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Author-Yienruuuuu-cyan?style=flat-square">
-  <img src="https://img.shields.io/badge/Open%20Source-Yes-cyan?style=flat-square">
-  <img src="https://img.shields.io/badge/Written%20In-Java-cyan?style=flat-square">
+  <img src="https://img.shields.io/badge/Author-Yienruuuuu-cyan?style=flat-square" alt="">
+  <img src="https://img.shields.io/badge/Open%20Source-Yes-cyan?style=flat-square" alt="">
+  <img src="https://img.shields.io/badge/Written%20In-Java-cyan?style=flat-square" alt="">
 </p>
 
 # Easy-Insta
