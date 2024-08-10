@@ -128,7 +128,8 @@ public class Instagram4jServiceImpl implements InstagramService {
     }
 
     @Override
-    public void searchFollowersAndSave(TaskQueue task, String maxId) {
+    public void searchFollowersAndSave(TaskQueue task, String maxId, LoginAccount loginAccount) {
+        igClient = clients.get(loginAccount.getAccount());
         try {
             // 取得追蹤者
             FollowersAndMaxIdDTO followersObjFromIg = getFollowersByUserNameAndMaxId(igClient, task.getIgUser().getUserName(), maxId);

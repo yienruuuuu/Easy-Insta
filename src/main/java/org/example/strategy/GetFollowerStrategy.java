@@ -28,9 +28,9 @@ public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrateg
     @Transactional
     public void executeTask(TaskQueue taskQueue, LoginAccount loginAccount) {
         //登入、檢查結果並更新登入帳號狀態
-        loginAndUpdateAccountStatus(loginAccount);
+        loginByIgClientPool(loginAccount);
         //執行爬蟲任務
-        performTaskWithAccount(taskQueue);
+        performTaskWithAccount(taskQueue,loginAccount);
         //結束任務，依條件判斷更新任務狀態
         finalizeTask(taskQueue);
     }
@@ -43,8 +43,8 @@ public class GetFollowerStrategy extends TaskStrategyBase implements TaskStrateg
      *
      * @param task 任務
      */
-    private void performTaskWithAccount(TaskQueue task) {
-        instagramService.searchFollowersAndSave(task, task.getNextIdForSearch());
+    private void performTaskWithAccount(TaskQueue task,LoginAccount loginAccount) {
+        instagramService.searchFollowersAndSave(task, task.getNextIdForSearch(),loginAccount);
     }
 
     /**

@@ -44,7 +44,7 @@ public interface InstagramService {
      * @param maxId 最大查詢數量 初次執行可能為null
      *              之後執行需帶入最後一次查詢的最後一筆Id
      */
-    void searchFollowersAndSave(TaskQueue task, String maxId);
+    void searchFollowersAndSave(TaskQueue task, String maxId,LoginAccount loginAccount);
 
     /**
      * 查詢用戶發文
