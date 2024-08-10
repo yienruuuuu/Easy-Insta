@@ -37,7 +37,7 @@ public class GetMediaCommentStrategy extends TaskStrategyBase implements TaskStr
     @Transactional
     public void executeTask(TaskQueue taskQueue, LoginAccount loginAccount) {
         //登入、檢查結果並更新登入帳號狀態
-        loginAndUpdateAccountStatus(loginAccount);
+        loginByIgClientPool(loginAccount);
         //刪除舊的媒體留言資料
         deleteOldMediaContentData(taskQueue);
         //新增或更新taskQueue對於taskQueueMedia的指向

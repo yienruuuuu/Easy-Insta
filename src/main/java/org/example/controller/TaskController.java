@@ -56,6 +56,7 @@ public class TaskController extends BaseController {
     @PostMapping(value = "/search/{username}/{needToWriteToDb}")
     public IgUser getUserInfoByUserName(@PathVariable String username, @PathVariable boolean needToWriteToDb) {
         LoginAccount loginAccount = loginService.getLoginAccount();
+        instagramService.login(loginAccount.getAccount(), loginAccount.getPassword());
         IgUser igUser = instagramService.searchUser(username, loginAccount);
         // 檢查是否需要寫入資料庫,保存或更新使用者訊息
         if (!needToWriteToDb) {

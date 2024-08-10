@@ -1,5 +1,6 @@
 package org.example.service;
 
+import com.github.instagram4j.instagram4j.IGClient;
 import org.example.entity.IgUser;
 import org.example.entity.LoginAccount;
 import org.example.entity.TaskQueue;
@@ -10,6 +11,15 @@ import org.example.entity.TaskQueue;
  * @author: Eric.Lee
  */
 public interface InstagramService {
+    /**
+     * 取得IGClient
+     *
+     * @param account  登入操作用帳號
+     * @param password 登入操作用密碼
+     * @return IGClient
+     */
+    IGClient getClient(String account, String password);
+
     /**
      * 登入
      *
